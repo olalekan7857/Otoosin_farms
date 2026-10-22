@@ -4,18 +4,18 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Dashboard | Harvest Castle Admin</title>
-    <meta name="author" content="Harvest Castle">
+    <title>Dashboard | O'Toosin Farms Admin</title>
+    <meta name="author" content="O'Toosin Farms">
     <!-- Admin is private: never index admin pages or expose dashboard content. -->
     <meta name="robots" content="NOINDEX,NOFOLLOW">
-    <meta name="description" content="Private Harvest Castle seller dashboard. Sign-in required.">
+    <meta name="description" content="Private O'Toosin Farms store dashboard.">
 
     <!-- Mobile Specific Metas -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Favicons - Place favicon.ico in the root directory -->
-    <link rel="shortcut icon" href="assets/img/harvest_castle/hc_favicon.png" type="image/png">
-    <link rel="icon" href="assets/img/harvest_castle/hc_favicon.png" type="image/png">
+    <link rel="shortcut icon" href="assets/img/harvest_castle/of_favicon.png" type="image/png">
+    <link rel="icon" href="assets/img/harvest_castle/of_favicon.png" type="image/png">
 
     <!--==============================
 	  Google Fonts (same as storefront)
@@ -33,12 +33,12 @@
     <link rel="stylesheet" href="assets/css/fontawesome.min.css">
     <!-- Theme Custom CSS -->
     <link rel="stylesheet" href="assets/css/harvest-castle.css">
-    <!-- Harvest Castle foundation overrides -->
+    <!-- Storefront foundation overrides -->
     <link rel="stylesheet" href="assets/css/fresh-direct.css">
-    <!-- Harvest Castle admin foundation (Stages 1–3B).
-         ?v= pin: keep the shared admin stylesheet fresh (see admin-products.html). -->
-    <link rel="stylesheet" href="assets/css/fd-admin.css?v=6.0">
-    <!-- Harvest Castle theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
+    <!-- Admin foundation (shared shell + dashboard styles).
+         ?v= pin: keeps the dashboard-specific additions fresh. -->
+    <link rel="stylesheet" href="assets/css/fd-admin.css?v=7.3">
+    <!-- Theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
     <link rel="stylesheet" href="assets/css/fd-theme.css">
     <!-- Apply the stored theme before first paint. Default is Light. -->
     <script>try{var fdT=localStorage.getItem("freshdirect_theme_v1");if(fdT==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(fdE){}</script>
@@ -50,7 +50,7 @@
     <a class="fd-skip-link" href="#fd-admin-main">Skip to dashboard content</a>
 
     <!--==============================
-    Admin shell (Stage 1 foundation, reused unchanged).
+    Admin shell (shared admin layout).
     Dashboard sets aria-current="page" on its own nav item.
     ============================== -->
     <div class="fd-admin-shell" id="fd-admin-shell">
@@ -58,9 +58,9 @@
         <!-- Sidebar navigation -->
         <aside class="fd-admin-sidebar" id="fd-admin-sidebar" aria-label="Admin navigation">
             <div class="fd-admin-brand">
-                <a href="index.html" class="fd-logo" aria-label="Harvest Castle storefront"><img src="assets/img/harvest_castle/hc_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="36" height="36">Harvest<span>Castle</span></a>
+                <a href="index.html" class="fd-logo" aria-label="O'Toosin Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="59" height="42">O'Toosin<span> Farms</span></a>
             </div>
-            <p class="fd-admin-role">Seller Admin</p>
+            <p class="fd-admin-role">Store Admin</p>
             <nav class="fd-admin-nav" aria-label="Management sections">
                 <ul>
                     <li>
@@ -74,8 +74,13 @@
                         </a>
                     </li>
                     <li>
-                        <a href="admin-blog.html" class="fd-admin-nav-link">
-                            <i class="fas fa-newspaper" aria-hidden="true"></i>Blog
+                        <a href="admin-inventory.html" class="fd-admin-nav-link">
+                            <i class="fas fa-warehouse" aria-hidden="true"></i>Inventory
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin-categories.html" class="fd-admin-nav-link">
+                            <i class="fas fa-layer-group" aria-hidden="true"></i>Categories
                         </a>
                     </li>
                     <li>
@@ -91,11 +96,10 @@
                 </ul>
             </nav>
             <div class="fd-admin-side-foot">
-                <!-- Disabled until seller sessions exist; wired to FreshDirectAdminAuth.signOut(). -->
-                <button type="button" class="fd-admin-logout" id="fd-admin-logout" aria-disabled="true" title="Sign in first — log out is available after sign-in">
-                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>Log Out
-                </button>
-                <p class="fd-admin-logout-hint">Log out is available after you sign in.</p>
+                <a class="fd-admin-logout" href="admin-login.html">
+                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i>Staff sign-in
+                </a>
+                <p class="fd-admin-logout-hint">Open the staff access page.</p>
             </div>
         </aside>
 
@@ -109,7 +113,7 @@
                     <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
                 <h1 class="fd-admin-title">Dashboard</h1>
-                <span class="fd-admin-context">Seller area &middot; store overview</span>
+                <span class="fd-admin-context">Store admin &middot; overview</span>
                 <button type="button" class="icon-btn fd-theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
                     <i class="fas fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
                     <i class="fas fa-sun" data-theme-icon="sun" aria-hidden="true" hidden></i>
@@ -118,144 +122,235 @@
 
             <main class="fd-admin-content fd-dash" id="fd-admin-main" tabindex="-1">
                 <div class="fd-dash-head">
-                    <p class="fd-dash-lead">What needs your attention, your most recent orders, and what is available right now.</p>
+                    <p class="fd-dash-lead">A concise view of orders, the meat catalogue and the work that needs attention.</p>
                 </div>
 
-                <noscript>
-                    <div class="fd-admin-notice is-error" role="alert">
-                        <strong>JavaScript is required.</strong>
-                        The dashboard needs JavaScript enabled to show your overview.
+                <!-- ============================================================
+                     STATIC DEMONSTRATION DATA
+                     Every figure, order, customer name and product state in this
+                     dashboard is illustrative interface content. None of it is a
+                     live order, a verified payment or a real stock record. Replace
+                     the repeated cards, table rows and catalogue items with Django
+                     context loops in a later phase; the layout stays the same.
+                     ============================================================ -->
+
+                <!-- Overview -->
+                <section class="fd-dash-section" aria-labelledby="fd-dash-overview-title">
+                    <h2 id="fd-dash-overview-title">Overview</h2>
+                    <ul class="fd-dash-grid" id="fd-dash-cards">
+                        <li class="fd-dash-card">
+                            <span class="fd-dash-card-icon" aria-hidden="true"><i class="fas fa-receipt"></i></span>
+                            <span class="fd-dash-card-label">Total orders</span>
+                            <span class="fd-dash-card-value">24</span>
+                            <span class="fd-dash-card-context">Orders recorded in this period.</span>
+                        </li>
+                        <li class="fd-dash-card">
+                            <span class="fd-dash-card-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+                            <span class="fd-dash-card-label">Awaiting action</span>
+                            <span class="fd-dash-card-value">3</span>
+                            <span class="fd-dash-card-context">Need a reply or confirmation.</span>
+                        </li>
+                        <li class="fd-dash-card">
+                            <span class="fd-dash-card-icon" aria-hidden="true"><i class="fas fa-check-circle"></i></span>
+                            <span class="fd-dash-card-label">Paid orders</span>
+                            <span class="fd-dash-card-value">18</span>
+                            <span class="fd-dash-card-context">Payment confirmed in the same period.</span>
+                        </li>
+                        <li class="fd-dash-card">
+                            <span class="fd-dash-card-icon" aria-hidden="true"><i class="fas fa-box"></i></span>
+                            <span class="fd-dash-card-label">Catalogue products</span>
+                            <span class="fd-dash-card-value">13</span>
+                            <span class="fd-dash-card-context">Meat lines in the catalogue.</span>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- Quick actions: all destinations exist today. -->
+                <section class="fd-dash-section" aria-labelledby="fd-dash-actions-title">
+                    <h2 id="fd-dash-actions-title">Quick actions</h2>
+                    <div class="fd-dash-actions">
+                        <a href="admin-product-edit.html" class="vs-btn fd-dash-btn">
+                            <i class="fas fa-plus" aria-hidden="true"></i>Add Product
+                        </a>
+                        <a href="admin-orders.html" class="fd-ghost-btn fd-dash-btn">
+                            <i class="fas fa-receipt" aria-hidden="true"></i>View Orders
+                        </a>
+                        <a href="admin-products.html" class="fd-ghost-btn fd-dash-btn">
+                            <i class="fas fa-box" aria-hidden="true"></i>Manage Products
+                        </a>
+                        <a href="admin-settings.html" class="fd-ghost-btn fd-dash-btn">
+                            <i class="fas fa-cog" aria-hidden="true"></i>Store Settings
+                        </a>
                     </div>
-                </noscript>
+                    <p class="fd-dash-hint">Use these shortcuts to manage the catalogue, order list and store settings. Delivery is arranged separately by O'Toosin Farms staff.</p>
+                </section>
 
-                <!-- Loading state: shown until the first render settles. -->
-                <div class="fd-admin-notice" id="fd-dash-loading" role="status" aria-live="polite">
-                    <strong>Loading dashboard…</strong>
-                    Getting your latest overview.
-                </div>
-
-                <!-- Error state: honest, with retry. Never shows stale numbers. -->
-                <div class="fd-admin-notice is-error" id="fd-dash-error" role="alert" hidden>
-                    <strong>Dashboard data could not be loaded.</strong>
-                    Nothing below is current, so it is hidden until the data loads.
-                    <div class="fd-dash-error-actions">
-                        <button type="button" class="vs-btn fd-dash-btn" id="fd-dash-retry">
-                            <i class="far fa-redo" aria-hidden="true"></i>Try again
-                        </button>
+                <!-- Recent orders -->
+                <section class="fd-dash-section" aria-labelledby="fd-dash-orders-title">
+                    <div class="fd-dash-section-head">
+                        <h2 id="fd-dash-orders-title">Recent orders</h2>
+                        <p class="fd-dash-count">Showing the 5 most recent orders.</p>
                     </div>
-                </div>
+                    <div class="fd-dash-table-scroll fd-dash-orders-wrap" id="fd-dash-orders-wrap" tabindex="0" role="region" aria-label="Recent orders table, scroll horizontally on small screens">
+                        <table class="fd-dash-table fd-dash-orders-table">
+                            <caption class="fd-dash-caption">Orders, newest first.</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Reference</th>
+                                    <th scope="col">Customer</th>
+                                    <th scope="col">Ordered</th>
+                                    <th scope="col">Items</th>
+                                    <th scope="col">Product total</th>
+                                    <th scope="col">Payment</th>
+                                    <th scope="col">Order status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th scope="row"><span class="fd-dash-ref">OF-1042</span></th>
+                                    <td>Amaka Obi</td>
+                                    <td>21 Oct 2026 &middot; 09:40</td>
+                                    <td><span class="fd-dash-items">2kg Pork Chops &middot; 1kg Whole Chicken</span></td>
+                                    <td class="is-amount">&#8358;13,100</td>
+                                    <td>
+                                        <span class="fd-dash-pay">
+                                            <span class="fd-dash-pay-method">Pay on Delivery</span>
+                                            <span class="fd-dash-pay-state">Due to rider</span>
+                                        </span>
+                                    </td>
+                                    <td><span class="fd-dash-pill is-warn">Pending</span></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><span class="fd-dash-ref">OF-1041</span></th>
+                                    <td>Chinedu Eze</td>
+                                    <td>21 Oct 2026 &middot; 08:15</td>
+                                    <td><span class="fd-dash-items">1kg Beef Steak &middot; 2kg Fresh Catfish</span></td>
+                                    <td class="is-amount">&#8358;13,900</td>
+                                    <td>
+                                        <span class="fd-dash-pay">
+                                            <span class="fd-dash-pay-method">Pay Now</span>
+                                            <span class="fd-dash-pay-state">Paid</span>
+                                        </span>
+                                    </td>
+                                    <td><span class="fd-dash-pill is-ok">Paid</span></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><span class="fd-dash-ref">OF-1040</span></th>
+                                    <td>Fola Adebayo</td>
+                                    <td>20 Oct 2026 &middot; 18:05</td>
+                                    <td><span class="fd-dash-items">1kg Turkey Breast &middot; 1.5kg Goat Meat</span></td>
+                                    <td class="is-amount">&#8358;14,500</td>
+                                    <td>
+                                        <span class="fd-dash-pay">
+                                            <span class="fd-dash-pay-method">Pay Now</span>
+                                            <span class="fd-dash-pay-state">Paid</span>
+                                        </span>
+                                    </td>
+                                    <td><span class="fd-dash-pill is-ok">Paid</span></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><span class="fd-dash-ref">OF-1039</span></th>
+                                    <td>Nneka Okafor</td>
+                                    <td>20 Oct 2026 &middot; 14:30</td>
+                                    <td><span class="fd-dash-items">2kg Chicken Drumsticks</span></td>
+                                    <td class="is-amount">&#8358;7,600</td>
+                                    <td>
+                                        <span class="fd-dash-pay">
+                                            <span class="fd-dash-pay-method">Pay on Delivery</span>
+                                            <span class="fd-dash-pay-state">Due to rider</span>
+                                        </span>
+                                    </td>
+                                    <td><span class="fd-dash-pill is-warn">Pending</span></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row"><span class="fd-dash-ref">OF-1038</span></th>
+                                    <td>Sadiq Bello</td>
+                                    <td>20 Oct 2026 &middot; 11:10</td>
+                                    <td><span class="fd-dash-items">1kg Pork Belly &middot; 1kg Fried Catfish</span></td>
+                                    <td class="is-amount">&#8358;10,700</td>
+                                    <td>
+                                        <span class="fd-dash-pay">
+                                            <span class="fd-dash-pay-method">Pay Now</span>
+                                            <span class="fd-dash-pay-state">Payment pending</span>
+                                        </span>
+                                    </td>
+                                    <td><span class="fd-dash-pill is-warn">Pending</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="fd-dash-hint">Product totals exclude delivery fees, which are paid separately to the rider. On narrower screens the table scrolls sideways to show every column.</p>
+                    <div class="fd-dash-foot">
+                        <a href="admin-orders.html" class="fd-ghost-btn fd-dash-btn">
+                            View all orders
+                        </a>
+                    </div>
+                </section>
 
-                <div id="fd-dash-content" aria-busy="true" hidden>
-
-                    <!-- Overview -->
-                    <section class="fd-dash-section" aria-labelledby="fd-dash-overview-title">
-                        <h2 id="fd-dash-overview-title">Overview</h2>
-                        <ul class="fd-dash-grid" id="fd-dash-cards" aria-live="polite"></ul>
-                    </section>
-
-                    <!-- Quick actions: future destinations stay intentionally disabled. -->
-                    <section class="fd-dash-section" aria-labelledby="fd-dash-actions-title">
-                        <h2 id="fd-dash-actions-title">Quick actions</h2>
-                        <div class="fd-dash-actions">
-                            <a href="admin-product-edit.html" class="vs-btn fd-dash-btn">
-                                <i class="fas fa-plus" aria-hidden="true"></i>Add Product
-                            </a>
-                            <a href="admin-orders.html" class="vs-btn fd-dash-btn">
-                                <i class="fas fa-receipt" aria-hidden="true"></i>View Orders
-                            </a>
-                            <a href="admin-products.html" class="vs-btn fd-dash-btn">
-                                <i class="fas fa-box" aria-hidden="true"></i>Manage Products
-                            </a>
-                        </div>
-                        <p class="fd-dash-hint">Open an order to update its status or follow up with the customer.</p>
-                    </section>
-
-                    <!-- Recent orders -->
-                    <section class="fd-dash-section" aria-labelledby="fd-dash-orders-title">
-                        <div class="fd-dash-section-head">
-                            <h2 id="fd-dash-orders-title">Recent orders</h2>
-                            <p class="fd-dash-count" id="fd-dash-orders-count" aria-live="polite"></p>
-                        </div>
-                        <div class="fd-dash-table-scroll" id="fd-dash-orders-wrap" tabindex="0" role="region" aria-label="Recent orders table, scroll horizontally on small screens" hidden>
-                            <table class="fd-dash-table">
-                                <caption class="fd-dash-caption">Most recent orders, newest first.</caption>
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Reference</th>
-                                        <th scope="col">Customer</th>
-                                        <th scope="col">Date</th>
-                                        <th scope="col">Total</th>
-                                        <th scope="col">Payment</th>
-                                        <th scope="col">Order status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="fd-dash-orders-body"></tbody>
-                            </table>
-                        </div>
-                        <div class="fd-dash-empty" id="fd-dash-orders-empty" hidden>
-                            <i class="far fa-receipt" aria-hidden="true"></i>
-                            <h3>No orders yet</h3>
-                            <p>Orders placed through Harvest Castle will appear here.</p>
-                        </div>
-                        <div class="fd-dash-foot">
-                            <a href="admin-orders.html" class="fd-ghost-btn fd-dash-btn">
-                                View all orders
-                            </a>
-                        </div>
-                    </section>
-
-                    <!-- Product availability -->
-                    <section class="fd-dash-section" aria-labelledby="fd-dash-products-title">
-                        <div class="fd-dash-section-head">
-                            <h2 id="fd-dash-products-title">Product availability</h2>
-                            <p class="fd-dash-count" id="fd-dash-products-count" aria-live="polite"></p>
-                        </div>
-                        <ul class="fd-dash-products" id="fd-dash-products-list" hidden></ul>
-                        <div class="fd-dash-empty" id="fd-dash-products-empty" hidden>
-                            <i class="far fa-box-open" aria-hidden="true"></i>
-                            <h3>No products yet</h3>
-                            <p>Create your first product to start building your Harvest Castle catalog.</p>
-                        </div>
-                        <p class="fd-dash-hint">Manage the full list on the <a href="admin-products.html">Products page</a>. Availability here mirrors the storefront — Available, Limited or Out of Stock.</p>
-                    </section>
-
-                    <!-- Needs attention -->
-                    <section class="fd-dash-section" aria-labelledby="fd-dash-attention-title">
-                        <h2 id="fd-dash-attention-title">Needs attention</h2>
-                        <ul class="fd-dash-attention" id="fd-dash-attention-list" hidden></ul>
-                        <div class="fd-dash-empty is-calm" id="fd-dash-attention-empty" hidden>
-                            <i class="far fa-check-circle" aria-hidden="true"></i>
-                            <h3>Nothing needs attention</h3>
-                            <p>No pending orders and no unavailable products.</p>
-                        </div>
-                    </section>
-
-                </div>
+                <!-- Catalogue preview -->
+                <section class="fd-dash-section" aria-labelledby="fd-dash-products-title">
+                    <div class="fd-dash-section-head">
+                        <h2 id="fd-dash-products-title">Catalogue preview</h2>
+                        <p class="fd-dash-count">Showing 6 of 13 meat lines.</p>
+                    </div>
+                    <ul class="fd-dash-products" id="fd-dash-products-list">
+                        <li>
+                            <div class="fd-dash-product-id">
+                                <strong>Pork Chops</strong>
+                                <span>Pork &middot; Red meat &middot; &#8358;4,800/kg</span>
+                            </div>
+                            <span class="fd-dash-pill">Fresh</span>
+                        </li>
+                        <li>
+                            <div class="fd-dash-product-id">
+                                <strong>Pork Belly</strong>
+                                <span>Pork &middot; Red meat &middot; &#8358;4,200/kg</span>
+                            </div>
+                            <span class="fd-dash-pill">Frozen</span>
+                        </li>
+                        <li>
+                            <div class="fd-dash-product-id">
+                                <strong>Whole Chicken</strong>
+                                <span>Chicken &middot; Poultry &middot; &#8358;3,500/kg</span>
+                            </div>
+                            <span class="fd-dash-pill">Fresh</span>
+                        </li>
+                        <li>
+                            <div class="fd-dash-product-id">
+                                <strong>Turkey Breast</strong>
+                                <span>Turkey &middot; Poultry &middot; &#8358;5,200/kg</span>
+                            </div>
+                            <span class="fd-dash-pill">Fresh</span>
+                        </li>
+                        <li>
+                            <div class="fd-dash-product-id">
+                                <strong>Beef Steak</strong>
+                                <span>Beef &middot; Red meat &middot; &#8358;7,500/kg</span>
+                            </div>
+                            <span class="fd-dash-pill">Fresh</span>
+                        </li>
+                        <li>
+                            <div class="fd-dash-product-id">
+                                <strong>Fried Catfish</strong>
+                                <span>Fish &middot; Seafood &middot; &#8358;6,500/kg</span>
+                            </div>
+                            <span class="fd-dash-pill">Fried</span>
+                        </li>
+                    </ul>
+                    <p class="fd-dash-hint">Manage the full catalogue, pricing and product details on the <a href="admin-products.html">Products page</a>.</p>
+                </section>
 
                 <p class="fd-dash-foot-note">
-                    Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">Harvest Castle</a>. Seller area.
+                    Copyright <i class="far fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O'Toosin Farms</a>. Store admin.
                 </p>
             </main>
         </div>
     </div>
 
-    <!-- Admin JS only: deliberately NOT loading fresh-direct.js so the
-         customer cart store can never leak into the admin. -->
-    <script src="assets/js/fd-admin.js"></script>
+    <!-- Admin JS only: deliberately NOT loading the storefront cart scripts.
+         fd-admin.js handles the drawer/shell; fd-theme.js handles the theme. -->
+    <script src="assets/js/fd-admin.js?v=6.8"></script>
     <script src="assets/js/fd-theme.js"></script>
-    <!-- Settings record (Stage 5: seller record kept in this browser). -->
-    <script src="assets/js/fd-admin-settings-data.js"></script>
-    <!-- Order source boundary (Stage 4: checkout snapshots kept in this
-         browser; the dashboard reads recent orders through it so the
-         dashboard and the Orders pages can never disagree). -->
-    <script src="assets/js/fd-admin-orders-data.js"></script>
-    <!-- Local seller-data store (kept in this browser; the future backend
-         replaces its internals while the dashboard UI is reused untouched). -->
-    <script src="assets/js/fd-admin-store.js"></script>
-    <!-- Dashboard data (reads the store above). -->
-    <script src="assets/js/fd-admin-dashboard-data.js"></script>
-    <!-- Dashboard renderer (consumes the data boundary above). -->
-    <script src="assets/js/fd-admin-dashboard.js"></script>
 
 </body>
 

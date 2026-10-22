@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Harvest Castle Admin — Order detail renderer (Stage 4)
+   O'Toosin Farms Admin — Order detail renderer (Stage 4)
    --------------------------------------------------------------------------
    Vanilla JS, no dependencies, no framework. Admin-scoped: never touches
    the customer cart store or fresh-direct.js.
@@ -144,7 +144,7 @@
     }
     if (missing) {
       missing.removeAttribute("hidden");
-      document.title = "Order not found | Harvest Castle Admin";
+      document.title = "Order not found | O'Toosin Farms Admin";
     }
   }
 
@@ -169,7 +169,7 @@
     if (heading) {
       heading.textContent = "Order " + order.id;
     }
-    document.title = "Order " + order.id + " | Harvest Castle Admin";
+    document.title = "Order " + order.id + " | O'Toosin Farms Admin";
   }
 
   function renderCustomer(order) {
@@ -199,6 +199,11 @@
     return li;
   }
 
+  function formatQty(value) {
+    var n = Number(value);
+    return isFinite(n) ? String(n) : String(value);
+  }
+
   function renderItems(order) {
     var tbody = document.getElementById("fd-order-items-body");
     var wrap = document.getElementById("fd-order-items-wrap");
@@ -212,22 +217,37 @@
         var name = document.createElement("th");
         name.setAttribute("scope", "row");
         name.setAttribute("data-label", "Product");
+
+        var product = document.createElement("span");
+        product.className = "fd-order-item-product";
+        var thumb = document.createElement("span");
+        thumb.className = "fd-order-item-thumb";
+        thumb.setAttribute("aria-hidden", "true");
+        var icon = document.createElement("i");
+        icon.className = "fas fa-drumstick-bite";
+        thumb.appendChild(icon);
+        var text = document.createElement("span");
+        text.className = "fd-order-item-text";
         var nameStrong = document.createElement("strong");
         nameStrong.textContent = it.name;
-        name.appendChild(nameStrong);
+        text.appendChild(nameStrong);
         if (it.variantLabel) {
           var variant = document.createElement("span");
           variant.className = "fd-orders-sub";
           variant.textContent = it.variantLabel;
-          name.appendChild(variant);
+          text.appendChild(variant);
         }
+        product.appendChild(thumb);
+        product.appendChild(text);
+        name.appendChild(product);
+
         tr.appendChild(name);
         var qty = document.createElement("td");
         qty.setAttribute("data-label", "Qty");
-        qty.textContent = String(it.quantity);
+        qty.textContent = formatQty(it.quantity) + " kg";
         tr.appendChild(qty);
         var unit = document.createElement("td");
-        unit.setAttribute("data-label", "Unit price");
+        unit.setAttribute("data-label", "Price / kg");
         unit.className = "is-amount";
         unit.textContent = fmtNaira(it.unitPrice);
         tr.appendChild(unit);
@@ -259,17 +279,17 @@
     }
     host.innerHTML = "";
     var rows = [];
-    if (d.mode === "off-campus") {
-      /* Only the fields checkout collects for off-campus orders. */
-      rows.push(["Full address", orNotProvided(d.address)]);
-      rows.push(["Landmark", orNotProvided(d.landmark)]);
-    } else {
-      /* Only the fields checkout collects for on-campus orders. */
-      rows.push(["Hostel / building", orNotProvided(d.hostel)]);
-      rows.push(["Room / block", orNotProvided(d.roomBlock)]);
-      rows.push(["Faculty / office", orNotProvided(d.facultyOffice)]);
-    }
+    rows.push(["Full address", orNotProvided(d.address)]);
+    var cityState = [d.city, d.state].filter(Boolean).join(", ");
+    rows.push(["City / state", orNotProvided(cityState)]);
+    rows.push(["Landmark", orNotProvided(d.landmark)]);
     rows.push(["Delivery instructions", orNotProvided(d.instructions)]);
+    rows.push([
+      "Delivery fee",
+      order.deliveryFee != null
+        ? fmtNaira(order.deliveryFee) + " (paid separately to the rider)"
+        : "Paid separately to the rider"
+    ]);
     for (var i = 0; i < rows.length; i++) {
       host.appendChild(factRow(rows[i][0], rows[i][1]));
     }
@@ -282,13 +302,23 @@
       return;
     }
     var pb = s.paymentMeta(order);
-    var method =
-      order.orderingMethod === "website" ? "Website order" : "Order via WhatsApp";
+    var method = s.paymentMethodMeta(order);
     host.innerHTML = "";
-    host.appendChild(factRow("Ordering method", method));
+    host.appendChild(factRow("Payment method", method.label));
     host.appendChild(factRow("Payment status", pb.label));
+    host.appendChild(factRow("Product subtotal", fmtNaira(order.subtotal)));
+    host.appendChild(
+      factRow(
+        "Delivery fee",
+        order.deliveryFee != null
+          ? fmtNaira(order.deliveryFee) + " (paid separately)"
+          : "Paid separately to the rider"
+      )
+    );
+    host.appendChild(factRow("Product total", fmtNaira(order.total)));
+    host.appendChild(factRow(method.amountLabel, fmtNaira(order.total)));
     /* A payment reference is shown ONLY when the snapshot carries a
-       backend-verified one. Nothing is ever invented here. */
+       verified one. Nothing is ever invented here. */
     if (
       order.payment &&
       order.payment.verified === true &&
@@ -297,6 +327,12 @@
       host.appendChild(factRow("Payment reference", order.payment.reference));
     } else {
       host.appendChild(factRow("Payment reference", "No verified payment"));
+    }
+    var note = document.getElementById("fd-order-payment-note");
+    if (note) {
+      note.textContent =
+        method.detail +
+        " The website product total never includes the delivery fee.";
     }
   }
 
@@ -364,18 +400,27 @@
     if (!form || !select) {
       return;
     }
+    /* Retrying a failed load must not stack duplicate submit handlers.
+       The form keeps the latest order on the element so one handler can
+       always act on fresh data. */
+    form._fdOrder = order;
+    if (form._fdStatusWired === true) {
+      return;
+    }
+    form._fdStatusWired = true;
     select.addEventListener("change", function () {
       setStatusNote("", false);
     });
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
+      var current = form._fdOrder;
       var s = svc();
-      if (!s) {
+      if (!s || !current) {
         setStatusNote("Order data is unavailable. Please try again.", true);
         return;
       }
       var next = select.value;
-      if (next === order.status) {
+      if (next === current.status) {
         setStatusNote("That is already the current status — no change was made.", false);
         return;
       }
@@ -383,19 +428,20 @@
          persists. No artificial delay — the result lands immediately. */
       setStatusNote("", false);
       setSubmitting(true);
-      var result = s.updateOrderStatus(order.id, next);
+      var result = s.updateOrderStatus(current.id, next);
       setSubmitting(false);
       if (result.ok && result.order) {
-        order.status = result.order.status;
-        renderHeader(order);
-        renderPayment(order);
-        setStatusNote("Order status updated to “" + s.orderStatusMeta(order.status).label + "”.", false);
+        current.status = result.order.status;
+        form._fdOrder = current;
+        renderHeader(current);
+        renderPayment(current);
+        setStatusNote("Order status updated to “" + s.orderStatusMeta(current.status).label + "”.", false);
       } else {
         var message =
           (result.error && result.error.message) ||
           "The status could not be saved. Please try again.";
         setStatusNote(message, true);
-        select.value = order.status;
+        select.value = current.status;
         select.focus();
       }
     });

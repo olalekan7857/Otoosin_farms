@@ -41,9 +41,12 @@
     <link rel="stylesheet" href="assets/css/fresh-direct.css">
     <!-- Harvest Castle theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
     <link rel="stylesheet" href="assets/css/fd-theme.css">
+    <link rel="stylesheet" href="assets/css/otoosin-mobile-nav.css">
+    <link rel="stylesheet" href="assets/css/otoosin-footer.css">
     <!-- Apply the stored theme before first paint. Default is Light. -->
     <script>try{var fdT=localStorage.getItem("freshdirect_theme_v1");if(fdT==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(fdE){}</script>
 
+    <script src="assets/js/otoosin-mobile-nav.js" defer></script>
 </head>
 
 <body>
@@ -78,7 +81,6 @@
                     <li><a href="about.html">About</a></li>
                     <li><a href="index.html#how-it-works">How It Works</a></li>
                     <li><a href="contact.html">Contact</a></li>
-                    <li><a href="blog.html">Blog</a></li>
                     <li><a href="cart.html">Cart</a></li>
                     <li><a href="#" data-whatsapp="general">Order on WhatsApp</a></li>
                 </ul>
@@ -153,7 +155,7 @@
                                         <li><a href="about.html">About</a></li>
                                         <li><a href="index.html#how-it-works">How It Works</a></li>
                                         <li><a href="contact.html">Contact</a></li>
-                                        <li><a href="blog.html">Blog</a></li>
+
                                     </ul>
                                 </nav>
                             </div>
@@ -233,106 +235,65 @@
     </main>
 
     <!--==============================
-			Footer Area
-	==============================-->
-    <footer class="footer-wrapper footer-layout1" id="contact" data-bg-src="assets/img/bg/footer-bg-1-1.jpg">
-        <div class="footer-top">
-            <div class="container">
-                <div class="row g-5">
-                    <div class="col-lg-4 col-md-6">
-                        <div class="media-style1">
-                            <div class="media-icon"><img src="assets/img/icon/icon-1-3.png" alt="" aria-hidden="true" loading="lazy" decoding="async"></div>
-                            <div class="media-body">
-                                <h3 class="media-title">Visit us:</h3>
-                                <p class="media-info">No. 89, behind Foursquare Church, FUNAAB Alabata Road, Camp, Abeokuta</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="media-style1">
-                            <div class="media-icon"><img src="assets/img/icon/icon-1-1.png" alt="" aria-hidden="true" loading="lazy" decoding="async"></div>
-                            <div class="media-body">
-                                <h3 class="media-title">Order:</h3>
-                                <p class="media-info">Shop on the website<br>Mon - Sat: 09.00 to 06.00</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="media-style1">
-                            <div class="media-icon"><img src="assets/img/icon/icon-1-2.png" alt="" aria-hidden="true" loading="lazy" decoding="async"></div>
-                            <div class="media-body">
-                                <h3 class="media-title">WhatsApp:</h3>
-                                <p class="media-info"><a href="#" data-whatsapp="general">Chat with Harvest Castle to order</a></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="widget-area">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-xl-4 col-md-6">
+    Footer
+    ============================== -->
+    <footer class="footer-wrapper footer-layout1 oto-footer" id="footer">
+        <div class="container">
+            <div class="widget-area">
+                <div class="row g-4">
+                    <div class="col-lg-4">
                         <div class="widget footer-widget">
-                            <div class="vs-widget-about">
-                                <div class="footer-logo">
-                                    <a href="index.html" class="fd-logo" aria-label="Harvest Castle home"><img src="assets/img/harvest_castle/hc_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="42" height="42">Harvest<span>Castle</span></a>
-                                </div>
-                                <p class="footer-text">Farm produce sold directly to you. Shop online on the website, or order through WhatsApp — serving the FUNAAB and Abeokuta community.</p>
-                            </div>
+                            <a href="index.html" class="fd-logo oto-logo oto-footer-logo" aria-label="O'Toosin Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async" loading="lazy">O'Toosin<span> Farms</span></a>
+                            <p class="footer-text oto-footer-text">A meat shop selling pork, chicken, turkey, beef, goat meat and fish. Browse by meat type and state, order by the kilogram, and choose Pay Now or Pay on Delivery.</p>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3 col-xl-2">
-                        <div class="widget widget_categories footer-widget">
+                    <div class="col-6 col-lg-2">
+                        <div class="widget footer-widget">
                             <h3 class="widget_title">Shop</h3>
-                            <ul>
-                                <li><a href="product.html">All produce</a></li>
-                                <li><a href="product.html">Vegetables</a></li>
-                                <li><a href="product.html">Fruits</a></li>
-                                <li><a href="cart.html">Cart</a></li>
+                            <ul class="widget_categories">
+                                <li><a href="product.html">Shop All</a></li>
+                                <li><a href="product-category.html?category=Pork">Pork</a></li>
+                                <li><a href="product-category.html?category=Chicken">Chicken</a></li>
+                                <li><a href="product-category.html?category=Turkey">Turkey</a></li>
+                                <li><a href="product-category.html?category=Beef">Beef</a></li>
+                                <li><a href="product-category.html?category=Goat-Meat">Goat Meat</a></li>
+                                <li><a href="product-category.html?category=Fish">Fish</a></li>
                             </ul>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3 col-xl-2">
-                        <div class="widget widget_categories footer-widget">
-                            <h3 class="widget_title">Company</h3>
-                            <ul>
-                                <li><a href="index.html">Home</a></li>
-                                <li><a href="about.html">About</a></li>
-                                <li><a href="index.html#how-it-works">How It Works</a></li>
-                                <li><a href="contact.html">Contact</a></li>
-                                <li><a href="blog.html">Blog</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-xl-4">
+                    <div class="col-6 col-lg-3">
                         <div class="widget footer-widget">
-                            <h4 class="widget_title">Order directly</h4>
-                            <p class="footer-text">The fastest way to order is WhatsApp. Tap below and send your list.</p>
-                            <a href="#" class="fd-whatsapp-btn" data-whatsapp="general"><i class="fab fa-whatsapp" aria-hidden="true"></i><span>Order on WhatsApp</span></a>
+                            <h3 class="widget_title">Ordering</h3>
+                            <ul class="widget_categories">
+                                <li><a href="index.html#how-it-works">How It Works</a></li>
+                                <li><a href="product.html?state=fresh">Fresh</a></li>
+                                <li><a href="product.html?state=fried">Fried</a></li>
+                                <li><a href="product.html?state=frozen">Frozen</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="widget footer-widget">
+                            <h3 class="widget_title">Company</h3>
+                            <ul class="widget_categories">
+                                <li><a href="index.html">Home</a></li>
+                                <li><a href="about.html">About Us</a></li>
+                                <li><a href="contact.html">Contact</a></li>
+                                <li><a href="index.html#faq">FAQ</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="copyright-wrap">
-            <div class="container">
-                <div class="row justify-content-xl-between justify-content-center align-items-center">
-                    <div class="col-auto">
-                        <p class="copyright-text">Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">Harvest Castle</a>. All Rights Reserved.</p>
-                    </div>
-                    <div class="col-auto">
-                        <div class="copyright-menu">
-                            <ul class="list-unstyled">
-                                <!-- Later stage: Privacy / Terms pages. -->
-                                <li><a href="privacy.html">Privacy Policy</a></li>
-                                <li><a href="terms.html">Ordering Terms</a></li>
-                                <li><a href="contact.html">Contact</a></li>
-                                <li><a href="blog.html">Blog</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+        <div class="container">
+            <div class="copyright-wrap oto-copyright">
+                <p class="copyright-text">Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O'Toosin Farms</a>. All Rights Reserved.</p>
+                <ul class="oto-legal-links">
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
             </div>
         </div>
     </footer>
@@ -360,10 +321,11 @@
     <!-- Main Js File -->
     <script src="assets/js/main.js"></script>
     <!-- Harvest Castle config + cart + shop (single WhatsApp source) -->
-    <script src="assets/js/fresh-direct.js"></script>
+    <script src="assets/js/fresh-direct.js?v=7.0"></script>
     <script src="assets/js/fd-theme.js"></script>
 
 
+    <div data-otoosin-mobile-nav-mount></div>
 </body>
 
 

@@ -1,0 +1,710 @@
+/* ==========================================================================
+   O'Toosin Farms — Checkout page (checkout.html only)
+   Reuses the shared Shop header/footer, fresh-direct cart summary language
+   and the existing freshdirect_cart_v1 store. Page-level composition only.
+   ========================================================================== */
+
+.otoosin-checkout .fd-shop-intro.oto-checkout-intro {
+  background: var(--smoke-color);
+  padding-bottom: 38px;
+}
+
+.oto-checkout-intro .sec-title {
+  margin-bottom: 10px;
+}
+
+.oto-checkout-intro p:last-child {
+  max-width: 660px;
+  margin-bottom: 0;
+  color: var(--body-color);
+}
+
+.oto-checkout-section {
+  padding: 34px 0 72px;
+}
+
+.oto-checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.oto-checkout-form[hidden],
+#oto-checkout-main[hidden],
+.oto-checkout-empty[hidden] {
+  display: none;
+}
+
+#fd-checkout-form .form-control:focus,
+#fd-checkout-form .form-control:focus-visible {
+  border-color: var(--fd-focus);
+  outline: 3px solid var(--fd-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.oto-checkout-form .fd-checkout-card {
+  margin: 0;
+  border-radius: 22px;
+  padding: 24px 24px 22px;
+}
+
+.oto-checkout-form .fd-checkout-card > .row + .fd-field {
+  margin-top: 16px;
+}
+
+.oto-checkout-form .fd-checkout-card > legend {
+  font-size: 21px;
+  margin-bottom: 2px;
+}
+
+.oto-checkout-guest {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 15px 17px;
+  border: 1px solid #ececec;
+  border-radius: 18px;
+  background: var(--white-color);
+}
+
+.oto-checkout-guest > i {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--theme-color);
+  color: var(--secondary-color);
+  font-size: 15px;
+}
+
+.oto-checkout-guest strong {
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--title-font);
+  font-size: 15px;
+}
+
+.oto-checkout-guest span {
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* ---------- Payment choices ---------- */
+.oto-pay-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.oto-pay-option {
+  position: relative;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--white-color);
+}
+
+.oto-pay-option > input {
+  position: absolute;
+  display: block;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  visibility: visible;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.oto-pay-option:has(input:focus-visible) {
+  outline-color: var(--fd-focus);
+}
+
+.oto-pay-icon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: var(--smoke-color);
+  color: var(--secondary-color);
+  font-size: 17px;
+}
+
+.oto-pay-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oto-pay-copy strong {
+  display: block;
+  font-family: var(--title-font);
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.oto-pay-copy small {
+  display: block;
+  margin-top: 4px;
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.oto-pay-tick {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--secondary-color);
+  color: var(--white-color);
+  font-size: 10px;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.oto-pay-option:has(input:checked) .oto-pay-tick {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.oto-pay-option:has(input:checked) .oto-pay-icon {
+  background: var(--secondary-color);
+  color: var(--white-color);
+}
+
+.oto-pay-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--smoke-color);
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.oto-pay-note i {
+  margin-top: 3px;
+  color: var(--secondary-color);
+}
+
+/* ---------- Primary / secondary actions ---------- */
+.oto-checkout-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.oto-checkout-actions .vs-btn {
+  width: 100%;
+  min-height: 54px;
+  justify-content: center;
+  text-align: center;
+}
+
+.oto-checkout-actions .fd-ghost-btn {
+  width: 100%;
+  min-height: 48px;
+}
+
+/* ---------- Order summary ---------- */
+.oto-checkout-summary {
+  position: sticky;
+  top: 104px;
+  padding: 27px 25px 24px;
+  border-radius: 24px;
+  box-shadow: 0 18px 44px rgba(6, 65, 29, 0.06);
+}
+
+.oto-checkout-summary-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--secondary-color);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.oto-checkout-summary h2 {
+  margin-bottom: 18px;
+  font-size: 24px;
+}
+
+.oto-checkout-lines {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid #ececec;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.oto-checkout-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.oto-checkout-thumb {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  background: var(--smoke-color);
+  color: var(--secondary-color);
+  font-family: var(--title-font);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.oto-checkout-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.oto-checkout-item-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oto-checkout-item-copy strong {
+  display: block;
+  font-family: var(--title-font);
+  font-size: 14.5px;
+  line-height: 1.35;
+}
+
+.oto-checkout-item-copy strong a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.oto-checkout-item-copy strong a:hover {
+  color: var(--secondary-color);
+}
+
+.oto-checkout-item-copy span {
+  display: block;
+  margin-top: 2px;
+  color: var(--body-color);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.oto-checkout-item-total {
+  flex: 0 0 auto;
+  font-family: var(--title-font);
+  font-size: 14.5px;
+  white-space: nowrap;
+}
+
+.oto-checkout-summary .fd-cart-summary-row {
+  font-size: 14.5px;
+}
+
+.oto-checkout-summary .fd-cart-summary-row strong {
+  font-size: 17px;
+}
+
+.oto-checkout-delivery-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 2px 0 14px;
+  font-size: 14.5px;
+}
+
+.oto-checkout-delivery-row strong {
+  max-width: 58%;
+  color: var(--secondary-color);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.oto-checkout-summary .fd-cart-summary-row.is-total {
+  align-items: flex-start;
+  margin-top: 16px;
+  padding-top: 17px;
+  border-top-color: #e4e4e4;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.oto-checkout-summary .fd-cart-summary-row.is-total span {
+  max-width: 58%;
+  font-family: var(--body-font);
+  font-weight: 600;
+}
+
+.oto-checkout-summary .fd-cart-summary-row.is-total strong {
+  color: var(--secondary-color);
+  font-size: 25px;
+}
+
+.oto-checkout-pay-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 18px;
+  color: var(--body-color);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.oto-checkout-pay-summary i {
+  margin-top: 3px;
+  color: var(--secondary-color);
+}
+
+.oto-checkout-summary .fd-cart-summary-actions {
+  gap: 10px;
+}
+
+.oto-checkout-summary .fd-cart-summary-actions .vs-btn {
+  min-height: 54px;
+  font-size: 16px;
+}
+
+.oto-checkout-edit {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 10px;
+}
+
+/* ---------- Review ---------- */
+.oto-checkout-review {
+  background: var(--white-color);
+  border: 1px solid #ececec;
+  border-radius: 22px;
+  padding: 26px 24px;
+  box-shadow: 0 18px 44px rgba(6, 65, 29, 0.05);
+}
+
+.oto-checkout-review[hidden] {
+  display: none;
+}
+
+.oto-review-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--secondary-color);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.oto-checkout-review h2 {
+  margin: 0 0 6px;
+  font-size: 25px;
+}
+
+.oto-checkout-review h2:focus {
+  outline: none;
+}
+
+.oto-review-lead {
+  margin-bottom: 20px;
+  color: var(--body-color);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.oto-review-block {
+  padding: 18px 0;
+  border-top: 1px solid #ececec;
+}
+
+.oto-review-block h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+
+.oto-review-details {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.oto-review-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 150px) 1fr;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.oto-review-label {
+  color: var(--body-color);
+}
+
+.oto-review-row strong {
+  font-family: var(--title-font);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.oto-review-payment {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--smoke-color);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.oto-review-payment strong {
+  font-family: var(--title-font);
+  font-size: 15px;
+}
+
+.oto-review-payment span {
+  color: var(--body-color);
+}
+
+.oto-review-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 14px;
+}
+
+.oto-review-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.oto-review-items strong {
+  font-family: var(--title-font);
+  white-space: nowrap;
+}
+
+.oto-review-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #ececec;
+  font-family: var(--title-font);
+  font-size: 17px;
+}
+
+.oto-review-total strong {
+  color: var(--secondary-color);
+  font-size: 24px;
+}
+
+.oto-review-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--smoke-color);
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.oto-review-note i {
+  margin-top: 3px;
+  color: var(--secondary-color);
+}
+
+.oto-review-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.oto-review-actions .vs-btn {
+  width: 100%;
+  min-height: 54px;
+  justify-content: center;
+}
+
+.oto-review-actions .fd-ghost-btn {
+  width: 100%;
+  min-height: 48px;
+}
+
+/* ---------- Empty state ---------- */
+.oto-checkout-empty {
+  margin: 0 auto;
+}
+
+/* ---------- Dark theme surfaces ---------- */
+html[data-theme="dark"] .oto-checkout-guest,
+html[data-theme="dark"] .oto-pay-option,
+html[data-theme="dark"] .oto-checkout-review {
+  background: var(--fd-surface);
+  border-color: var(--fd-hairline);
+}
+
+html[data-theme="dark"] .oto-checkout-guest > i,
+html[data-theme="dark"] .oto-pay-icon,
+html[data-theme="dark"] .oto-checkout-thumb {
+  background: var(--fd-surface-2);
+}
+
+html[data-theme="dark"] .oto-pay-option:has(input:checked) .oto-pay-icon {
+  background: var(--secondary-color);
+  color: var(--white-color);
+}
+
+html[data-theme="dark"] .oto-pay-note,
+html[data-theme="dark"] .oto-review-payment,
+html[data-theme="dark"] .oto-review-note {
+  background: var(--fd-surface-2);
+}
+
+html[data-theme="dark"] .oto-checkout-lines,
+html[data-theme="dark"] .oto-review-block,
+html[data-theme="dark"] .oto-review-total {
+  border-color: var(--fd-hairline);
+}
+
+html[data-theme="dark"] .oto-checkout-thumb {
+  border-color: var(--fd-hairline);
+}
+
+html[data-theme="dark"] .oto-checkout-summary,
+html[data-theme="dark"] .oto-checkout-review {
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .oto-checkout-summary-kicker,
+html[data-theme="dark"] .oto-review-kicker,
+html[data-theme="dark"] .oto-checkout-delivery-row strong,
+html[data-theme="dark"] .oto-checkout-summary .fd-cart-summary-row.is-total strong,
+html[data-theme="dark"] .oto-review-total strong,
+html[data-theme="dark"] .oto-checkout-item-copy strong a:hover,
+html[data-theme="dark"] .oto-pay-note i,
+html[data-theme="dark"] .oto-checkout-pay-summary i,
+html[data-theme="dark"] .oto-review-note i {
+  color: var(--fd-brand-green-text);
+}
+
+html[data-theme="dark"] .oto-pay-tick,
+html[data-theme="dark"] .oto-pay-option:has(input:checked) .oto-pay-icon {
+  background: var(--fd-brand-green-text);
+  color: var(--fd-bg);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991px) {
+  .oto-checkout-summary {
+    position: static;
+    margin-top: 8px;
+  }
+
+  .oto-checkout-section {
+    padding-bottom: 64px;
+  }
+}
+
+@media (max-width: 575px) {
+  .oto-checkout-section {
+    padding: 24px 0 58px;
+  }
+
+  .oto-checkout-form .fd-checkout-card {
+    padding: 21px 18px 20px;
+    border-radius: 18px;
+  }
+
+  .oto-checkout-form .fd-checkout-card > legend {
+    font-size: 19px;
+  }
+
+  .oto-pay-option {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .oto-pay-icon {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+
+  .oto-pay-copy small {
+    font-size: 13px;
+  }
+
+  .oto-checkout-summary,
+  .oto-checkout-review {
+    padding: 22px 18px 20px;
+    border-radius: 19px;
+  }
+
+  .oto-review-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .oto-review-label {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .oto-checkout-item {
+    gap: 10px;
+  }
+
+  .oto-checkout-thumb {
+    flex-basis: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .oto-checkout-item-copy strong {
+    font-size: 13.5px;
+  }
+
+  .oto-checkout-item-total {
+    font-size: 13.5px;
+  }
+}

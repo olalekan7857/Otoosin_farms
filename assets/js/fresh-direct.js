@@ -18,7 +18,7 @@
     // WHATSAPP_NUMBER. Every WhatsApp entry point site-wide follows it.
     whatsappNumber: "2349011058873",
     defaultMessage:
-      "Hello Harvest Castle! I would like to place an order for farm produce.",
+      "Hello O'Toosin Farms! I would like to place an order for meat.",
     currency: "NGN",
     shopUrl: "product.html",
   };
@@ -37,13 +37,13 @@
   function messageFor(el) {
     var mode = el.getAttribute("data-whatsapp") || "general";
     if (mode === "product") {
-      var name = el.getAttribute("data-product") || "farm produce";
+      var name = el.getAttribute("data-product") || "meat";
       var qty = el.getAttribute("data-qty") || "1";
       var unit = el.getAttribute("data-unit") || "";
       var variant = el.getAttribute("data-variant") || "";
       var what = variant ? name + " — " + variant : name;
       return (
-        "Hello Harvest Castle! I would like to order: " +
+        "Hello O'Toosin Farms! I would like to order: " +
         what +
         " (Qty: " +
         qty +
@@ -53,14 +53,14 @@
     }
     if (mode === "cart") {
       return (
-        "Hello Harvest Castle! I would like to place an order from the website. " +
+        "Hello O'Toosin Farms! I would like to place an order from the website. " +
         "Please help me complete my order."
       );
     }
     if (mode === "restock") {
-      var item = el.getAttribute("data-product") || "farm produce";
+      var item = el.getAttribute("data-product") || "meat";
       return (
-        "Hello Harvest Castle! Please let me know when " +
+        "Hello O'Toosin Farms! Please let me know when " +
         item +
         " is back in stock. Thank you."
       );
@@ -289,6 +289,11 @@
       if (!Array.isArray(items)) {
         return [];
       }
+      // Drop the retired Harvest Castle produce seed (mock-*) from older
+      // carts so the O'Toosin meat catalogue is the only possible source.
+      items = items.filter(function (item) {
+        return item && !/^mock-/.test(String(item.id || ""));
+      });
       // Migrate pre-variant lines (Stage 2) to keyed lines.
       for (var i = 0; i < items.length; i++) {
         if (!items[i].key) {
@@ -315,6 +320,11 @@
       window.localStorage.setItem(CART_KEY, JSON.stringify(items));
     } catch (e) {
       /* storage unavailable (private mode) — cart still works in memory */
+    }
+    try {
+      document.dispatchEvent(new CustomEvent("freshdirect:cart"));
+    } catch (e) {
+      /* CustomEvent unavailable — other surfaces still re-render normally */
     }
   }
 
@@ -537,9 +547,10 @@
     refreshBadges();
     renderCartPanel();
     renderCartPage();
-    var label = line.name + (line.variant ? " — " + line.variant : "");
+    var label = line.name + (line.variant && !lineIsKg ? " — " + line.variant : "");
     showToast(
-      "Added to cart: " + label + " × " + fdQtyLabel(lineQty, lineIsKg)
+      "Added to cart: " + label + (lineIsKg ? " · " : " × ") +
+      fdQtyLabel(lineQty, lineIsKg)
     );
     return true;
   }
@@ -604,7 +615,18 @@
     suffix.className = "fd-qty-unit";
     suffix.setAttribute("aria-hidden", "true");
     suffix.textContent = "kg";
-    return [input, suffix];
+    var row = document.createElement("span");
+    row.className = "fd-qty-entry-row";
+    row.appendChild(input);
+    row.appendChild(suffix);
+    var hint = document.createElement("span");
+    hint.className = "fd-kg-hint";
+    hint.textContent = "Type exact kg";
+    var entry = document.createElement("span");
+    entry.className = "fd-qty-entry has-kg-input";
+    entry.appendChild(row);
+    entry.appendChild(hint);
+    return [entry];
   }
 
   // Commit path: single store write, then re-render every surface.
@@ -649,7 +671,11 @@
     if (li) {
       var amount = li.querySelector(".fd-cart-line strong, .fd-cartpage-line");
       if (amount) {
-        amount.textContent = fmtNaira(fdLineTotal(price, qty));
+        var lineTotal = fmtNaira(fdLineTotal(price, qty));
+        amount.textContent = lineTotal;
+        if (amount.classList.contains("fd-cartpage-line")) {
+          amount.setAttribute("aria-label", "Line total: " + lineTotal);
+        }
       }
       // Keep the "1.4 kg · ₦2,800" line in step with the typed quantity.
       var liveMeta = li.querySelector("[data-cart-meta]");
@@ -658,9 +684,6 @@
         if (kind === "kg") {
           liveMeta.textContent =
             fdQtyLabel(qty, true) + " · " + fmtNaira(price);
-        } else if (kind === "kg-each") {
-          liveMeta.textContent =
-            fdQtyLabel(qty, true) + " · " + fmtNaira(price) + " each";
         }
       }
     }
@@ -715,6 +738,7 @@
       }
       var parsed = fdParseKgQty(t.value);
       if (parsed === null) {
+        showToast("Enter a weight between 0.5 kg and 99 kg.");
         renderCartPanel();
         renderCartPage();
         return;
@@ -778,7 +802,7 @@
 
   // Corrupted lines (unknown product, malformed data) must never crash the
   // page: they render as removable "unavailable" rows and are excluded
-  // from the subtotal and the WhatsApp order. Prices are never invented.
+  // from the product subtotal. Prices are never invented.
   function cartPageValid(item) {
     if (
       !item ||
@@ -809,27 +833,6 @@
       return { src: entry.images[0].src, alt: entry.images[0].alt || item.name };
     }
     return { src: "", alt: item.name };
-  }
-
-  function cartWhatsAppMessage(validItems, subtotal) {
-    var lines = ["Hello Harvest Castle! I would like to order:"];
-    for (var i = 0; i < validItems.length; i++) {
-      var it = validItems[i];
-      var variantLabel = it.variant || it.unit || "";
-      var itKg = fdIsKgItem(it);
-      lines.push("");
-      lines.push(
-        i + 1 + ". " + it.name + (variantLabel ? " — " + variantLabel : "") +
-        " × " + fdQtyLabel(it.qty, itKg)
-      );
-      lines.push(
-        fmtNaira(it.price) + " each — " + fmtNaira(fdLineTotal(it.price, it.qty))
-      );
-    }
-    lines.push("");
-    lines.push("Subtotal: " + fmtNaira(subtotal));
-    lines.push("Please confirm availability and delivery details.");
-    return lines.join("\n");
   }
 
   function cartPageNode(item) {
@@ -881,26 +884,51 @@
     name.appendChild(link);
     var meta = document.createElement("span");
     var pageKg = fdIsKgItem(item);
-    // Same as the preview: KG lines show the live total, not the static pack.
+    var catalogEntry = FD_CATALOG[item.id];
     if (pageKg) {
-      meta.textContent =
-        fdQtyLabel(item.qty, true) + " · " + fmtNaira(item.price) + " each";
-      meta.setAttribute("data-cart-meta", "kg-each");
+      var metaParts = [];
+      if (catalogEntry && catalogEntry.condition) {
+        metaParts.push(catalogEntry.condition);
+      }
+      var meatType = item.category || (catalogEntry && catalogEntry.category) || "";
+      if (meatType) {
+        metaParts.push(meatType);
+      }
+      metaParts.push(fmtNaira(item.price) + "/kg");
+      meta.textContent = metaParts.join(" · ");
+      meta.setAttribute("data-cart-meta", "kg-price");
     } else {
       meta.textContent =
         (variantLabel ? variantLabel + " · " : "") + fmtNaira(item.price) + " each";
     }
     idWrap.appendChild(name);
     idWrap.appendChild(meta);
+    var lineWrap = document.createElement("div");
+    lineWrap.className = "fd-cartpage-line-wrap";
+    var lineLabel = document.createElement("span");
+    lineLabel.className = "fd-cartpage-line-label";
+    lineLabel.textContent = "Line total";
     var line = document.createElement("strong");
     line.className = "fd-cartpage-line";
     line.textContent = fmtNaira(fdLineTotal(item.price, item.qty));
+    line.setAttribute(
+      "aria-label",
+      "Line total: " + fmtNaira(fdLineTotal(item.price, item.qty))
+    );
+    lineWrap.appendChild(lineLabel);
+    lineWrap.appendChild(line);
     top.appendChild(idWrap);
-    top.appendChild(line);
+    top.appendChild(lineWrap);
     info.appendChild(top);
 
     var actions = document.createElement("div");
     actions.className = "fd-cartpage-actions";
+    var weight = document.createElement("div");
+    weight.className = "fd-cartpage-weight";
+    var weightLabel = document.createElement("span");
+    weightLabel.className = "fd-cartpage-weight-label";
+    weightLabel.textContent = "Weight";
+    weight.appendChild(weightLabel);
     var qty = document.createElement("div");
     qty.className = "fd-qty";
     qty.setAttribute("role", "group");
@@ -921,7 +949,8 @@
       qty.appendChild(pageValueNodes[pvn]);
     }
     qty.appendChild(inc);
-    actions.appendChild(qty);
+    weight.appendChild(qty);
+    actions.appendChild(weight);
 
     var remove = document.createElement("button");
     remove.type = "button";
@@ -952,6 +981,8 @@
     if (!items.length) {
       main.setAttribute("hidden", "");
       empty.removeAttribute("hidden");
+      setCartLineCount(wrap, 0);
+      setCartMoney(wrap, 0);
       return;
     }
     empty.setAttribute("hidden", "");
@@ -963,31 +994,79 @@
         valid.push(items[i]);
       }
     }
-    var subtotal = cartSubtotal(valid);
+    setCartLineCount(wrap, items.length);
+    setCartMoney(wrap, cartSubtotal(valid));
+  }
+
+  function setCartLineCount(wrap, count) {
+    var nodes = wrap.querySelectorAll("[data-cart-line-count]");
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = count + (count === 1 ? " item" : " items");
+    }
+  }
+
+  function setCartMoney(wrap, amount) {
+    var value = fmtNaira(amount);
     var subs = wrap.querySelectorAll("[data-cart-subtotal]");
     for (var s = 0; s < subs.length; s++) {
-      subs[s].textContent = fmtNaira(subtotal);
+      subs[s].textContent = value;
     }
     var totals = wrap.querySelectorAll("[data-cart-total]");
     for (var t = 0; t < totals.length; t++) {
-      totals[t].textContent = fmtNaira(subtotal);
+      totals[t].textContent = value;
     }
-    var wa = document.getElementById("fd-cart-wa");
-    if (wa) {
-      wa.setAttribute(
-        "href",
-        "https://wa.me/" + FRESH_DIRECT.whatsappNumber + "?text=" +
-          encodeURIComponent(cartWhatsAppMessage(valid, subtotal))
-      );
-      wa.setAttribute("target", "_blank");
-      wa.setAttribute("rel", "noopener");
+  }
+
+  // Static prototype only: first visit with no saved cart key gets two
+  // illustrative lines. An existing cart (including a deliberately emptied
+  // "[]" cart) is never overwritten or repopulated.
+  function cartSeedDemoOnce() {
+    var raw = null;
+    try {
+      raw = window.localStorage.getItem(CART_KEY);
+    } catch (e) {
+      return;
     }
+    if (raw !== null) {
+      return;
+    }
+    var picks = [
+      { id: "demo-pork-chops", qty: 1.5 },
+      { id: "demo-whole-chicken", qty: 1 },
+    ];
+    var items = [];
+    for (var i = 0; i < picks.length; i++) {
+      var product = FD_CATALOG[picks[i].id];
+      if (!product) {
+        continue;
+      }
+      var variant = fdDefaultVariant(product);
+      items.push({
+        key: product.id + "__" + variant.id,
+        id: product.id,
+        name: product.name,
+        variant: variant.label,
+        price: variant.price,
+        qty: picks[i].qty,
+        unit: variant.label,
+        category: product.category,
+        image: product.images[0].src,
+        alt: product.images[0].alt,
+      });
+    }
+    if (!items.length) {
+      return;
+    }
+    cartSave(items);
+    refreshBadges();
+    renderCartPanel();
   }
 
   function wireCartPage() {
     if (!document.getElementById("fd-cart-wrap")) {
       return;
     }
+    cartSeedDemoOnce();
     renderCartPage();
   }
 
@@ -1276,155 +1355,219 @@
      gallery, or related-products logic below.
      status: "in" | "limited" | "out" (never invent counts).
      ========================================================================== */
+  /* O'Toosin Farms meat catalogue.
+     Prices are illustrative Naira-per-kilogram demo values for this static
+     prototype. Django will replace this object with real stock and pricing.
+     Each meat is sold by weight, so every line uses one 1kg unit and the
+     PDP quantity control collects kilograms. */
   var FD_CATALOG = {
-    "mock-tomatoes": {
-      id: "mock-tomatoes",
-      name: "Fresh Tomatoes",
-      category: "Tomatoes",
+    "demo-pork-chops": {
+      id: "demo-pork-chops",
+      name: "Pork Chops",
+      category: "Pork",
+      group: "Red meat",
+      condition: "Fresh",
+      cut: "Bone-in chops",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
       status: "in",
       badge: "Fresh",
       defaultVariant: "1kg",
-      desc: "Fresh red tomatoes, picked ripe and handled carefully. An everyday staple for stews, sauces and salads.",
-      images: [{ src: "assets/img/product/product-1-1.png", alt: "Fresh red tomatoes", w: 203, h: 190 }],
-      variants: [
-        { id: "0.5kg", label: "0.5kg", price: 1200 },
-        { id: "1kg", label: "1kg", price: 2500 },
-        { id: "2kg", label: "2kg", price: 4800 },
-        { id: "5kg", label: "5kg", price: 11500 },
-      ],
+      desc: "Tender pork chops with a rich flavour, great for grilling or pan-searing.",
+      images: [{ src: "assets/img/meat/pork-chops.svg", alt: "Fresh pork chops", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 4800 }],
     },
-    "mock-pepper": {
-      id: "mock-pepper",
-      name: "Red Scotch Pepper",
-      category: "Peppers",
+    "demo-pork-belly": {
+      id: "demo-pork-belly",
+      name: "Pork Belly",
+      category: "Pork",
+      group: "Red meat",
+      condition: "Frozen",
+      cut: "Belly cut",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      status: "in",
+      badge: "Frozen",
+      defaultVariant: "1kg",
+      desc: "Layered pork belly that crisps beautifully when roasted or fried.",
+      images: [{ src: "assets/img/meat/pork-belly.svg", alt: "Frozen pork belly strips", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 4200 }],
+    },
+    "demo-whole-chicken": {
+      id: "demo-whole-chicken",
+      name: "Whole Chicken",
+      category: "Chicken",
+      group: "Poultry",
+      condition: "Fresh",
+      cut: "Whole bird",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
       status: "in",
       badge: "Fresh",
       defaultVariant: "1kg",
-      desc: "Hot red scotch peppers for soups, stews and sauces. Choose the pack size you need.",
-      images: [{ src: "assets/img/product/product-1-2.png", alt: "Fresh red scotch peppers", w: 212, h: 190 }],
-      variants: [
-        { id: "0.5kg", label: "0.5kg", price: 1700 },
-        { id: "1kg", label: "1kg", price: 3200 },
-        { id: "2kg", label: "2kg", price: 6200 },
-      ],
+      desc: "A whole chicken for roasting, grilling or cutting into pieces for stews.",
+      images: [{ src: "assets/img/meat/whole-chicken.svg", alt: "Whole fresh chicken", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 3500 }],
     },
-    "mock-onions": {
-      id: "mock-onions",
-      name: "Sweet Onions",
-      category: "Onions",
+    "demo-chicken-wings": {
+      id: "demo-chicken-wings",
+      name: "Chicken Wings",
+      category: "Chicken",
+      group: "Poultry",
+      condition: "Frozen",
+      cut: "Wings",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
       status: "in",
-      defaultVariant: "2kg",
-      desc: "Firm sweet onions for cooking and salads. Choose the pack size you need.",
-      images: [{ src: "assets/img/product/product-1-3.png", alt: "Fresh sweet onions", w: 201, h: 190 }],
-      variants: [
-        { id: "1kg", label: "1kg", price: 1500 },
-        { id: "2kg", label: "2kg", price: 2800 },
-        { id: "5kg", label: "5kg", price: 6800 },
-      ],
-    },
-    "mock-ugu": {
-      id: "mock-ugu",
-      name: "Fresh Ugu Leaves",
-      category: "Vegetables",
-      status: "limited",
-      defaultVariant: "bunch",
-      desc: "Freshly harvested ugu leaves, sold per bunch. Best used soon after delivery.",
-      images: [{ src: "assets/img/product/product-1-4.png", alt: "Fresh ugu leaves", w: 240, h: 190 }],
-      variants: [{ id: "bunch", label: "Per bunch", price: 800 }],
-    },
-    "mock-bananas": {
-      id: "mock-bananas",
-      name: "Ripe Bananas",
-      category: "Fruits",
-      status: "in",
-      defaultVariant: "bunch",
-      desc: "Ripe bananas, sold per bunch. Good for eating fresh and for smoothies.",
-      images: [{ src: "assets/img/product/product-1-5.png", alt: "Ripe yellow bananas", w: 110, h: 190 }],
-      variants: [
-        { id: "bunch", label: "1 bunch", price: 1500 },
-        { id: "3bunch", label: "3 bunches", price: 4200 },
-      ],
-    },
-    "mock-oranges": {
-      id: "mock-oranges",
-      name: "Fresh Oranges",
-      category: "Fruits",
-      status: "in",
-      defaultVariant: "2kg",
-      desc: "Juicy fresh oranges, sold by weight. Choose the pack size you need.",
-      images: [{ src: "assets/img/product/product-1-6.png", alt: "Fresh juicy oranges", w: 173, h: 190 }],
-      variants: [
-        { id: "1kg", label: "1kg", price: 1100 },
-        { id: "2kg", label: "2kg", price: 2000 },
-        { id: "5kg", label: "5kg", price: 4800 },
-      ],
-    },
-    "mock-yam": {
-      id: "mock-yam",
-      name: "White Yam",
-      category: "Tubers",
-      status: "in",
-      defaultVariant: "tuber",
-      desc: "Whole white yam tubers, sold per tuber.",
-      images: [{ src: "assets/img/product/product-1-7.png", alt: "Fresh white yam tubers", w: 134, h: 190 }],
-      variants: [{ id: "tuber", label: "Per tuber", price: 4500 }],
-    },
-    "mock-pineapple": {
-      id: "mock-pineapple",
-      name: "Ripe Pineapple",
-      category: "Fruits",
-      status: "in",
-      defaultVariant: "piece",
-      desc: "Ripe pineapples, sold per piece.",
-      images: [{ src: "assets/img/product/product-1-8.png", alt: "Ripe pineapple", w: 210, h: 190 }],
-      variants: [{ id: "piece", label: "Per piece", price: 1200 }],
-    },
-    "mock-tatashe": {
-      id: "mock-tatashe",
-      name: "Tatashe Peppers",
-      category: "Peppers",
-      status: "out",
+      badge: "Frozen",
       defaultVariant: "1kg",
-      desc: "Mild tatashe peppers for stews and sauces. Currently out of stock — message us and we will let you know when it returns.",
-      images: [{ src: "assets/img/product/product-1-2.png", alt: "Tatashe peppers, currently out of stock", w: 212, h: 190 }],
-      variants: [
-        { id: "0.5kg", label: "0.5kg", price: 1500 },
-        { id: "1kg", label: "1kg", price: 2800 },
-      ],
+      desc: "Meaty chicken wings for grilling, frying or oven baking.",
+      images: [{ src: "assets/img/meat/chicken-wings.svg", alt: "Frozen chicken wings", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 4000 }],
     },
-    "mock-spring-onions": {
-      id: "mock-spring-onions",
-      name: "Spring Onions",
-      category: "Vegetables",
+    "demo-chicken-drumsticks": {
+      id: "demo-chicken-drumsticks",
+      name: "Chicken Drumsticks",
+      category: "Chicken",
+      group: "Poultry",
+      condition: "Frozen",
+      cut: "Drumsticks",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
       status: "in",
-      defaultVariant: "bunch",
-      desc: "Fresh spring onions, sold per bunch.",
-      images: [{ src: "assets/img/product/product-1-3.png", alt: "Fresh spring onions", w: 201, h: 190 }],
-      variants: [{ id: "bunch", label: "Per bunch", price: 600 }],
+      badge: "Frozen",
+      defaultVariant: "1kg",
+      desc: "Juicy drumsticks for the oven, grill or a family stew.",
+      images: [{ src: "assets/img/meat/chicken-drumsticks.svg", alt: "Frozen chicken drumsticks", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 3800 }],
     },
-    "mock-cassava": {
-      id: "mock-cassava",
-      name: "Cassava Tubers",
-      category: "Tubers",
+    "demo-turkey-breast": {
+      id: "demo-turkey-breast",
+      name: "Turkey Breast",
+      category: "Turkey",
+      group: "Poultry",
+      condition: "Fresh",
+      cut: "Boneless breast",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
       status: "in",
-      defaultVariant: "3kg",
-      desc: "Fresh cassava tubers, sold by weight. Choose the pack size you need.",
-      images: [{ src: "assets/img/product/product-1-7.png", alt: "Fresh cassava tubers", w: 134, h: 190 }],
-      variants: [
-        { id: "2kg", label: "2kg", price: 1700 },
-        { id: "3kg", label: "3kg", price: 2400 },
-        { id: "5kg", label: "5kg", price: 3800 },
-      ],
+      badge: "Fresh",
+      defaultVariant: "1kg",
+      desc: "Lean turkey breast, easy to roast whole or slice for sandwiches.",
+      images: [{ src: "assets/img/meat/turkey-breast.svg", alt: "Fresh turkey breast with carved slices", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 5200 }],
     },
-    "mock-scent-leaves": {
-      id: "mock-scent-leaves",
-      name: "Scent Leaves",
-      category: "Herbs & Spices",
+    "demo-beef-steak": {
+      id: "demo-beef-steak",
+      name: "Beef Steak",
+      category: "Beef",
+      group: "Red meat",
+      condition: "Fresh",
+      cut: "Steak cuts",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
       status: "in",
-      defaultVariant: "bunch",
-      desc: "Fragrant scent leaves, sold per bunch.",
-      images: [{ src: "assets/img/product/product-1-4.png", alt: "Fresh scent leaves", w: 240, h: 190 }],
-      variants: [{ id: "bunch", label: "Per bunch", price: 500 }],
+      badge: "Fresh",
+      defaultVariant: "1kg",
+      desc: "Marbled beef steak with a bold flavour and a tender bite.",
+      images: [{ src: "assets/img/meat/beef-steak.svg", alt: "Fresh marbled beef steak", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 7500 }],
+    },
+    "demo-beef-brisket": {
+      id: "demo-beef-brisket",
+      name: "Beef Brisket",
+      category: "Beef",
+      group: "Red meat",
+      condition: "Frozen",
+      cut: "Brisket joint",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      status: "in",
+      badge: "Frozen",
+      defaultVariant: "1kg",
+      desc: "A slow-cooking beef brisket that becomes tender and rich.",
+      images: [{ src: "assets/img/meat/beef-brisket.svg", alt: "Frozen beef brisket joint", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 6800 }],
+    },
+    "demo-goat-meat": {
+      id: "demo-goat-meat",
+      name: "Goat Meat",
+      category: "Goat Meat",
+      group: "Red meat",
+      condition: "Fresh",
+      cut: "Mixed bone-in pieces",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1kg",
+      desc: "Clean goat meat pieces for stews, soups and traditional dishes.",
+      images: [{ src: "assets/img/meat/goat-meat.svg", alt: "Fresh cubed goat meat", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 6200 }],
+    },
+    "demo-fried-goat-meat": {
+      id: "demo-fried-goat-meat",
+      name: "Fried Goat Meat",
+      category: "Goat Meat",
+      group: "Red meat",
+      condition: "Fried",
+      cut: "Fried pieces",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      status: "in",
+      badge: "Fried",
+      defaultVariant: "1kg",
+      desc: "Fried goat meat with a deep savoury flavour and a long pantry life.",
+      images: [{ src: "assets/img/meat/goat-meat.svg", alt: "Fried goat meat pieces", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 8000 }],
+    },
+    "demo-fresh-catfish": {
+      id: "demo-fresh-catfish",
+      name: "Fresh Catfish",
+      category: "Fish",
+      group: "Seafood",
+      condition: "Fresh",
+      cut: "Whole, cleaned",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1kg",
+      desc: "Whole fresh catfish, cleaned and ready for pepper soup or grilling.",
+      images: [{ src: "assets/img/meat/catfish.svg", alt: "Fresh whole catfish", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 3200 }],
+    },
+    "demo-tilapia": {
+      id: "demo-tilapia",
+      name: "Tilapia",
+      category: "Fish",
+      group: "Seafood",
+      condition: "Frozen",
+      cut: "Whole",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      status: "in",
+      badge: "Frozen",
+      defaultVariant: "1kg",
+      desc: "Whole tilapia with firm white flesh, ideal for frying or baking.",
+      images: [{ src: "assets/img/meat/tilapia.svg", alt: "Frozen whole tilapia", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 2900 }],
+    },
+    "demo-fried-catfish": {
+      id: "demo-fried-catfish",
+      name: "Fried Catfish",
+      category: "Fish",
+      group: "Seafood",
+      condition: "Fried",
+      cut: "Fried whole",
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      status: "in",
+      badge: "Fried",
+      defaultVariant: "1kg",
+      desc: "Fried catfish that adds a rich smoked flavour to soups and stews.",
+      images: [{ src: "assets/img/meat/catfish.svg", alt: "Fried catfish", w: 480, h: 360 }],
+      variants: [{ id: "1kg", label: "1kg", price: 6500 }],
     },
   };
 
@@ -1433,9 +1576,9 @@
   function pdpReadId() {
     try {
       var params = new URLSearchParams(window.location.search);
-      return params.get("id") || "mock-tomatoes";
+      return params.get("id") || "demo-whole-chicken";
     } catch (e) {
-      return "mock-tomatoes";
+      return "demo-whole-chicken";
     }
   }
 
@@ -1457,7 +1600,7 @@
         if (missing) {
           missing.removeAttribute("hidden");
         }
-        document.title = "Product not found | Harvest Castle";
+        document.title = "Product not found | O'Toosin Farms";
         return;
       }
       renderPDP(root, product);
@@ -1476,12 +1619,16 @@
 
   function pdpStatusMeta(status) {
     if (status === "out") {
-      return { badge: "Out of Stock", cls: "is-out", schema: "https://schema.org/OutOfStock" };
+      return { badge: "Out of Stock", stockLabel: "Out of stock", cls: "is-out", stockCls: "is-out", schema: "https://schema.org/OutOfStock" };
     }
     if (status === "limited") {
-      return { badge: "Limited", cls: "is-low", schema: "https://schema.org/LimitedAvailability" };
+      return { badge: "Limited", stockLabel: "Limited availability", cls: "is-low", stockCls: "is-low", schema: "https://schema.org/LimitedAvailability" };
     }
-    return { badge: "Available", cls: "", schema: "https://schema.org/InStock" };
+    return { badge: "Available", stockLabel: "In stock", cls: "", stockCls: "is-in", schema: "https://schema.org/InStock" };
+  }
+
+  function pdpCategorySlug(category) {
+    return String(category || "").replace(/\s+/g, "-");
   }
 
   function renderPDP(root, product) {
@@ -1499,20 +1646,35 @@
     };
 
     // Identity.
-    setText("fd-pdp-cat", product.category);
+    setText("fd-pdp-cat", product.group ? product.category + " \u00b7 " + product.group : product.category);
     setText("fd-pdp-name", product.name);
     setText("fd-pdp-desc", product.desc);
     setText("fd-pdp-crumb", product.name);
+    setText("fd-pdp-condition", product.condition || product.badge || meta.badge);
+    setText("fd-pdp-cut", product.cut || "");
     var crumb = document.getElementById("fd-pdp-crumb");
     if (crumb) {
       crumb.setAttribute("aria-current", "page");
+    }
+    var crumbCat = document.getElementById("fd-pdp-crumb-cat");
+    if (crumbCat) {
+      crumbCat.textContent = product.category;
+      crumbCat.setAttribute(
+        "href",
+        "product-category.html?category=" + encodeURIComponent(pdpCategorySlug(product.category))
+      );
     }
 
     // Availability badge.
     var badge = document.getElementById("fd-pdp-badge");
     if (badge) {
-      badge.textContent = meta.badge;
+      badge.textContent = product.badge || meta.badge;
       badge.className = "fd-badge" + (meta.cls ? " " + meta.cls : "");
+    }
+    var stock = document.getElementById("fd-pdp-stock");
+    if (stock) {
+      stock.textContent = meta.stockLabel;
+      stock.className = "fd-pdp-stock " + meta.stockCls;
     }
 
     // Gallery (structure supports many images; mock has one).
@@ -1598,10 +1760,24 @@
       qtyInit.textContent = "1";
     }
 
-    // Purchase actions.
+    // Purchase actions use the website cart/checkout only.
     var addBtn = document.getElementById("fd-pdp-add");
-    var waBtn = document.getElementById("fd-pdp-wa");
+    var buyBtn = document.getElementById("fd-pdp-buy");
     var out = product.status === "out";
+    var addSelection = function () {
+      return cartAddLine({
+        key: product.id + "__" + state.variant.id,
+        id: product.id,
+        name: product.name,
+        variant: state.variant.label,
+        price: state.variant.price,
+        qty: state.qty,
+        unit: state.variant.label,
+        category: product.category,
+        image: product.images[0].src,
+        alt: product.images[0].alt,
+      });
+    };
     if (addBtn) {
       if (out) {
         addBtn.disabled = true;
@@ -1609,19 +1785,7 @@
         addBtn.textContent = "Out of Stock";
       } else {
         addBtn.addEventListener("click", function () {
-          var ok = cartAddLine({
-            key: product.id + "__" + state.variant.id,
-            id: product.id,
-            name: product.name,
-            variant: state.variant.label,
-            price: state.variant.price,
-            qty: state.qty,
-            unit: state.variant.label,
-            category: product.category,
-            image: product.images[0].src,
-            alt: product.images[0].alt,
-          });
-          if (ok) {
+          if (addSelection()) {
             // Reset for the next selection so a later variant/quantity
             // choice is always deliberate (never a stale qty surprise).
             state.qty = 1;
@@ -1632,21 +1796,28 @@
         });
       }
     }
-    if (waBtn) {
+    if (buyBtn) {
       if (out) {
-        waBtn.setAttribute("data-whatsapp", "restock");
-        waBtn.setAttribute("data-product", product.name);
-        waBtn.removeAttribute("data-variant");
-        waBtn.removeAttribute("data-qty");
-        var waLabel = waBtn.querySelector("span");
-        if (waLabel) {
-          waLabel.textContent = "Notify me on WhatsApp";
-        }
+        buyBtn.disabled = true;
+        buyBtn.setAttribute("aria-disabled", "true");
+        buyBtn.textContent = "Out of Stock";
+      } else {
+        buyBtn.addEventListener("click", function () {
+          if (addSelection()) {
+            window.location.href = "checkout.html";
+          } else {
+            showToast("Something went wrong. Please try again.");
+          }
+        });
       }
     }
 
     // Supporting facts.
-    setText("fd-pdp-fact-cat", product.category);
+    setText("fd-pdp-fact-cat", product.group || product.category);
+    setText("fd-pdp-fact-type", product.category);
+    setText("fd-pdp-fact-condition", product.condition || product.badge || meta.badge);
+    setText("fd-pdp-fact-cut", product.cut || "");
+    setText("fd-pdp-fact-price", product.priceBasis || "Per kilogram");
     setText(
       "fd-pdp-fact-options",
       product.variants.map(function (v) {
@@ -1668,6 +1839,16 @@
     if (!el) {
       return null;
     }
+    var entry = el.closest ? el.closest(".fd-qty-entry") : null;
+    if (entry) {
+      entry.classList.toggle("has-kg-input", isKg);
+      entry.classList.toggle("is-each", !isKg);
+    }
+    var suffix = document.getElementById("fd-pdp-qty-unit");
+    if (suffix) {
+      suffix.textContent = isKg ? "kg" : "";
+      suffix.hidden = !isKg;
+    }
     var wantInput = isKg;
     var hasInput = el.tagName === "INPUT";
     if (wantInput && !hasInput) {
@@ -1679,6 +1860,7 @@
       input.setAttribute("autocapitalize", "off");
       input.setAttribute("spellcheck", "false");
       input.setAttribute("aria-label", "Quantity in kilograms");
+      input.setAttribute("aria-describedby", "fd-pdp-kg-hint");
       input.className = "fd-pdp-qty-input";
       input.value = fdFormatQty(state.qty, true);
       if (el.parentNode) {
@@ -1751,19 +1933,9 @@
     }
     var detail = document.getElementById("fd-pdp-total-detail");
     if (detail) {
-      detail.textContent = "· " + v.label + " × " + fdQtyLabel(state.qty, isKg);
-    }
-    var waBtn = document.getElementById("fd-pdp-wa");
-    if (waBtn && state.product.status !== "out") {
-      waBtn.setAttribute("data-product", state.product.name);
-      waBtn.setAttribute("data-variant", v.label);
-      waBtn.setAttribute("data-qty", fdFormatQty(state.qty, isKg));
-      if (isKg) {
-        waBtn.setAttribute("data-unit", "kg");
-      } else {
-        waBtn.removeAttribute("data-unit");
-      }
-      wireWhatsApp();
+      detail.textContent =
+        "\u00b7 " + fdQtyLabel(state.qty, isKg) + " \u00d7 " + fmtNaira(v.price) +
+        (isKg ? "/kg" : " each");
     }
   }
 
@@ -1771,7 +1943,7 @@
     var v = state.variant;
     var isKg = fdIsKgVariant(state.variant);
     setText("fd-pdp-price", fmtNaira(v.price));
-    setText("fd-pdp-unit", v.label);
+    setText("fd-pdp-unit", state.product.priceUnit || v.label);
     var el = pdpEnsureQtyControl(state);
     if (el) {
       if (el.tagName === "INPUT") {
@@ -1887,6 +2059,10 @@
       }
     }
     var pick = same.concat(rest).slice(0, 4);
+    // Keep the canonical meat order (Pork first) in every mixed list.
+    pick.sort(function (a, b) {
+      return ids.indexOf(a) - ids.indexOf(b);
+    });
     grid.innerHTML = "";
     for (var j = 0; j < pick.length; j++) {
       var node = pdpCardNode(FD_CATALOG[pick[j]]);
@@ -1898,9 +2074,9 @@
         shopDescFor(dynCard);
       }
     }
-    // Refresh the header count after the dynamic render (pool = catalog
-    // minus the product being viewed).
-    fdUpdateCount("fd-pdp-related", "fd-pdp-count", ids.length - 1);
+    // Refresh the header count after the dynamic render. The related grid
+    // deliberately shows four recommendations, so report that same pool.
+    fdUpdateCount("fd-pdp-related", "fd-pdp-count", pick.length);
   }
 
   /* ==========================================================================
@@ -1911,7 +2087,7 @@
           data-category / data-stock]
          > .fd-badge? + .product-img > img + .product-about
            (cat / title / unit / .fd-buy-row[price + Add] /
-            .fd-secondary-row[View + WhatsApp])
+            .fd-secondary-row[View product])
      data-unit carries the variant ID (e.g. "1kg", "bunch") matching Shop;
      the visible unit line is derived by fdUnitDisplay() to match Shop text
      (e.g. "1kg pack", "Per bunch"). Price is ALWAYS the default variant —
@@ -1990,17 +2166,13 @@
       about +=
         '<button type="button" class="vs-btn fd-add-btn" disabled aria-disabled="true">Out of Stock</button></div>' +
         '<div class="fd-secondary-row"><a href="product-details.html?id=' + esc(p.id) +
-        '" class="fd-view-link">View product</a>' +
-        '<a href="#" class="fd-wa-link" data-whatsapp="restock" data-product="' + esc(p.name) +
-        '">Notify me</a></div>';
+        '" class="fd-view-link">View product</a></div>';
     } else {
       about +=
         '<button type="button" class="vs-btn fd-add-btn" data-add-to-cart="' + esc(p.id) +
         '">Add to Cart</button></div>' +
         '<div class="fd-secondary-row"><a href="product-details.html?id=' + esc(p.id) +
-        '" class="fd-view-link">View product</a>' +
-        '<a href="#" class="fd-wa-link" data-whatsapp="product" data-product="' + esc(p.name) +
-        '" data-qty="1" data-unit="' + esc(def.id) + '">WhatsApp</a></div>';
+        '" class="fd-view-link">View product</a></div>';
     }
     about += "</div>";
 
@@ -2010,8 +2182,6 @@
       article.appendChild(tmp.firstChild);
     }
     col.appendChild(article);
-    // WhatsApp links created here need wiring.
-    wireWhatsApp();
     return col;
   }
 
@@ -2027,24 +2197,40 @@
   };
 
   function pdpSEO(product, meta) {
-    document.title = product.name + " | Harvest Castle";
+    document.title = product.name + " | O'Toosin Farms";
     var base = product.variants[0];
     for (var i = 0; i < product.variants.length; i++) {
       if (product.variants[i].id === product.defaultVariant) {
         base = product.variants[i];
       }
     }
+    var condition = product.condition || product.badge || "";
+    var description =
+      product.name + " (" + condition + " " + product.category + ") from O'Toosin Farms. " +
+      "Priced per kilogram. Choose your quantity and check out on the website.";
     var desc = document.querySelector('meta[name="description"]');
     if (desc) {
-      desc.setAttribute(
+      desc.setAttribute("content", description);
+    }
+    var keywords = document.querySelector('meta[name="keywords"]');
+    if (keywords) {
+      keywords.setAttribute(
         "content",
-        product.name + " (" + product.category + ") from Harvest Castle. " +
-          "Choose your weight, add to cart, or order through WhatsApp."
+        product.name + ", " + product.category + ", " + condition +
+          " meat, O'Toosin Farms, buy meat by kilogram"
       );
     }
     var og = document.querySelector('meta[property="og:title"]');
     if (og) {
-      og.setAttribute("content", product.name + " | Harvest Castle");
+      og.setAttribute("content", product.name + " | O'Toosin Farms");
+    }
+    var ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) {
+      ogDesc.setAttribute("content", description);
+    }
+    var ogImage = document.querySelector('meta[property="og:image"]');
+    if (ogImage) {
+      ogImage.setAttribute("content", product.images[0].src);
     }
     var ld = document.getElementById("fd-pdp-jsonld");
     if (ld) {
@@ -2055,11 +2241,18 @@
         category: product.category,
         description: product.desc,
         image: product.images[0].src,
+        brand: { "@type": "Brand", name: "O'Toosin Farms" },
         offers: {
           "@type": "Offer",
           priceCurrency: "NGN",
           price: base.price,
           availability: meta.schema,
+          priceSpecification: {
+            "@type": "UnitPriceSpecification",
+            price: base.price,
+            priceCurrency: "NGN",
+            unitText: "kg",
+          },
         },
       });
     }
@@ -2557,7 +2750,7 @@
       if (checkoutMethod() === "whatsapp") {
         // Snapshot first (independent of the cart, which is preserved),
         // then hand off to WhatsApp and land on the confirmation state.
-        var waOrder = stampOrder(result.order, "whatsapp-submitted");
+        var waOrder = stampOrder(result.order, "submitted");
         saveLastOrder(waOrder);
         window.open(checkoutWhatsAppHref(waOrder), "_blank", "noopener");
         checkoutGo(confirmationUrl(waOrder));
@@ -2591,7 +2784,7 @@
           checkoutStatus("Please fix the highlighted fields.", true);
           return;
         }
-        var waOrder = stampOrder(result.order, "whatsapp-submitted");
+        var waOrder = stampOrder(result.order, "submitted");
         saveLastOrder(waOrder);
         window.open(checkoutWhatsAppHref(waOrder), "_blank", "noopener");
         checkoutGo(confirmationUrl(waOrder));
@@ -2632,7 +2825,7 @@
      STAGE 6 — Order confirmation (order-confirmation.html + checkout
      handoff). One saved snapshot (sessionStorage freshdirect_last_order)
      is the ONLY thing the confirmation page reads: the URL carries just
-     the order id, never payment state. Statuses: whatsapp-submitted |
+     the order id, never payment state. Statuses: submitted |
      pending | failed | paid. "paid" renders ONLY when the snapshot itself
      carries payment.verified === true plus a reference (a backend-set
      flag) — URL parameters can never confer it. The FD-XXXXXX reference
@@ -2950,13 +3143,13 @@
     }
 
     var waHref = checkoutWhatsAppHref(order);
-    if (order.status === "whatsapp-submitted") {
+    if (order.status === "submitted") {
       mount.appendChild(
         confirmCard({
           icon: "fab fa-whatsapp",
-          badge: "WhatsApp order",
+          badge: "Order submitted",
           title: "Thank you, " + confirmFirstName(order),
-          lead: "Your order details are ready — send the WhatsApp message to Harvest Castle to confirm it. Nothing is paid until we confirm with you.",
+          lead: "Your order details are ready — send the WhatsApp message to O'Toosin Farms to confirm it. Nothing is paid until we confirm with you.",
           ref: order.id,
           order: order,
           note: "Delivery is arranged personally with you — any delivery fee will be confirmed before anything is prepared.",
@@ -3314,6 +3507,24 @@
     window.addEventListener("resize", requestPaint);
     paint();
   }
+
+  // Minimal read-only cart bridge for page scripts that extend the
+  // storefront (checkout). Same store, same line maths, no second cart.
+  window.FreshDirectCart = window.FreshDirectCart || {
+    load: cartLoad,
+    valid: cartPageValid,
+    media: cartPageMedia,
+    subtotal: cartSubtotal,
+    lineTotal: fdLineTotal,
+    qtyLabel: fdQtyLabel,
+    isKg: fdIsKgItem,
+    fmtNaira: fmtNaira,
+    seedDemo: cartSeedDemoOnce,
+    refresh: function () {
+      refreshBadges();
+      renderCartPanel();
+    },
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {

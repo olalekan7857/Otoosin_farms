@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Harvest Castle Admin — Local seller-data store
+   O'Toosin Farms Admin — Local seller-data store
    --------------------------------------------------------------------------
    Vanilla JS, no dependencies, no framework. Admin-scoped: never touches
    the customer cart store or fresh-direct.js.
@@ -26,8 +26,8 @@
        shape { id, name, category, status, badge?, defaultVariant, desc,
        images[], variants[] }.
      - Keep getLocal()/upsert()/isLocal() signatures so every consumer
-       (fd-admin-products-data.js, fd-admin-dashboard.js,
-       fd-admin-product-editor.js) is reused untouched.
+       (fd-admin-products-data.js, fd-admin-product-editor.js) is reused
+       untouched.
      - Do NOT hardcode endpoint URLs here.
    ========================================================================== */
 (function () {

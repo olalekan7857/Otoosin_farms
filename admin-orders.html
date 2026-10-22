@@ -4,18 +4,18 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Orders | Harvest Castle Admin</title>
-    <meta name="author" content="Harvest Castle">
+    <title>Orders | O'Toosin Farms Admin</title>
+    <meta name="author" content="O'Toosin Farms">
     <!-- Admin is private: never index admin pages or expose order data. -->
     <meta name="robots" content="NOINDEX,NOFOLLOW">
-    <meta name="description" content="Private Harvest Castle seller order list. Sign-in required.">
+    <meta name="description" content="Private O'Toosin Farms seller order list.">
 
     <!-- Mobile Specific Metas -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Favicons - Place favicon.ico in the root directory -->
-    <link rel="shortcut icon" href="assets/img/harvest_castle/hc_favicon.png" type="image/png">
-    <link rel="icon" href="assets/img/harvest_castle/hc_favicon.png" type="image/png">
+    <link rel="shortcut icon" href="assets/img/harvest_castle/of_favicon.png" type="image/png">
+    <link rel="icon" href="assets/img/harvest_castle/of_favicon.png" type="image/png">
 
     <!--==============================
 	  Google Fonts (same as storefront)
@@ -33,14 +33,14 @@
     <link rel="stylesheet" href="assets/css/fontawesome.min.css">
     <!-- Theme Custom CSS -->
     <link rel="stylesheet" href="assets/css/harvest-castle.css">
-    <!-- Harvest Castle foundation overrides -->
+    <!-- Storefront foundation overrides -->
     <link rel="stylesheet" href="assets/css/fresh-direct.css">
-    <!-- Harvest Castle admin foundation (Stages 1–4).
+    <!-- O'Toosin Farms admin foundation (shared shell + table styles).
          ?v= pin: force browsers to fetch the latest order styles
          instead of serving a stale cached copy. Bump when this file
          changes again. -->
-    <link rel="stylesheet" href="assets/css/fd-admin.css?v=6.0">
-    <!-- Harvest Castle theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
+    <link rel="stylesheet" href="assets/css/fd-admin.css?v=7.3">
+    <!-- Theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
     <link rel="stylesheet" href="assets/css/fd-theme.css">
     <!-- Apply the stored theme before first paint. Default is Light. -->
     <script>try{var fdT=localStorage.getItem("freshdirect_theme_v1");if(fdT==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(fdE){}</script>
@@ -60,9 +60,9 @@
         <!-- Sidebar navigation -->
         <aside class="fd-admin-sidebar" id="fd-admin-sidebar" aria-label="Admin navigation">
             <div class="fd-admin-brand">
-                <a href="index.html" class="fd-logo" aria-label="Harvest Castle storefront"><img src="assets/img/harvest_castle/hc_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="36" height="36">Harvest<span>Castle</span></a>
+                <a href="index.html" class="fd-logo" aria-label="O'Toosin Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="59" height="42">O'Toosin<span> Farms</span></a>
             </div>
-            <p class="fd-admin-role">Seller Admin</p>
+            <p class="fd-admin-role">Store Admin</p>
             <nav class="fd-admin-nav" aria-label="Management sections">
                 <ul>
                     <li>
@@ -76,8 +76,13 @@
                         </a>
                     </li>
                     <li>
-                        <a href="admin-blog.html" class="fd-admin-nav-link">
-                            <i class="fas fa-newspaper" aria-hidden="true"></i>Blog
+                        <a href="admin-inventory.html" class="fd-admin-nav-link">
+                            <i class="fas fa-warehouse" aria-hidden="true"></i>Inventory
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin-categories.html" class="fd-admin-nav-link">
+                            <i class="fas fa-layer-group" aria-hidden="true"></i>Categories
                         </a>
                     </li>
                     <li>
@@ -93,11 +98,10 @@
                 </ul>
             </nav>
             <div class="fd-admin-side-foot">
-                <!-- Disabled until a seller session exists; wired to FreshDirectAdminAuth.signOut(). -->
-                <button type="button" class="fd-admin-logout" id="fd-admin-logout" aria-disabled="true" title="Sign in first — log out is available after sign-in">
-                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>Log Out
-                </button>
-                <p class="fd-admin-logout-hint">Log out is available after you sign in.</p>
+                <a class="fd-admin-logout" href="admin-login.html">
+                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i>Staff sign-in
+                </a>
+                <p class="fd-admin-logout-hint">Open the staff access page.</p>
             </div>
         </aside>
 
@@ -111,7 +115,7 @@
                     <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
                 <h1 class="fd-admin-title">Orders</h1>
-                <span class="fd-admin-context">Seller area &middot; order management</span>
+                <span class="fd-admin-context">Store admin &middot; order management</span>
                 <button type="button" class="icon-btn fd-theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
                     <i class="fas fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
                     <i class="fas fa-sun" data-theme-icon="sun" aria-hidden="true" hidden></i>
@@ -172,15 +176,14 @@
                             <label class="fd-shop-select" for="fd-orders-status">Order status
                                 <select id="fd-orders-status" class="form-select">
                                     <option value="all">All statuses</option>
-                                    <option value="whatsapp-submitted">WhatsApp order</option>
                                     <option value="pending">Pending</option>
                                     <option value="paid">Paid</option>
                                     <option value="failed">Failed</option>
                                 </select>
                             </label>
-                            <label class="fd-shop-select" for="fd-orders-payment">Payment
+                            <label class="fd-shop-select" for="fd-orders-payment">Payment status
                                 <select id="fd-orders-payment" class="form-select">
-                                    <option value="all">All payments</option>
+                                    <option value="all">All payment statuses</option>
                                     <option value="unpaid">Unpaid</option>
                                     <option value="pending">Pending</option>
                                     <option value="paid">Paid</option>
@@ -191,8 +194,7 @@
                             <label class="fd-shop-select" for="fd-orders-delivery">Delivery
                                 <select id="fd-orders-delivery" class="form-select">
                                     <option value="all">All delivery</option>
-                                    <option value="on-campus">On Campus</option>
-                                    <option value="off-campus">Off Campus</option>
+                                    <option value="address">Delivery address</option>
                                 </select>
                             </label>
                             <label class="fd-shop-select" for="fd-orders-sort">Sort by
@@ -217,8 +219,8 @@
                                         <th scope="col">Customer</th>
                                         <th scope="col">Date</th>
                                         <th scope="col">Items</th>
-                                        <th scope="col">Total</th>
-                                        <th scope="col">Payment</th>
+                                        <th scope="col">Product total</th>
+                                        <th scope="col">Payment status</th>
                                         <th scope="col">Order status</th>
                                         <th scope="col">Action</th>
                                     </tr>
@@ -230,7 +232,7 @@
                         <div class="fd-dash-empty" id="fd-orders-empty-all" hidden>
                             <i class="far fa-receipt" aria-hidden="true"></i>
                             <h3>No orders yet</h3>
-                            <p>Orders placed through Harvest Castle will appear here.</p>
+                            <p>Orders placed through O'Toosin Farms will appear here.</p>
                         </div>
 
                         <div class="fd-dash-empty" id="fd-orders-empty-filtered" hidden>
@@ -242,13 +244,13 @@
                             </div>
                         </div>
 
-                        <p class="fd-dash-hint">Totals are the amounts recorded when each order was placed. Payment and order status are tracked separately — an order marked paid without a verified payment shows as Unverified.</p>
+                        <p class="fd-dash-hint">Product totals are the amounts recorded when each order was placed; the delivery fee is arranged separately with the rider and is not part of this figure. Payment status and order status are tracked separately — an order marked paid without a verified payment shows as Unverified.</p>
                     </section>
 
                 </div>
 
                 <p class="fd-dash-foot-note">
-                    Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">Harvest Castle</a>. Seller area.
+                    Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O'Toosin Farms</a>. Store admin.
                 </p>
             </main>
         </div>
@@ -256,7 +258,7 @@
 
     <!-- Admin JS only: deliberately NOT loading fresh-direct.js so the
          customer cart store can never leak into the admin. -->
-    <script src="assets/js/fd-admin.js"></script>
+    <script src="assets/js/fd-admin.js?v=6.8"></script>
     <script src="assets/js/fd-theme.js"></script>
     <!-- Settings record (Stage 5: seller record kept in this browser;
          the order service below reads the saved WhatsApp number here). -->

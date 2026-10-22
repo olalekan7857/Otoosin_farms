@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Harvest Castle Admin — Stage 1 foundation (admin shell + login)
+   O'Toosin Farms Admin — Stage 1 foundation (admin shell + login)
    --------------------------------------------------------------------------
    Scoped ENTIRELY under `.fd-admin` so customer storefront styles are never
    affected. Reuses the existing project system only:
@@ -217,9 +217,9 @@
   width: 44px;
   height: 44px;
   border-radius: 0;
-  border: 1px solid var(--border-color);
-  background: var(--white-color);
-  color: var(--title-color);
+  border: 1px solid var(--theme-color);
+  background: var(--theme-color);
+  color: var(--black-color);
   font-size: 18px;
   cursor: pointer;
 }
@@ -246,9 +246,57 @@
 }
 
 /* ---------- Login card ---------- */
+/* Standalone sign-in page: no sidebar, menu or topbar — the card is the
+   only surface, with the theme toggle floating cleanly at top-right. */
+.fd-admin-login .fd-admin-shell--login {
+  display: block;
+}
+
+.fd-admin-login .fd-admin-main {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.fd-admin-login .fd-admin-login-theme {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  z-index: 80;
+  display: flex;
+  align-items: center;
+}
+
+.fd-admin-login .fd-admin-login-theme .fd-theme-toggle {
+  background: var(--fd-surface);
+  border: 1px solid var(--fd-hairline);
+  border-radius: 12px;
+  color: var(--fd-text);
+}
+
+html[data-theme="dark"] .fd-admin-login .fd-admin-login-theme .fd-theme-toggle {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.fd-admin-login .fd-admin-login-content {
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 92px 24px 48px;
+}
+
 .fd-admin-login-wrap {
+  width: 100%;
   max-width: 480px;
   margin: 0 auto;
+}
+
+@media (max-width: 575px) {
+  .fd-admin.fd-admin-login .fd-admin-login-content {
+    padding: 84px 14px 32px;
+  }
 }
 
 .fd-admin-card {
@@ -471,6 +519,9 @@
     bottom: 0;
     width: min(300px, 86vw);
     flex-basis: auto;
+    /* Above the base menu (z-index 900) like the storefront drawer is
+       above the storefront base menu. */
+    z-index: 960;
     transform: translateX(-105%);
     transition: transform ease 0.3s;
     box-shadow: none;
@@ -485,7 +536,7 @@
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 55;
+    z-index: 950;
     background: rgba(0, 0, 0, 0.5);
     border: none;
     padding: 0;
@@ -535,7 +586,7 @@
 }
 
 /* ==========================================================================
-   Harvest Castle Admin — Stage 2 dashboard (admin-dashboard.html only)
+   O'Toosin Farms Admin — Stage 2 dashboard (admin-dashboard.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-dash-*). Every value reuses the existing system:
      tokens  -> style.css :root (theme/secondary/title/body/smoke/border/
@@ -557,6 +608,21 @@
   margin: 0;
   font-size: 15px;
   max-width: 68ch;
+}
+
+html[data-theme="dark"] .fd-dash-card-icon {
+  background: var(--fd-surface-2);
+  color: var(--fd-brand-green-text);
+}
+
+/* Sample order references are plain text, not links: the dashboard must
+   not imply that clicking a demonstration record opens a real order. */
+.fd-admin .fd-dash-ref {
+  font-family: var(--title-font);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: var(--title-color);
 }
 
 /* Dashboard buttons keep their natural width (Stage 1 forces .vs-btn
@@ -790,6 +856,60 @@
   white-space: nowrap;
 }
 
+/* Dashboard order summary: seven readable columns on desktop, horizontal
+   scroll inside the wrapper on smaller screens. */
+.fd-admin .fd-dash-orders-table {
+  min-width: 840px;
+}
+
+.fd-admin .fd-dash-items {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--body-color);
+}
+
+.fd-admin .fd-dash-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-admin .fd-dash-pay-method {
+  font-family: var(--title-font);
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--title-color);
+  white-space: nowrap;
+}
+
+.fd-admin .fd-dash-pay-state {
+  font-size: 12.5px;
+  color: var(--body-color);
+  white-space: nowrap;
+}
+
+/* The order table keeps its full seven-column layout on every screen and
+   scrolls INSIDE this wrapper. The wrapper is the only scroll container,
+   so the page itself can never gain a horizontal scrollbar. */
+.fd-admin .fd-dash-orders-wrap {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 1023px) {
+  .fd-admin .fd-dash-orders-table {
+    min-width: 860px;
+  }
+
+  .fd-admin .fd-dash-orders-table th,
+  .fd-admin .fd-dash-orders-table td {
+    padding: 12px 14px;
+  }
+}
+
 /* ---------- Product availability list ---------- */
 .fd-dash-products {
   list-style: none;
@@ -1002,7 +1122,7 @@
 }
 
 /* ==========================================================================
-   Harvest Castle Admin — Stage 3A product list (admin-products.html only)
+   O'Toosin Farms Admin — Stage 3A product list (admin-products.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-prod-*). Reuses the existing system exactly:
      controls -> .fd-shop-search / .fd-shop-select / .form-control /
@@ -1013,8 +1133,9 @@
      states   -> .fd-admin-notice / .fd-dash-empty (Stages 1–2)
      buttons  -> .vs-btn + .fd-ghost-btn (template / fresh-direct.css)
    All selectors stay under .fd-admin so the storefront can never change.
-   No Grid/List toggle by decision: the table is the management-efficient
-   presentation; rows transform into cards on small screens instead.
+   No Grid/List toggle by decision: one card list keeps the same layout
+   from desktop to mobile, with search, filters and sorting applied to the
+   rendered product cards.
    ========================================================================== */
 
 /* ---------- List header: title + count left, primary action right ---------- */
@@ -1029,6 +1150,18 @@
 
 .fd-prod-head-text h2 {
   margin: 0 0 4px 0;
+}
+
+.fd-prod-overview .fd-prod-head {
+  margin-bottom: 18px;
+}
+
+.fd-prod-overview .fd-prod-head .fd-dash-lead {
+  margin-bottom: 0;
+}
+
+.fd-prod-summary {
+  margin-top: 0;
 }
 
 /* ---------- Toolbar: search owns a full row, selects share the rest -------
@@ -1070,12 +1203,12 @@
   width: 172px;
 }
 
-.fd-prod-toolbar #fd-prod-avail {
-  width: 135px;
+.fd-prod-toolbar #fd-prod-state {
+  width: 140px;
 }
 
 .fd-prod-toolbar #fd-prod-sort {
-  width: 170px;
+  width: 210px;
 }
 
 .fd-prod-toolbar #fd-prod-clear {
@@ -1131,6 +1264,10 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+}
+
+.fd-admin .fd-prod-card[hidden] {
+  display: none;
 }
 
 .fd-prod-card {
@@ -1273,11 +1410,19 @@
   min-width: 0;
 }
 
-/* ---------- Product actions: compact tappable pair, never cramped ------
-   View is a real storefront link (new tab, admin state preserved).
-   Edit links to the product editor (?id= stable product ID).
-   There is intentionally no Delete control. These bordered buttons are
-   controls (shared with Orders), not information boxes. */
+.fd-prod-unit {
+  font-family: var(--body-font);
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--body-color);
+  white-space: nowrap;
+}
+
+/* ---------- Product actions: compact tappable control, never cramped ----
+   View is a real storefront link (new tab, admin state preserved). The
+   product editor is not yet wired to these catalogue IDs, so no per-row
+   Edit link is offered. There is intentionally no Delete control. These
+   bordered buttons are controls, not information boxes. */
 .fd-prod-actions {
   display: flex;
   gap: 8px;
@@ -1351,7 +1496,7 @@
   }
 
   .fd-prod-toolbar #fd-prod-cat,
-  .fd-prod-toolbar #fd-prod-avail,
+  .fd-prod-toolbar #fd-prod-state,
   .fd-prod-toolbar #fd-prod-sort {
     width: 100%;
   }
@@ -1547,22 +1692,18 @@
   }
 }
 
-/* ---------- Product cards: tablet -----------------------------------------
-   Identity spans the full row; variants and price/actions share the
-   second row — efficient without crowding. */
+/* ---------- Product cards: tablet and desktop ----------------------------
+   One efficient row: identity on the left, price and actions on the right.
+   The same cards stack on phones, so there is only one component. */
 @media (min-width: 768px) {
   .fd-prod-card {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 14px 20px;
+    gap: 14px 24px;
     align-items: center;
   }
 
   .fd-prod-card-top {
-    grid-column: 1 / -1;
-  }
-
-  .fd-prod-variants {
     grid-column: 1;
   }
 
@@ -1579,31 +1720,16 @@
   }
 }
 
-/* ---------- Product cards: desktop ----------------------------------------
-   One efficient row: identity | variants | price-over-actions. Columns
-   align across cards; generous gutters replace every vertical rule. */
 @media (min-width: 1024px) {
   .fd-prod-card {
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) auto;
-    gap: 8px 28px;
+    grid-template-columns: minmax(0, 1.45fr) auto;
+    gap: 14px 28px;
     padding: 20px 24px;
-  }
-
-  .fd-prod-card-top {
-    grid-column: 1;
-  }
-
-  .fd-prod-variants {
-    grid-column: 2;
-  }
-
-  .fd-prod-card-foot {
-    grid-column: 3;
   }
 }
 
 /* ==========================================================================
-   Harvest Castle Admin — Stage 3B product editor (admin-product-edit.html only)
+   O'Toosin Farms Admin — Stage 3B product editor (admin-product-edit.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-edit-*). Reuses the existing system exactly:
      shell    -> .fd-admin-shell / sidebar / topbar (Stage 1, untouched)
@@ -1818,6 +1944,66 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* ---------- Price per kilogram ----------------------------------------- */
+.fd-admin .fd-edit-price-field {
+  max-width: 460px;
+}
+
+.fd-admin .fd-edit-price-input {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--smoke-color);
+  overflow: hidden;
+}
+
+.fd-admin .fd-edit-price-input .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 50px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.fd-admin .fd-edit-price-input .form-control:focus {
+  box-shadow: none;
+}
+
+.fd-admin .fd-edit-price-input:focus-within {
+  outline: 2px solid var(--secondary-color);
+  outline-offset: 2px;
+}
+
+.fd-admin .fd-edit-price-input:has(.form-control[aria-invalid="true"]) {
+  border-color: var(--error-color);
+}
+
+.fd-admin .fd-edit-price-prefix,
+.fd-admin .fd-edit-price-suffix {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  font-family: var(--title-font);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--body-color);
+}
+
+.fd-admin .fd-edit-price-suffix {
+  border-left: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.fd-admin .fd-edit-result-price {
+  font-family: var(--title-font);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--title-color);
 }
 
 /* ---------- Availability: the three storefront states, nothing more ----- */
@@ -2180,7 +2366,7 @@
 }
 
 /* ==========================================================================
-   Harvest Castle Admin — Stage 4 order management (admin-orders.html +
+   O'Toosin Farms Admin — Stage 4 order management (admin-orders.html +
    admin-order.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-orders-* / .fd-order-*). Reuses the existing
@@ -2651,7 +2837,7 @@
 }
 
 /* ==========================================================================
-   Harvest Castle Admin — Stage 5 settings (admin-settings.html only)
+   O'Toosin Farms Admin — Stage 5 settings (admin-settings.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-set-* / .fd-required). Reuses the existing system
    exactly:
@@ -2942,5 +3128,217 @@
 
   .fd-admin .fd-dash-section {
     padding: 16px 12px;
+  }
+}
+
+/* ---------- Order detail: item thumbnail + product cell ---------------- */
+.fd-admin .fd-order-item-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.fd-admin .fd-order-item-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: var(--smoke-color);
+  color: var(--body-color);
+  font-size: 18px;
+}
+
+.fd-admin .fd-order-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fd-admin .fd-order-item-text strong {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Admin mobile base navigation ------------------------------
+   Mirrors the storefront's fixed base navigation for the admin area:
+   five primary destinations, icon + short label, and an accent active
+   state. Hidden on desktop; the persistent sidebar remains the desktop
+   navigation. Never rendered on the standalone sign-in page. */
+.fd-admin-base-nav {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  /* Use the storefront's page canvas behind the admin shell. Without this,
+     the admin body's grey shows in the device safe-area / overscroll strip
+     below the white base navigation, while the storefront (white canvas)
+     stays flush to the screen edge. */
+  html {
+    background-color: var(--body-bg);
+  }
+
+  /* Same container properties as .otoosin-mobile-nav (the storefront base
+     menu), including its exact box model, padding, border reset and safe
+     area handling. */
+  .fd-admin-base-nav {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 5px 6px calc(5px + env(safe-area-inset-bottom, 0px));
+    background: var(--fd-surface);
+    border: 0;
+    border-top: 1px solid var(--fd-hairline);
+    border-radius: 0;
+    box-shadow: 0 -10px 30px rgba(6, 65, 29, 0.12);
+    font-family: var(--title-font);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .fd-admin-base-nav ul {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fd-admin-base-nav li {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .fd-admin-base-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 54px;
+    padding: 6px 2px;
+    border-radius: 16px;
+    color: var(--fd-text-2);
+    text-align: center;
+    text-decoration: none;
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .fd-admin-base-nav__item:hover {
+    color: var(--fd-brand-green-text);
+    background: var(--fd-surface-2);
+  }
+
+  .fd-admin-base-nav__item:focus-visible {
+    outline: 3px solid var(--fd-focus);
+    outline-offset: -1px;
+  }
+
+  .fd-admin-base-nav__item.is-active,
+  .fd-admin-base-nav__item[aria-current="page"] {
+    color: var(--fd-brand-green-text);
+  }
+
+  .fd-admin-base-nav__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 26px;
+    border-radius: 9999px;
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .fd-admin-base-nav__item.is-active .fd-admin-base-nav__icon,
+  .fd-admin-base-nav__item[aria-current="page"] .fd-admin-base-nav__icon {
+    background: var(--theme-color);
+    color: var(--secondary-color);
+  }
+
+  .fd-admin-base-nav__label {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.fd-admin-base-nav-on .fd-admin-main {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 400px) {
+  .fd-admin-base-nav {
+    padding: 4px 5px calc(4px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .fd-admin-base-nav__item {
+    min-height: 52px;
+    padding: 5px 1px;
+    border-radius: 14px;
+  }
+
+  .fd-admin-base-nav__label {
+    font-size: 11px;
+  }
+
+  .fd-admin-base-nav__icon {
+    width: 32px;
+    height: 24px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 991px) and (max-height: 500px) {
+  .fd-admin-base-nav {
+    padding: 3px 5px calc(3px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .fd-admin-base-nav__item {
+    min-height: 44px;
+    gap: 1px;
+    padding: 3px 2px;
+    border-radius: 13px;
+  }
+
+  .fd-admin-base-nav__label {
+    font-size: 10px;
+  }
+
+  .fd-admin-base-nav__icon {
+    width: 30px;
+    height: 22px;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-admin-base-nav__item,
+  .fd-admin-base-nav__icon {
+    transition: none;
+  }
+}
+
+@media print {
+  .fd-admin-base-nav {
+    display: none !important;
   }
 }

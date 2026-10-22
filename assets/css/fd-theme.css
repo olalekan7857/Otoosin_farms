@@ -243,8 +243,15 @@ html[data-theme="dark"] .fd-step:hover {
 
 /* Brand-green small text turns luminous so it stays readable on dark
    (fills keep the original brand greens). */
-html[data-theme="dark"] .fd-logo {
+html[data-theme="dark"] .fd-logo,
+html[data-theme="dark"] .sec-subtitle,
+html[data-theme="dark"] .fd-breadcrumb a,
+html[data-theme="dark"] .main-menu a[aria-current="page"] {
   color: var(--fd-brand-green-text);
+}
+
+html[data-theme="dark"] .vs-mobile-menu ul li a[aria-current="page"] {
+  color: var(--fd-brand-green-text) !important;
 }
 html[data-theme="dark"] .footer-wrapper .fd-logo {
   color: var(--white-color);
@@ -360,6 +367,25 @@ html[data-theme="dark"] .fd-admin-notice.is-dev {
 html[data-theme="dark"] .fd-admin-notice.is-error,
 html[data-theme="dark"] .fd-admin .fd-order-status-note.is-error {
   color: var(--fd-error-text);
+}
+html[data-theme="dark"] .fd-admin .fd-edit-back a,
+html[data-theme="dark"] .fd-admin-back-link,
+html[data-theme="dark"] .fd-admin a.fd-orders-ref,
+html[data-theme="dark"] .fd-admin-forgot {
+  color: var(--fd-brand-green-text);
+}
+html[data-theme="dark"] .fd-settings-eyebrow,
+html[data-theme="dark"] .fd-settings-index,
+html[data-theme="dark"] .fd-settings-preview-label {
+  color: var(--fd-brand-green-text);
+}
+
+/* Gold fills keep dark ink in both themes, including elements whose text
+   uses the remapped title token. */
+html[data-theme="dark"] .fd-step-num,
+html[data-theme="dark"] .oto-payment-icon,
+html[data-theme="dark"] .oto-feature-icon:hover {
+  color: #231a02;
 }
 
 /* ============ 8. Hardcoded black text that must lift in Dark ===========

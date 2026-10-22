@@ -1,21 +1,21 @@
 /* ==========================================================================
-   Harvest Castle Admin — Order source boundary (Stage 4: Order Management)
+   O'Toosin Farms Admin — Order source boundary (Stage 4: Order Management)
    --------------------------------------------------------------------------
    Vanilla JS, no dependencies, no framework. Admin-scoped: never touches
    the customer cart store and never loads fresh-direct.js, so customer
-   state cannot leak into the seller area.
+   state cannot leak into the admin area.
 
-   CANONICAL ORDER SHAPE (reused EXACTLY from the customer checkout +
-   confirmation flow in assets/js/fresh-direct.js — buildOrder/stampOrder):
+   CANONICAL ORDER SHAPE (reused from the O'Toosin customer checkout in
+   assets/js/otoosin-checkout.js, with the older FreshDirect snapshot
+   fields still accepted):
      { id, status, placedAt, customer { name, phone, email },
-       delivery { mode, hostel, facultyOffice, roomBlock, address,
-                  landmark, instructions },
+       delivery { mode, address, city, state, landmark, instructions },
        items [{ productId, variantId, name, variantLabel, quantity,
                  unitPrice, lineTotal }],
-       subtotal, total, orderingMethod, payment { provider, reference,
-                 status, verified } }
-   Order status vocabulary (confirmation flow): "whatsapp-submitted" |
-   "pending" | "failed" | "paid". "paid" renders as Paid ONLY when the
+       subtotal, total, deliveryFee, orderingMethod,
+       payment { method, label, provider, reference, status, verified } }
+   Order status vocabulary: "pending" | "failed" | "paid". "paid" renders
+   as Paid ONLY when the
    snapshot itself carries payment.verified === true plus a reference
    (a backend-set flag) — nothing else can confer it. No new order model
    is introduced here.
@@ -23,7 +23,7 @@
    CURRENT SOURCE (frontend-only phase):
      - The customer checkout saves one snapshot to sessionStorage
        ("freshdirect_last_order"). getOrders() imports that snapshot into
-       the seller-kept store below (localStorage
+       the store-kept record below (localStorage
        "freshdirect_admin_orders_v1") the first time it is seen, so orders
        placed in this browser appear here. Imported snapshots are never
        rewritten: item prices stay exactly as recorded at order time, and
@@ -38,9 +38,9 @@
        with API calls (GET orders, GET order by id, PATCH/PUT order
        status) that resolve/accept the SAME canonical shape and the SAME
        payload { orderId, status }.
-     - Keep this file's public signatures so fd-admin-orders.js,
-       fd-admin-order-detail.js and fd-admin-dashboard.js are reused
-       untouched. Do NOT hardcode endpoint URLs here.
+     - Keep this file's public signatures so fd-admin-orders.js and
+       fd-admin-order-detail.js are reused untouched. Do NOT hardcode
+       endpoint URLs here.
 
    WHATSAPP: the store number below mirrors FRESH_DIRECT.whatsappNumber
    (assets/js/fresh-direct.js), which mirrors the future Django setting
@@ -53,7 +53,7 @@
   var LAST_ORDER_KEY = "freshdirect_last_order";
 
   /* Central store number (digits only). A WhatsApp number saved on the
-     Settings page (Stage 5 seller record) wins; otherwise the shared
+     Settings page (Stage 5 store record) wins; otherwise the shared
      customer config; otherwise the same digits as a last resort. Admin
      pages never load fresh-direct.js, so each fallback keeps the digits
      identical — never a second number. */
@@ -87,8 +87,8 @@
 
   /* Order statuses genuinely supported by the customer confirmation flow.
      No fulfillment workflow (confirmed/preparing/ready/…) is invented:
-     until the backend defines one, the seller works with these four. */
-  var ALLOWED_STATUSES = ["whatsapp-submitted", "pending", "paid", "failed"];
+     until the backend defines one, the store admin works with these four. */
+  var ALLOWED_STATUSES = ["pending", "paid", "failed"];
 
   /* ---------- Small local helpers (admin copies; no customer dep) ---------- */
   function esc(text) {
@@ -144,8 +144,8 @@
   }
 
   function asQty(value) {
-    var n = parseInt(value, 10);
-    return isFinite(n) && n >= 1 ? n : 1;
+    var n = parseFloat(value);
+    return isFinite(n) && n > 0 ? n : 1;
   }
 
   function asMoney(value, fallback) {
@@ -257,13 +257,15 @@
     }
 
     var d = (raw.delivery && typeof raw.delivery === "object") ? raw.delivery : {};
-    var mode = asText(d.mode) === "off-campus" ? "off-campus" : "on-campus";
+    /* Checkout snapshots record a street address; there is no campus mode. */
+    var mode = (asText(d.address) || asText(d.city) || asText(d.state))
+      ? "address"
+      : "";
     var delivery = {
       mode: mode,
-      hostel: asText(d.hostel),
-      facultyOffice: asText(d.facultyOffice),
-      roomBlock: asText(d.roomBlock),
       address: asText(d.address),
+      city: asText(d.city),
+      state: asText(d.state),
       landmark: asText(d.landmark),
       instructions: asText(d.instructions)
     };
@@ -283,8 +285,17 @@
       total = subtotal;
     }
 
-    var payment = { provider: "", reference: "", status: "unpaid", verified: false };
+    var payment = {
+      method: "",
+      label: "",
+      provider: "",
+      reference: "",
+      status: "unpaid",
+      verified: false
+    };
     if (raw.payment && typeof raw.payment === "object") {
+      payment.method = asText(raw.payment.method);
+      payment.label = asText(raw.payment.label);
       payment.provider = asText(raw.payment.provider);
       payment.reference = asText(raw.payment.reference);
       var ps = asText(raw.payment.status);
@@ -303,8 +314,15 @@
 
     var status = asText(raw.status) || asText(raw.orderStatus);
     if (ALLOWED_STATUSES.indexOf(status) === -1) {
-      status = "whatsapp-submitted";
+      /* Older snapshots may carry a legacy submitted state; it is simply
+         pending in the order record now. */
+      status = "pending";
     }
+
+    /* Delivery is arranged and paid separately from the website product
+       amount. Preserve a recorded fee when one exists; otherwise leave it
+       null so the detail page can say it is settled with the rider. */
+    var deliveryFee = asMoney(raw.deliveryFee, NaN);
 
     return {
       id: id,
@@ -315,6 +333,7 @@
       items: items,
       subtotal: subtotal,
       total: total,
+      deliveryFee: isFinite(deliveryFee) ? deliveryFee : null,
       orderingMethod:
         asText(raw.orderingMethod) === "website" ? "website" : "whatsapp",
       payment: payment
@@ -367,10 +386,7 @@
     if (status === "failed") {
       return { key: "failed", label: "Failed", tone: "is-bad" };
     }
-    if (status === "whatsapp-submitted") {
-      return { key: "whatsapp-submitted", label: "WhatsApp order", tone: "is-muted" };
-    }
-    return { key: "unknown", label: "Submitted", tone: "is-muted" };
+    return { key: "pending", label: "Pending", tone: "is-warn" };
   }
 
   function paymentMeta(order) {
@@ -391,8 +407,52 @@
     return { key: "unpaid", label: "Unpaid", tone: "is-muted" };
   }
 
+  /* The payment arrangement recorded at checkout, kept separate from
+     payment status. The delivery fee is never part of these amounts. */
+  function paymentMethodMeta(order) {
+    var p = (order && order.payment) || {};
+    var method = asText(p.method);
+    if (method === "pay-on-delivery") {
+      return {
+        key: "pay-on-delivery",
+        label: "Pay on Delivery",
+        amountLabel: "Amount payable to the rider",
+        detail:
+          "The product amount is paid physically to the rider on delivery. The delivery fee is also paid separately to the rider."
+      };
+    }
+    if (method === "pay-now") {
+      return {
+        key: "pay-now",
+        label: "Pay Now",
+        amountLabel: "Amount payable online",
+        detail:
+          "The product amount is paid online. The delivery fee is paid separately to the rider."
+      };
+    }
+    if (order && order.orderingMethod === "whatsapp") {
+      return {
+        key: "whatsapp",
+        label: asText(p.label) || "Order via WhatsApp",
+        amountLabel: "Amount payable for products",
+        detail:
+          "This order was arranged through WhatsApp. The delivery fee is paid separately to the rider."
+      };
+    }
+    return {
+      key: "not-recorded",
+      label: "Not recorded",
+      amountLabel: "Amount payable for products",
+      detail:
+        "No payment method was recorded with this order. The delivery fee is paid separately to the rider."
+    };
+  }
+
   function deliveryLabel(mode) {
-    return mode === "off-campus" ? "Off Campus" : "On Campus";
+    if (mode === "address") {
+      return "Delivery address";
+    }
+    return "Delivery details";
   }
 
   function itemCount(order) {
@@ -404,14 +464,11 @@
     return n;
   }
 
-  /* An order needs the seller's attention while it is still actionable:
-     waiting for a WhatsApp reply or for payment verification. Paid and
-     failed are terminal and never count as action. */
+  /* An order needs attention while it is still actionable: waiting for
+     payment verification. Paid and failed are terminal and never count as
+     action. */
   function needsAttention(order) {
-    return (
-      !!order &&
-      (order.status === "whatsapp-submitted" || order.status === "pending")
-    );
+    return !!order && order.status === "pending";
   }
 
   /* ---------- Public boundary ---------- */
@@ -549,7 +606,7 @@
   function getOrderWhatsAppHref(order) {
     var statusLabel = orderStatusMeta(order.status).label;
     var lines = [
-      "Hello! Following up on Harvest Castle order " + order.id + ".",
+      "Hello! Following up on O'Toosin Farms order " + order.id + ".",
       "",
       "Customer: " + (order.customer.name || "—"),
       "Items: " + itemCount(order) + " (" + fmtNaira(order.total) + ")",
@@ -591,6 +648,7 @@
       normalize: normalize,
       orderStatusMeta: orderStatusMeta,
       paymentMeta: paymentMeta,
+      paymentMethodMeta: paymentMethodMeta,
       deliveryLabel: deliveryLabel,
       itemCount: itemCount,
       needsAttention: needsAttention,

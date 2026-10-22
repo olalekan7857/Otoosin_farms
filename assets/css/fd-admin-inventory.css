@@ -1,0 +1,153 @@
+/* ==========================================================================
+   O'Toosin Farms Admin — Inventory page (admin-inventory.html only)
+   --------------------------------------------------------------------------
+   Loaded only by admin-inventory.html so the shared fd-admin.css stays
+   untouched. Reuses the existing admin tokens and table/toolbar patterns;
+   this file only adds the inventory select widths and the product cell.
+   ========================================================================== */
+
+.fd-admin .fd-inv-toolbar .fd-shop-search {
+  flex: 1 1 260px;
+}
+
+.fd-admin .fd-inv-toolbar #fd-inv-category {
+  width: 158px;
+}
+
+.fd-admin .fd-inv-toolbar #fd-inv-state {
+  width: 140px;
+}
+
+.fd-admin .fd-inv-toolbar #fd-inv-availability {
+  width: 168px;
+}
+
+.fd-admin .fd-inv-toolbar #fd-inv-sort {
+  width: 190px;
+}
+
+.fd-admin .fd-inv-toolbar #fd-inv-clear {
+  flex: 0 0 auto;
+  min-width: 160px;
+  height: 50px;
+  min-height: 50px;
+  line-height: 21px;
+  padding: 8px 18px;
+  font-size: 14px;
+}
+
+/* Product cell: thumbnail + name + catalogue ID, aligned left at every
+   width (the shared mobile table goals right-align plain cells). */
+.fd-admin .fd-inv-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.fd-admin .fd-inv-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  background: var(--smoke-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.fd-admin .fd-inv-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.fd-admin .fd-inv-id-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fd-admin .fd-inv-name {
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--title-color);
+  overflow-wrap: anywhere;
+}
+
+.fd-admin .fd-inv-code {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--body-color);
+  overflow-wrap: anywhere;
+}
+
+.fd-admin .fd-inv-code code {
+  font-size: 12.5px;
+  color: inherit;
+  background: none;
+  padding: 0;
+}
+
+.fd-admin .fd-inv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fd-admin .fd-inv-actions .fd-prod-btn {
+  min-height: 44px;
+}
+
+/* Dark theme: the shared layer recolours table cells, but the mobile row
+   card and its row-header divider are page-specific, so pin them too. */
+html[data-theme="dark"] .fd-admin .fd-inv-table tbody tr,
+html[data-theme="dark"] .fd-admin .fd-inv-table tbody th[scope="row"] {
+  border-color: var(--fd-hairline);
+}
+
+@media (max-width: 767px) {
+  .fd-admin .fd-inv-toolbar .fd-shop-search,
+  .fd-admin .fd-inv-toolbar .fd-shop-select,
+  .fd-admin .fd-inv-toolbar #fd-inv-category,
+  .fd-admin .fd-inv-toolbar #fd-inv-state,
+  .fd-admin .fd-inv-toolbar #fd-inv-availability,
+  .fd-admin .fd-inv-toolbar #fd-inv-sort,
+  .fd-admin .fd-inv-toolbar #fd-inv-clear {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Row-header cell (product) joins the shared table-to-card layout: the
+     shared rules only unroll td cells, so th cells are unrolled here. */
+  .fd-admin .fd-inv-table tbody th[scope="row"] {
+    display: block;
+    width: 100%;
+    border-bottom: 1px solid #ececec;
+    padding: 20px 0;
+    text-align: left;
+    min-width: 0;
+  }
+
+  .fd-admin .fd-inv-table tbody th[scope="row"]::before {
+    content: "Product";
+    display: block;
+    font-family: var(--title-font);
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--body-color);
+    margin-bottom: 12px;
+  }
+
+  .fd-admin .fd-inv-table td:last-child {
+    border-bottom: none;
+  }
+}

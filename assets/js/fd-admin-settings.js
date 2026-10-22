@@ -1,35 +1,38 @@
 /* ==========================================================================
-   Harvest Castle Admin — Settings renderer (Stage 5)
+   O'Toosin Farms Admin — Store Settings page controller
    --------------------------------------------------------------------------
-   Vanilla JS, no dependencies, no framework. Admin-scoped: never touches
-   the customer cart store or fresh-direct.js.
-
-   Boundary:
-     window.FreshDirectAdminSettings (fd-admin-settings-data.js) is the
-     ONLY place this UI meets settings data. Forms render from
-     getSettings(), save through updateSettings(), and report only
-     genuine results. Django stage: the service internals become API
-     calls with the same signatures; every function below is reused
-     untouched.
-
-   Honesty rules enforced here:
-     - Success is shown only after the service verifies the stored
-       record (read-back inside updateSettings()).
-     - Validation failures show per-field messages; storage failures
-       show a truthful form-level error. Nothing is ever faked.
-     - The Account section never fabricates security: password changes
-       stay with the store owner (same pattern as the login page), and
-       Log out mirrors the shell session boundary exactly.
+   One form owns all editable settings. The data boundary
+   (window.FreshDirectAdminSettings in fd-admin-settings-data.js) is the only
+   source of settings values and the only place a save is attempted. The
+   page never fabricates success: it renders the record returned after a
+   verified save, or the service's field/form errors.
    ========================================================================== */
 (function () {
   "use strict";
+
+  var FIELDS = [
+    { key: "businessName", input: "fd-settings-name", label: "Business name" },
+    { key: "address", input: "fd-settings-address", label: "Outlet address" },
+    { key: "whatsapp", input: "fd-settings-whatsapp", label: "WhatsApp number" },
+    { key: "contactPhone", input: "fd-settings-phone", label: "Contact phone number" },
+    { key: "description", input: "fd-settings-description", label: "Storefront introduction" }
+  ];
+
+  var snapshot = null;
+  var busy = false;
+  var navWired = false;
+  var scrollQueued = false;
 
   function svc() {
     return window.FreshDirectAdminSettings || null;
   }
 
+  function byId(id) {
+    return document.getElementById(id);
+  }
+
   function esc(text) {
-    return String(text).replace(/[&<>"']/g, function (c) {
+    return String(text == null ? "" : text).replace(/[&<>"']/g, function (c) {
       return {
         "&": "&amp;",
         "<": "&lt;",
@@ -40,70 +43,162 @@
     });
   }
 
-  /* ---------- Page states ---------- */
-  function showLoading(on) {
-    var loading = document.getElementById("fd-set-loading");
-    var content = document.getElementById("fd-set-content");
-    var error = document.getElementById("fd-set-error");
-    if (loading) {
-      if (on) {
-        loading.removeAttribute("hidden");
-      } else {
-        loading.setAttribute("hidden", "");
+  function fieldByKey(key) {
+    for (var i = 0; i < FIELDS.length; i++) {
+      if (FIELDS[i].key === key) {
+        return FIELDS[i];
       }
     }
-    if (content) {
-      content.setAttribute("aria-busy", on ? "true" : "false");
+    return null;
+  }
+
+  function fieldByInput(id) {
+    for (var i = 0; i < FIELDS.length; i++) {
+      if (FIELDS[i].input === id) {
+        return FIELDS[i];
+      }
     }
-    if (on && error) {
+    return null;
+  }
+
+  /* ---------- Page states ---------- */
+  function showLoading() {
+    var loading = byId("fd-settings-loading");
+    var content = byId("fd-settings-content");
+    var error = byId("fd-settings-error");
+    if (loading) {
+      loading.removeAttribute("hidden");
+    }
+    if (content) {
+      content.setAttribute("hidden", "");
+      content.setAttribute("aria-busy", "true");
+    }
+    if (error) {
       error.setAttribute("hidden", "");
     }
   }
 
+  function showContent() {
+    var loading = byId("fd-settings-loading");
+    var content = byId("fd-settings-content");
+    var error = byId("fd-settings-error");
+    if (loading) {
+      loading.setAttribute("hidden", "");
+    }
+    if (error) {
+      error.setAttribute("hidden", "");
+    }
+    if (content) {
+      content.removeAttribute("hidden");
+      content.setAttribute("aria-busy", "false");
+    }
+  }
+
   function showError() {
-    var loading = document.getElementById("fd-set-loading");
-    var content = document.getElementById("fd-set-content");
-    var error = document.getElementById("fd-set-error");
+    var loading = byId("fd-settings-loading");
+    var content = byId("fd-settings-content");
+    var error = byId("fd-settings-error");
     if (loading) {
       loading.setAttribute("hidden", "");
     }
     if (content) {
       content.setAttribute("hidden", "");
+      content.setAttribute("aria-busy", "false");
     }
     if (error) {
       error.removeAttribute("hidden");
-      var retry = document.getElementById("fd-set-retry");
+      var retry = byId("fd-settings-retry");
       if (retry) {
         retry.focus();
       }
     }
   }
 
-  /* ---------- Field helpers (checkout convention) ---------- */
-  function setFieldError(input, message) {
+  /* ---------- Field errors ---------- */
+  function setFieldError(field, message) {
+    if (!field) {
+      return;
+    }
+    var input = byId(field.input);
+    var error = byId(field.input + "-error");
     if (!input) {
       return;
     }
-    var err = document.getElementById(input.id + "-error");
     if (message) {
       input.setAttribute("aria-invalid", "true");
-      if (err) {
-        err.textContent = message;
-        err.removeAttribute("hidden");
-        input.setAttribute("aria-describedby", err.id);
+      if (error) {
+        error.textContent = message;
+        error.removeAttribute("hidden");
+        var described = input.getAttribute("aria-describedby") || "";
+        if (described.indexOf(error.id) === -1) {
+          input.setAttribute("aria-describedby", described ? described + " " + error.id : error.id);
+        }
       }
     } else {
       input.removeAttribute("aria-invalid");
-      input.removeAttribute("aria-describedby");
-      if (err) {
-        err.textContent = "";
-        err.setAttribute("hidden", "");
+      if (error) {
+        error.textContent = "";
+        error.setAttribute("hidden", "");
+        var parts = (input.getAttribute("aria-describedby") || "").split(/\s+/);
+        var kept = [];
+        for (var i = 0; i < parts.length; i++) {
+          if (parts[i] && parts[i] !== error.id) {
+            kept.push(parts[i]);
+          }
+        }
+        if (kept.length) {
+          input.setAttribute("aria-describedby", kept.join(" "));
+        } else {
+          input.removeAttribute("aria-describedby");
+        }
       }
     }
   }
 
-  function setNote(id, message, isError) {
-    var note = document.getElementById(id);
+  function clearErrors() {
+    for (var i = 0; i < FIELDS.length; i++) {
+      setFieldError(FIELDS[i], "");
+    }
+  }
+
+  /* ---------- Form alert and feedback ---------- */
+  function hideAlert() {
+    var alert = byId("fd-settings-alert");
+    var list = byId("fd-settings-alert-list");
+    if (alert) {
+      alert.setAttribute("hidden", "");
+    }
+    if (list) {
+      list.innerHTML = "";
+    }
+  }
+
+  function showAlert(title, messages) {
+    var alert = byId("fd-settings-alert");
+    var titleEl = byId("fd-settings-alert-title");
+    var list = byId("fd-settings-alert-list");
+    if (!alert || !list) {
+      return;
+    }
+    list.innerHTML = "";
+    for (var i = 0; i < messages.length; i++) {
+      var item = document.createElement("li");
+      item.textContent = messages[i];
+      list.appendChild(item);
+    }
+    if (titleEl && title) {
+      titleEl.textContent = title;
+    }
+    alert.removeAttribute("hidden");
+    try {
+      alert.focus();
+    } catch (e) {
+      /* focus is best-effort */
+    }
+  }
+
+  function setFeedback(message, isError, focus) {
+    var note = byId("fd-settings-feedback");
     if (!note) {
       return;
     }
@@ -114,418 +209,368 @@
       return;
     }
     note.textContent = message;
-    note.removeAttribute("hidden");
     note.classList.toggle("is-error", !!isError);
+    note.removeAttribute("hidden");
+    if (focus) {
+      try {
+        note.focus();
+      } catch (e) {
+        /* focus is best-effort */
+      }
+    }
   }
 
-  /* ---------- Editable section controller ----------
-     One controller per form: snapshot on fill, dirty tracking on input,
-     validated save through the service, discard restores the snapshot.
-     cfg: { form, fields: [ids], save, discard, dirty, note,
-            pick(values)->payload, labels } */
-  function sectionController(cfg) {
-    var s = svc();
-    var form = document.getElementById(cfg.form);
-    if (!form || !s) {
-      return null;
+  /* ---------- Form values ---------- */
+  function readForm() {
+    var values = {};
+    for (var i = 0; i < FIELDS.length; i++) {
+      var input = byId(FIELDS[i].input);
+      values[FIELDS[i].key] = input ? input.value : "";
     }
-    var inputs = [];
-    for (var i = 0; i < cfg.fields.length; i++) {
-      var el = document.getElementById(cfg.fields[i]);
-      if (el) {
-        inputs.push(el);
-      }
-    }
-    var saveBtn = document.getElementById(cfg.save);
-    var discardBtn = document.getElementById(cfg.discard);
-    var dirtyHint = document.getElementById(cfg.dirty);
-    var snapshot = {};
+    return values;
+  }
 
-    function readForm() {
-      var values = {};
-      for (var i = 0; i < inputs.length; i++) {
-        values[inputs[i].id] = inputs[i].value;
-      }
-      return values;
-    }
-
-    function isDirty() {
-      var current = readForm();
-      for (var i = 0; i < inputs.length; i++) {
-        var id = inputs[i].id;
-        if ((current[id] || "") !== (snapshot[id] || "")) {
-          return true;
-        }
-      }
+  function isDirty() {
+    if (!snapshot) {
       return false;
     }
-
-    function paintDirty() {
-      var dirty = isDirty();
-      if (saveBtn) {
-        saveBtn.disabled = !dirty;
-      }
-      if (discardBtn) {
-        discardBtn.disabled = !dirty;
-      }
-      if (dirtyHint) {
-        if (dirty) {
-          dirtyHint.removeAttribute("hidden");
-        } else {
-          dirtyHint.setAttribute("hidden", "");
-        }
-      }
-      if (!dirty) {
-        setNote(cfg.note, "", false);
+    var current = readForm();
+    for (var i = 0; i < FIELDS.length; i++) {
+      var key = FIELDS[i].key;
+      if ((current[key] || "") !== (snapshot[key] || "")) {
+        return true;
       }
     }
-
-    function fill(settingsValues) {
-      /* Controllers map the canonical settings record onto their own
-         field ids (see cfg.unpick); snapshots stay id-keyed so dirty
-         tracking compares like with like. */
-      var values = cfg.unpick ? cfg.unpick(settingsValues || {}) : (settingsValues || {});
-      snapshot = {};
-      for (var i = 0; i < inputs.length; i++) {
-        var id = inputs[i].id;
-        inputs[i].value = values[id] != null ? values[id] : "";
-        snapshot[id] = inputs[i].value;
-        setFieldError(inputs[i], "");
-      }
-      setNote(cfg.note, "", false);
-      paintDirty();
-      if (cfg.afterFill) {
-        cfg.afterFill(settingsValues);
-      }
-    }
-
-    function clearErrors() {
-      for (var i = 0; i < inputs.length; i++) {
-        setFieldError(inputs[i], "");
-      }
-    }
-
-    function setBusy(on) {
-      if (saveBtn) {
-        saveBtn.disabled = on || !isDirty();
-        saveBtn.setAttribute("aria-busy", on ? "true" : "false");
-      }
-      if (discardBtn) {
-        discardBtn.disabled = on || !isDirty();
-      }
-      for (var i = 0; i < inputs.length; i++) {
-        inputs[i].disabled = !!on;
-      }
-    }
-
-    for (var j = 0; j < inputs.length; j++) {
-      inputs[j].addEventListener("input", function () {
-        setFieldError(this, "");
-        paintDirty();
-      });
-    }
-
-    if (discardBtn) {
-      discardBtn.addEventListener("click", function () {
-        var s2 = svc();
-        if (!s2) {
-          setNote(cfg.note, "Settings are unavailable. Please try again.", true);
-          return;
-        }
-        fill(s2.getSettings());
-        setNote(cfg.note, "Unsaved changes discarded.", false);
-        var heading = document.getElementById(cfg.heading);
-        if (heading) {
-          heading.setAttribute("tabindex", "-1");
-          heading.focus({ preventScroll: false });
-        }
-      });
-    }
-
-    form.addEventListener("submit", function (ev) {
-      ev.preventDefault();
-      var s3 = svc();
-      if (!s3) {
-        setNote(cfg.note, "Settings are unavailable. Please try again.", true);
-        return;
-      }
-      if (!isDirty()) {
-        return;
-      }
-      clearErrors();
-      setBusy(true);
-      setNote(cfg.note, "", false);
-      var result = s3.updateSettings(cfg.pick(readForm()));
-      setBusy(false);
-      if (result.ok && result.settings) {
-        fill(result.settings);
-        setNote(cfg.note, cfg.success, false);
-      } else {
-        var errors = (result && result.errors) || {};
-        var firstBad = null;
-        for (var k = 0; k < inputs.length; k++) {
-          var key = cfg.keyFor ? cfg.keyFor(inputs[k].id) : inputs[k].id;
-          if (errors[key]) {
-            setFieldError(inputs[k], errors[key]);
-            if (!firstBad) {
-              firstBad = inputs[k];
-            }
-          }
-        }
-        if (errors._form) {
-          setNote(cfg.note, errors._form, true);
-        } else if (firstBad) {
-          setNote(cfg.note, "Check the highlighted fields.", true);
-          try {
-            firstBad.focus();
-          } catch (e) {
-            /* focus is best-effort */
-          }
-        } else {
-          setNote(cfg.note, "Your changes could not be saved. Please try again.", true);
-        }
-        paintDirty();
-      }
-    });
-
-    return { fill: fill, paint: paintDirty, form: form };
+    return false;
   }
 
-  /* ---------- Display sections (delivery info, account) ---------- */
-  function factRow(label, value) {
-    var li = document.createElement("li");
-    var lab = document.createElement("span");
-    lab.textContent = label + ":";
-    var val = document.createElement("strong");
-    val.textContent = " " + value;
-    li.appendChild(lab);
-    li.appendChild(val);
-    return li;
+  function paintDirty() {
+    var dirty = isDirty();
+    var submit = byId("fd-settings-submit");
+    var discard = byId("fd-settings-discard");
+    var hint = byId("fd-settings-dirty");
+    if (submit) {
+      submit.disabled = busy || !dirty;
+    }
+    if (discard) {
+      discard.disabled = busy || !dirty;
+    }
+    if (hint) {
+      if (dirty) {
+        hint.removeAttribute("hidden");
+      } else {
+        hint.setAttribute("hidden", "");
+      }
+    }
+  }
+
+  function paintDescription() {
+    var input = byId("fd-settings-description");
+    var count = byId("fd-settings-description-count");
+    var preview = byId("fd-settings-description-preview");
+    if (!input) {
+      return;
+    }
+    if (count) {
+      count.textContent = input.value.length + " / 500";
+    }
+    if (preview) {
+      var text = input.value.trim();
+      preview.textContent = text || "Your introduction will appear here.";
+    }
+  }
+
+  function setBusy(on) {
+    busy = !!on;
+    var submit = byId("fd-settings-submit");
+    var label = byId("fd-settings-submit-label");
+    var discard = byId("fd-settings-discard");
+    if (submit) {
+      submit.setAttribute("aria-busy", busy ? "true" : "false");
+    }
+    if (label) {
+      label.textContent = busy ? "Saving…" : "Save Changes";
+    }
+    if (discard) {
+      discard.disabled = busy || !isDirty();
+    }
+    for (var i = 0; i < FIELDS.length; i++) {
+      var input = byId(FIELDS[i].input);
+      if (input) {
+        input.disabled = busy;
+      }
+    }
+    paintDirty();
+  }
+
+  function fill(settings) {
+    var values = settings || {};
+    for (var i = 0; i < FIELDS.length; i++) {
+      var input = byId(FIELDS[i].input);
+      if (input) {
+        input.value = values[FIELDS[i].key] != null ? values[FIELDS[i].key] : "";
+      }
+    }
+    snapshot = readForm();
+    clearErrors();
+    hideAlert();
+    setFeedback("", false, false);
+    paintDescription();
+    paintDirty();
+  }
+
+  /* ---------- Read-only delivery rules ---------- */
+  function setText(id, value) {
+    var node = byId(id);
+    if (node) {
+      node.textContent = value || "—";
+    }
   }
 
   function renderDelivery() {
     var s = svc();
-    if (!s) {
+    if (!s || typeof s.getDeliveryInfo !== "function") {
       return;
     }
-    var info = s.getDeliveryInfo();
-    var onHost = document.getElementById("fd-set-delivery-on");
-    var offHost = document.getElementById("fd-set-delivery-off");
-    var outHost = document.getElementById("fd-set-delivery-outlet");
-    if (onHost) {
-      onHost.innerHTML = "";
-      onHost.appendChild(factRow("Availability", "Offered at checkout"));
-      onHost.appendChild(factRow("Covers", info.onCampus.detail));
-    }
-    if (offHost) {
-      offHost.innerHTML = "";
-      offHost.appendChild(factRow("Availability", "Offered at checkout"));
-      offHost.appendChild(factRow("Covers", info.offCampus.detail));
-    }
-    if (outHost) {
-      outHost.innerHTML = "";
-      outHost.appendChild(factRow("Outlet", info.outlet));
-      outHost.appendChild(factRow("Hours", info.hours));
-    }
-  }
-
-  function renderWhatsAppPreview(settings) {
-    var link = document.getElementById("fd-set-wa-test");
-    var shown = document.getElementById("fd-set-wa-shown");
-    if (!link) {
-      return;
-    }
-    var digits = "";
+    var info;
     try {
-      var s = svc();
-      digits = s ? s.normalizePhone((settings && settings.whatsapp) || "") : "";
-      if (!digits && s) {
-        digits = s.getWhatsAppNumber();
-      }
+      info = s.getDeliveryInfo();
     } catch (e) {
-      digits = "";
-    }
-    if (!digits) {
-      link.setAttribute("hidden", "");
-    } else {
-      link.removeAttribute("hidden");
-      link.setAttribute("href", "https://wa.me/" + digits + "?text=" + encodeURIComponent("Hello Harvest Castle!"));
-      link.setAttribute("target", "_blank");
-      link.setAttribute("rel", "noopener");
-    }
-    if (shown) {
-      shown.textContent = digits || "Not set";
-    }
-  }
-
-  function wireLogout() {
-    var btn = document.getElementById("fd-set-logout");
-    var note = document.getElementById("fd-set-account-note");
-    if (!btn) {
       return;
     }
-    btn.addEventListener("click", function () {
-      /* Mirrors the shell session boundary exactly: disabled until a
-         real seller session exists; never fabricates a sign-out. */
-      if (btn.getAttribute("aria-disabled") === "true") {
-        return;
-      }
-      if (window.FreshDirectAdminAuth && window.FreshDirectAdminAuth.signOut) {
-        window.FreshDirectAdminAuth.signOut().catch(function () {
-          if (note) {
-            note.textContent = "You are not signed in. Contact the store owner for seller access.";
-            note.removeAttribute("hidden");
-          }
-        });
-      }
-    });
+    setText("fd-settings-delivery-arrangement", info.arrangement);
+    setText("fd-settings-delivery-coverage", info.coverage);
+    setText("fd-settings-delivery-hours", info.hours);
+    setText("fd-settings-delivery-pay-now", info.payNow);
+    setText("fd-settings-delivery-pay-on-delivery", info.payOnDelivery);
+    setText("fd-settings-delivery-fee", info.fee);
   }
 
-  /* ---------- Load ---------- */
-  var businessCtl = null;
-  var whatsappCtl = null;
+  /* ---------- Save attempts ---------- */
+  function applyErrors(result) {
+    var errors = (result && result.errors) || {};
+    var messages = [];
+    var firstBad = null;
+    for (var i = 0; i < FIELDS.length; i++) {
+      var message = errors[FIELDS[i].key];
+      if (message) {
+        setFieldError(FIELDS[i], message);
+        messages.push(FIELDS[i].label + ": " + message);
+        if (!firstBad) {
+          firstBad = byId(FIELDS[i].input);
+        }
+      }
+    }
+    if (errors._form) {
+      messages.push(errors._form);
+    }
+    if (!messages.length) {
+      messages.push("Your changes could not be saved. Please try again.");
+    }
+    showAlert(
+      Object.keys(errors).length > 1 || firstBad ? "Check the highlighted fields." : "Settings were not saved.",
+      messages
+    );
+    if (firstBad) {
+      try {
+        firstBad.focus();
+      } catch (e) {
+        /* focus is best-effort */
+      }
+    }
+  }
 
-  function load() {
+  function save() {
+    if (busy) {
+      return;
+    }
     var s = svc();
     if (!s) {
-      showLoading(false);
+      showAlert("Settings are unavailable.", ["Reload the page and try again."]);
+      return;
+    }
+    if (!isDirty()) {
+      return;
+    }
+    hideAlert();
+    setFeedback("", false, false);
+    clearErrors();
+    setBusy(true);
+    var result;
+    try {
+      result = s.updateSettings(readForm());
+    } catch (e) {
+      result = {
+        ok: false,
+        errors: { _form: "Your changes could not be saved. Please try again." }
+      };
+    }
+    setBusy(false);
+    if (result && result.ok && result.settings) {
+      fill(result.settings);
+      setFeedback("Store settings saved on this device.", false, true);
+    } else {
+      applyErrors(result);
+    }
+  }
+
+  function discard() {
+    if (busy) {
+      return;
+    }
+    var s = svc();
+    if (!s) {
+      showAlert("Settings are unavailable.", ["Reload the page and try again."]);
+      return;
+    }
+    try {
+      fill(s.getSettings());
+    } catch (e) {
       showError();
       return;
     }
-    showLoading(true);
+    setFeedback("Unsaved changes discarded.", false, true);
+  }
+
+  /* ---------- In-page navigation ---------- */
+  function setActiveNav(id) {
+    var links = document.querySelectorAll("[data-settings-nav]");
+    for (var i = 0; i < links.length; i++) {
+      var active = links[i].getAttribute("data-settings-nav") === id;
+      links[i].classList.toggle("is-active", active);
+      if (active) {
+        links[i].setAttribute("aria-current", "location");
+      } else {
+        links[i].removeAttribute("aria-current");
+      }
+    }
+  }
+
+  function updateActiveNav() {
+    var sections = document.querySelectorAll("[data-settings-section]");
+    if (!sections.length) {
+      return;
+    }
+    var threshold = 110;
+    var current = sections[0].id;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].getBoundingClientRect().top <= threshold) {
+        current = sections[i].id;
+      }
+    }
+    setActiveNav(current);
+  }
+
+  function queueActiveNav() {
+    if (scrollQueued) {
+      return;
+    }
+    scrollQueued = true;
+    window.requestAnimationFrame(function () {
+      scrollQueued = false;
+      updateActiveNav();
+    });
+  }
+
+  function wireNav() {
+    if (navWired) {
+      return;
+    }
+    navWired = true;
+    var links = document.querySelectorAll("[data-settings-nav]");
+    for (var i = 0; i < links.length; i++) {
+      links[i].addEventListener("click", function () {
+        setActiveNav(this.getAttribute("data-settings-nav"));
+      });
+    }
+    window.addEventListener("scroll", queueActiveNav, { passive: true });
+    window.addEventListener("resize", queueActiveNav);
+    updateActiveNav();
+  }
+
+  /* ---------- Wiring ---------- */
+  function wireForm() {
+    var form = byId("fd-settings-form");
+    var discardBtn = byId("fd-settings-discard");
+    if (form) {
+      form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        save();
+      });
+    }
+    if (discardBtn) {
+      discardBtn.addEventListener("click", discard);
+    }
+    for (var i = 0; i < FIELDS.length; i++) {
+      var input = byId(FIELDS[i].input);
+      if (input) {
+        input.addEventListener("input", function () {
+          var field = fieldByInput(this.id);
+          setFieldError(field, "");
+          hideAlert();
+          setFeedback("", false, false);
+          paintDirty();
+          if (field && field.key === "description") {
+            paintDescription();
+          }
+        });
+      }
+    }
+  }
+
+  function wireRetry() {
+    var retry = byId("fd-settings-retry");
+    if (retry) {
+      retry.addEventListener("click", load);
+    }
+  }
+
+  function wireUnload() {
+    window.addEventListener("beforeunload", function (ev) {
+      if (!isDirty()) {
+        return;
+      }
+      ev.preventDefault();
+      ev.returnValue = "";
+      return "";
+    });
+  }
+
+  function load() {
+    var s = svc();
+    if (!s || typeof s.getSettings !== "function") {
+      showError();
+      return;
+    }
+    showLoading();
     var settings;
     try {
       settings = s.getSettings();
     } catch (e) {
-      showLoading(false);
       showError();
       return;
     }
-    showLoading(false);
-    var content = document.getElementById("fd-set-content");
-    if (content) {
-      content.removeAttribute("hidden");
-    }
-
-    businessCtl = sectionController({
-      form: "fd-set-business-form",
-      heading: "fd-set-business-title",
-      fields: ["fd-set-name", "fd-set-phone", "fd-set-address", "fd-set-desc"],
-      save: "fd-set-business-save",
-      discard: "fd-set-business-discard",
-      dirty: "fd-set-business-dirty",
-      note: "fd-set-business-note",
-      success: "Business information saved.",
-      keyFor: function (id) {
-        return {
-          "fd-set-name": "businessName",
-          "fd-set-phone": "contactPhone",
-          "fd-set-address": "address",
-          "fd-set-desc": "description"
-        }[id] || id;
-      },
-      pick: function (v) {
-        return {
-          businessName: v["fd-set-name"],
-          contactPhone: v["fd-set-phone"],
-          address: v["fd-set-address"],
-          description: v["fd-set-desc"]
-        };
-      },
-      unpick: function (s) {
-        return {
-          "fd-set-name": s.businessName,
-          "fd-set-phone": s.contactPhone,
-          "fd-set-address": s.address,
-          "fd-set-desc": s.description
-        };
-      }
-    });
-
-    whatsappCtl = sectionController({
-      form: "fd-set-whatsapp-form",
-      heading: "fd-set-whatsapp-title",
-      fields: ["fd-set-whatsapp"],
-      save: "fd-set-whatsapp-save",
-      discard: "fd-set-whatsapp-discard",
-      dirty: "fd-set-whatsapp-dirty",
-      note: "fd-set-whatsapp-note",
-      success: "WhatsApp number saved.",
-      keyFor: function () {
-        return "whatsapp";
-      },
-      pick: function (v) {
-        return { whatsapp: v["fd-set-whatsapp"] };
-      },
-      unpick: function (s) {
-        return { "fd-set-whatsapp": s.whatsapp };
-      },
-      afterFill: renderWhatsAppPreview
-    });
-
-    var phoneEmpty = document.getElementById("fd-set-phone-empty");
-    if (businessCtl) {
-      businessCtl.fill(settings);
-      /* The contact phone starts empty until the seller genuinely adds
-         one — surface that honestly next to the field. */
-      if (phoneEmpty) {
-        if (!settings.contactPhone) {
-          phoneEmpty.removeAttribute("hidden");
-        } else {
-          phoneEmpty.setAttribute("hidden", "");
-        }
-      }
-      var phoneInput = document.getElementById("fd-set-phone");
-      if (phoneInput) {
-        phoneInput.addEventListener("input", function () {
-          if (phoneEmpty) {
-            if (!phoneInput.value.trim()) {
-              phoneEmpty.removeAttribute("hidden");
-            } else {
-              phoneEmpty.setAttribute("hidden", "");
-            }
-          }
-        });
-      }
-    }
-    if (whatsappCtl) {
-      whatsappCtl.fill(settings);
-    }
+    fill(settings);
     renderDelivery();
-    renderWhatsAppPreview(settings);
-    wireLogout();
-  }
-
-  function wireRetry() {
-    var retry = document.getElementById("fd-set-retry");
-    if (!retry) {
-      return;
-    }
-    retry.addEventListener("click", function () {
-      var error = document.getElementById("fd-set-error");
-      var content = document.getElementById("fd-set-content");
-      if (error) {
-        error.setAttribute("hidden", "");
-      }
-      if (content) {
-        content.removeAttribute("hidden");
-      }
-      load();
-    });
+    showContent();
+    wireNav();
   }
 
   function init() {
-    if (!document.getElementById("fd-set-content")) {
+    if (!byId("fd-settings-form")) {
       return;
     }
+    wireForm();
     wireRetry();
+    wireUnload();
     load();
   }
 
-  /* Testable seam: automated checks use these. */
   window.FreshDirectAdminSettingsUI = {
     load: load,
-    esc: esc
+    esc: esc,
+    fields: FIELDS.slice(),
+    isDirty: isDirty
   };
 
   if (document.readyState === "loading") {

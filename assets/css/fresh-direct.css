@@ -307,6 +307,10 @@ textarea:focus-visible,
   margin-top: 10px;
 }
 
+.fd-secondary-row .fd-view-link:only-child {
+  flex: 1 1 100%;
+}
+
 .fd-view-link,
 .fd-wa-link {
   display: inline-flex;
@@ -783,6 +787,7 @@ textarea:focus-visible,
    ========================================================================== */
 #featured .product-style1,
 #fd-shop-grid .product-style1,
+#fd-home-grid .product-style1,
 #fd-pdp-related .product-style1 {
   position: relative;
   border-radius: var(--fd-radius);
@@ -1250,6 +1255,7 @@ a.fd-cat-pill {
 
 /* ---------- Shop grid reuses the Home card system ---------- */
 #fd-shop-grid .product-style1,
+#fd-home-grid .product-style1,
 #fd-pdp-related .product-style1 {
   display: flex;
   flex-direction: column;
@@ -1257,6 +1263,7 @@ a.fd-cat-pill {
 }
 
 #fd-shop-grid .product-style1 .product-about,
+#fd-home-grid .product-style1 .product-about,
 #fd-pdp-related .product-style1 .product-about {
   flex: 1 1 auto;
   display: flex;
@@ -1265,6 +1272,7 @@ a.fd-cat-pill {
 
 #featured .product-style1 .product-img,
 #fd-shop-grid .product-style1 .product-img,
+#fd-home-grid .product-style1 .product-img,
 #fd-pdp-related .product-style1 .product-img {
   margin-bottom: 12px;
   text-align: center;
@@ -1272,6 +1280,7 @@ a.fd-cat-pill {
 
 #featured .product-style1 .product-img img,
 #fd-shop-grid .product-style1 .product-img img,
+#fd-home-grid .product-style1 .product-img img,
 #fd-pdp-related .product-style1 .product-img img {
   border-radius: var(--fd-radius-img);
   max-height: 150px;
@@ -1282,6 +1291,7 @@ a.fd-cat-pill {
 
 #featured .product-style1 .product-title,
 #fd-shop-grid .product-style1 .product-title,
+#fd-home-grid .product-style1 .product-title,
 #fd-pdp-related .product-style1 .product-title {
   font-size: 18px;
   line-height: 1.35;
@@ -1289,6 +1299,7 @@ a.fd-cat-pill {
 }
 
 #fd-shop-grid .fd-buy-row .price,
+#fd-home-grid .fd-buy-row .price,
 #fd-pdp-related .fd-buy-row .price {
   font-size: 19px;
 }
@@ -1434,7 +1445,7 @@ a.fd-cat-pill {
   color: var(--white-color);
 }
 
-.fd-qty > span {
+.fd-qty > span:not(.fd-qty-entry) {
   min-width: 26px;
   text-align: center;
   font-weight: 700;
@@ -1446,19 +1457,97 @@ a.fd-cat-pill {
 .fd-cart-qty-input {
   width: 48px;
   max-width: 52px;
+  height: 30px;
   min-height: 30px;
   text-align: center;
   font-weight: 700;
   font-size: 14px;
+  line-height: 1.2;
   color: inherit;
   background: transparent;
   border: none;
-  outline-offset: 2px;
+  outline: none;
   padding: 5px 2px;
 }
 
 .fd-qty-unit {
   padding-right: 4px;
+}
+
+/* Side-cart items sit inside .widget, whose generic input styling
+   (60px tall, grey pill) must not leak into the inline KG field. */
+.widget .fd-cart-qty-input {
+  height: 30px;
+  min-height: 30px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Typing affordance shared by every KG stepper: the number and "kg" sit
+   on one line with a quiet caption underneath. The caption only appears
+   when the editable input exists, so it never promises typing on a
+   read-only or non-KG control. */
+.fd-qty-entry {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.fd-qty-entry-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.fd-kg-hint {
+  display: none;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--body-color);
+  opacity: 0.85;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fd-qty-entry.has-kg-input .fd-kg-hint {
+  display: block;
+}
+
+.fd-qty-entry.is-each .fd-kg-hint {
+  display: none;
+}
+
+/* The inner field must never draw its own heavy focus rectangle: the
+   whole pill gets a quiet brand ring instead, so typing feels part of
+   the control rather than a box inside a box. */
+.fd-cart-qty-input:focus,
+.fd-cart-qty-input:focus-visible,
+.fd-pdp-qty-input:focus,
+.fd-pdp-qty-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.fd-qty:has(.fd-cart-qty-input:focus),
+.fd-pdp-qty:has(.fd-pdp-qty-input:focus) {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(6, 65, 29, 0.12);
+}
+
+html[data-theme="dark"] .fd-qty:has(.fd-cart-qty-input:focus),
+html[data-theme="dark"] .fd-pdp-qty:has(.fd-pdp-qty-input:focus) {
+  border-color: var(--theme-color);
+  box-shadow: 0 0 0 3px rgba(222, 173, 57, 0.18);
 }
 
 .fd-cart-line {
@@ -1588,28 +1677,33 @@ a.fd-cat-pill {
   }
 
   #fd-shop-grid .product-style1,
+#fd-home-grid .product-style1,
 #fd-pdp-related .product-style1 {
     padding: 12px 10px 14px;
   }
 
 #featured .product-style1 .product-img img,
 #fd-shop-grid .product-style1 .product-img img,
+#fd-home-grid .product-style1 .product-img img,
 #fd-pdp-related .product-style1 .product-img img {
     max-height: 120px;
   }
 
 #featured .product-style1 .product-title,
 #fd-shop-grid .product-style1 .product-title,
+#fd-home-grid .product-style1 .product-title,
 #fd-pdp-related .product-style1 .product-title {
     font-size: 14.5px;
   }
 
   #fd-shop-grid .fd-buy-row .price,
+#fd-home-grid .fd-buy-row .price,
 #fd-pdp-related .fd-buy-row .price {
     font-size: 16px;
   }
 
   #fd-shop-grid .fd-add-btn,
+  #fd-home-grid .fd-add-btn,
   #fd-pdp-related .fd-add-btn {
     padding: 10px 14px;
     font-size: 13px;
@@ -1617,6 +1711,8 @@ a.fd-cat-pill {
 
   #fd-shop-grid .fd-view-link,
   #fd-shop-grid .fd-wa-link,
+  #fd-home-grid .fd-view-link,
+  #fd-home-grid .fd-wa-link,
   #fd-pdp-related .fd-view-link,
   #fd-pdp-related .fd-wa-link {
     font-size: 12px;
@@ -1847,7 +1943,7 @@ a.fd-cat-pill {
   color: var(--white-color);
 }
 
-.fd-pdp-qty > span {
+.fd-pdp-qty > span:not(.fd-qty-entry) {
   min-width: 34px;
   text-align: center;
   font-weight: 700;
@@ -1861,10 +1957,11 @@ a.fd-cat-pill {
   text-align: center;
   font-weight: 700;
   font-size: 17px;
+  line-height: 1.2;
   color: inherit;
   background: transparent;
   border: none;
-  outline-offset: 2px;
+  outline: none;
   padding: 6px 2px;
 }
 
@@ -3357,18 +3454,21 @@ a.fd-cat-pill {
   /* Grid cards: tighter inner padding/gaps; type steps already set above. */
   #featured .product-style1,
   #fd-shop-grid .product-style1,
+  #fd-home-grid .product-style1,
   #fd-pdp-related .product-style1 {
     padding: 10px 8px 12px;
   }
 
   #featured .fd-buy-row,
   #fd-shop-grid .fd-buy-row,
+  #fd-home-grid .fd-buy-row,
   #fd-pdp-related .fd-buy-row {
     gap: 6px;
   }
 
   #featured .product-style1 .product-img img,
   #fd-shop-grid .product-style1 .product-img img,
+  #fd-home-grid .product-style1 .product-img img,
   #fd-pdp-related .product-style1 .product-img img {
     max-height: 110px;
   }
@@ -3468,6 +3568,13 @@ a.fd-cat-pill {
     gap: 6px;
   }
 
+  /* The shared 44px min-width overrides the 40px --icon-size at this
+     width; pin the icon buttons to 40px so the row stays inside 320px. */
+  .fd-header-actions .icon-btn {
+    width: 40px;
+    min-width: 40px;
+  }
+
   .fd-logo {
     font-size: 17px;
   }
@@ -3494,6 +3601,7 @@ a.fd-cat-pill {
   /* Grid cards keep 2 columns: shave padding, never the touch targets. */
   #featured .fd-add-btn,
   #fd-shop-grid .fd-add-btn,
+  #fd-home-grid .fd-add-btn,
   #fd-pdp-related .fd-add-btn {
     padding: 9px 8px;
     min-height: 40px;
@@ -3537,10 +3645,9 @@ a.fd-cat-pill {
   }
 }
 
-/* ---------- Blog nav fit: six desktop links stay on one row --------------
-   The Blog item brings .main-menu to six links. Below 1300px the item
-   gutters step from 16px to 10px so the menu never wraps mid-header.
-   Typography, colors and behavior are untouched. */
+/* ---------- Desktop nav fit: links stay on one row ----------------------
+   Below 1300px the item gutters step from 16px to 10px so the menu never
+   wraps mid-header. Typography, colors and behavior are untouched. */
 @media (max-width: 1300px) {
   .header-layout1 .main-menu > ul > li {
     margin: 0 10px;
@@ -3699,7 +3806,7 @@ a.fd-cat-pill {
   }
 }
 
-/* Shop / category pagination (Django-ready, mirrors blog pagination). */
+/* Shop / category pagination (Django-ready). */
 .fd-pagination {
   display: flex;
   flex-wrap: wrap;
@@ -3751,7 +3858,7 @@ a.fd-page-link.is-current:hover {
   cursor: not-allowed;
 }
 
-/* Dark mode follows the blog pagination tokens so page numbers stay
+/* Dark mode follows the shop pagination tokens so page numbers stay
    readable on dark surfaces (storefront + admin share this block). */
 html[data-theme="dark"] .fd-page-link {
   background: var(--fd-surface);

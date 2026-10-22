@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Harvest Castle Admin — Stage 1 (admin shell + login controller)
+   O'Toosin Farms Admin — admin shell + login controller
    --------------------------------------------------------------------------
    Vanilla JS, no dependencies, no framework. This file NEVER touches the
    customer cart (no dependency on fresh-direct.js cart store) so customer
@@ -116,7 +116,7 @@
 
   function notConfigured(op) {
     var err = new Error(
-      "Harvest Castle admin authentication is not connected yet (" + op + ")."
+      "O'Toosin Farms admin authentication is not connected yet (" + op + ")."
     );
     err.code = AUTH_NOT_CONFIGURED;
     return err;
@@ -376,9 +376,121 @@
     });
   }
 
+  /* ---------- 5. Mobile base navigation ----------
+     Mirrors the storefront's fixed mobile base nav: five primary admin
+     destinations with an icon, a short label and a clear active state.
+     The desktop sidebar stays exactly as it is; this bar is mobile-only
+     and is never injected into the standalone sign-in screen. */
+  function wireBaseNav() {
+    var shell = document.querySelector(".fd-admin-shell");
+    if (!shell || document.getElementById("fd-admin-login-form")) {
+      return;
+    }
+    if (document.querySelector(".fd-admin-base-nav")) {
+      return;
+    }
+
+    var file = window.location.pathname
+      .replace(/\\/g, "/")
+      .split("/")
+      .pop()
+      .toLowerCase();
+    if (!file) {
+      file = "admin-dashboard.html";
+    }
+
+    var activeMap = {
+      "admin-dashboard.html": "dashboard",
+      "admin-orders.html": "orders",
+      "admin-order.html": "orders",
+      "admin-products.html": "products",
+      "admin-product-edit.html": "products",
+      "admin-inventory.html": "inventory",
+      "admin-categories.html": "categories"
+    };
+    var active = activeMap[file] || "";
+
+    var items = [
+      {
+        key: "dashboard",
+        label: "Dashboard",
+        href: "admin-dashboard.html",
+        icon: "fas fa-tachometer-alt"
+      },
+      {
+        key: "orders",
+        label: "Orders",
+        href: "admin-orders.html",
+        icon: "fas fa-receipt"
+      },
+      {
+        key: "products",
+        label: "Products",
+        href: "admin-products.html",
+        icon: "fas fa-box"
+      },
+      {
+        key: "inventory",
+        label: "Inventory",
+        href: "admin-inventory.html",
+        icon: "fas fa-warehouse"
+      },
+      {
+        key: "categories",
+        label: "Categories",
+        href: "admin-categories.html",
+        icon: "fas fa-layer-group"
+      }
+    ];
+
+    var nav = document.createElement("nav");
+    nav.className = "fd-admin-base-nav";
+    nav.setAttribute("aria-label", "Admin quick navigation");
+
+    var list = document.createElement("ul");
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var li = document.createElement("li");
+      var link = document.createElement("a");
+      link.className = "fd-admin-base-nav__item";
+      link.href = item.href;
+      if (active === item.key) {
+        link.className += " is-active";
+        link.setAttribute("aria-current", "page");
+      }
+
+      var iconWrap = document.createElement("span");
+      iconWrap.className = "fd-admin-base-nav__icon";
+      iconWrap.setAttribute("aria-hidden", "true");
+      var icon = document.createElement("i");
+      icon.className = item.icon;
+      iconWrap.appendChild(icon);
+
+      var label = document.createElement("span");
+      label.className = "fd-admin-base-nav__label";
+      label.textContent = item.label;
+
+      link.appendChild(iconWrap);
+      link.appendChild(label);
+      li.appendChild(link);
+      list.appendChild(li);
+    }
+
+    nav.appendChild(list);
+    document.body.appendChild(nav);
+    document.body.classList.add("fd-admin-base-nav-on");
+  }
+
+  /* Paint the mobile base navigation as soon as the shell is parsed, so the
+     bottom of small screens is covered from first paint instead of waiting
+     for DOMContentLoaded (which can be delayed by slow font/asset requests).
+     The DOMContentLoaded call below remains as a no-op safety net. */
+  wireBaseNav();
+
   document.addEventListener("DOMContentLoaded", function () {
     wireYear();
     wireShell();
+    wireBaseNav();
     wirePasswordToggle();
     wireForgotPanel();
     wireLoginForm();
