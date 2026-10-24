@@ -209,7 +209,7 @@
       var location = selectedPickupLocation();
       return (
         "Your order total is " + subtotal + " for your products, with no delivery fee. " +
-        "No payment is collected on this page; payment is arranged directly with O’TOOSIN Farms. " +
+        "Complete your order and payment securely at checkout. " +
         "Collect from " +
         (location ? location.name + ", " + location.address : "your selected pickup location") +
         "."
@@ -220,7 +220,7 @@
       return (
         "Your products total is " + subtotal + ". The park delivery charge" +
         (destination ? " for " + destination.name : "") +
-        " is confirmed before dispatch. No payment is collected on this page."
+        " is confirmed before dispatch. Complete your order and payment securely at checkout."
       );
     }
     var zone = findZone(valueOf("oto-co-zone"));
@@ -232,7 +232,7 @@
     return (
       "Your order total is " + cart.fmtNaira(orderTotal()) + ": " + subtotal +
       " for your products plus " + cart.fmtNaira(zone.fee) +
-      " delivery to the " + zone.name + " zone. No payment is collected on this page."
+      " delivery to the " + zone.name + " zone. Complete your order and payment securely at checkout."
     );
   }
 
@@ -424,7 +424,7 @@
       dueOnline: orderTotal(),
       deliveryFee: fee,
       confirmed: false,
-      label: "Payment arranged with O’TOOSIN Farms",
+      label: "Payment at checkout",
     };
   }
 
@@ -587,23 +587,23 @@
     }
     box.innerHTML = "";
     var name = document.createElement("strong");
-    name.textContent = payment.label || "Payment arranged directly";
+    name.textContent = payment.label || "Payment at checkout";
     var text = document.createElement("span");
     if (payment.method === "pickup") {
       text.textContent =
-        "No payment is collected on this page. Your order total is " +
+        "Your order total is " +
         cart.fmtNaira(payment.dueOnline) +
-        " for your products, with no delivery fee. Collect from the selected pickup location.";
+        " for your products, with no delivery fee. Complete your order and payment securely at checkout, then collect from the selected pickup location.";
     } else if (payment.method === "park") {
       text.textContent =
-        "No payment is collected on this page. Your products total is " +
+        "Your products total is " +
         cart.fmtNaira(payment.dueOnline) +
-        ". The park delivery charge is confirmed before dispatch.";
+        ". Complete your order and payment securely at checkout. The park delivery charge is confirmed before dispatch.";
     } else {
       text.textContent =
-        "No payment is collected on this page. Your order total is " +
+        "Your order total is " +
         cart.fmtNaira(payment.dueOnline) +
-        ", including the applicable doorstep delivery fee.";
+        ", including the applicable doorstep delivery fee. Complete your order and payment securely at checkout.";
     }
     box.appendChild(name);
     box.appendChild(text);
