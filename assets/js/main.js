@@ -61,6 +61,9 @@
       // Menu Show & Hide
       function menuToggle() {
         menu.toggleClass(opt.bodyToggleClass);
+        var isOpen = menu.hasClass(opt.bodyToggleClass);
+        $(opt.menuToggleBtn).attr("aria-expanded", isOpen ? "true" : "false");
+        $(opt.menuToggleBtn).attr("aria-label", isOpen ? "Close menu" : "Open menu");
 
         // collapse submenu on menu hide or show
         var subMenu = "." + opt.subMenuClass;

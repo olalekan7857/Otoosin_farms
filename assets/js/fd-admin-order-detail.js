@@ -1,5 +1,5 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Order detail renderer (Stage 4)
+   O’TOOSIN Farms Admin — Order detail renderer
    --------------------------------------------------------------------------
    Vanilla JS, no dependencies, no framework. Admin-scoped: never touches
    the customer cart store or fresh-direct.js.
@@ -7,14 +7,15 @@
    Boundary:
      window.FreshDirectAdminOrders (fd-admin-orders-data.js) is the ONLY
      place this UI meets order data. The detail route is
-     admin-order.html?id=<order reference> (same ?id= convention as the
-     product editor), deep-linkable: a valid id renders the snapshot, an
-     unknown id renders the not-found state. Django stage: the service
-     internals become API calls; every renderer below is reused untouched.
+     admin-order.html?id=<order reference> (the same ?id= convention as the
+     product editor), deep-linkable: a valid id renders that snapshot, an
+     unknown id renders the not-found state. No other order is ever used as
+     a fallback. Django stage: the service internals become API calls; every
+     renderer below is reused untouched.
 
-   Snapshot principle: every price shown comes from the order's own item
-   lines (unitPrice/lineTotal recorded at order time). The catalog is
-   never consulted, so later price edits cannot rewrite history.
+   Snapshot principle: every price, quantity and unit shown comes from the
+   order's own item lines (recorded at order time). The catalog is never
+   consulted, so later price or unit edits cannot rewrite history.
    ========================================================================== */
 (function () {
   "use strict";
@@ -144,7 +145,7 @@
     }
     if (missing) {
       missing.removeAttribute("hidden");
-      document.title = "Order not found | O'Toosin Farms Admin";
+      document.title = "Order not found | O’TOOSIN Farms Admin";
     }
   }
 
@@ -164,12 +165,14 @@
       date.textContent = fmtDateFull(order.placedAt);
     }
     if (pills) {
-      pills.innerHTML = pill("Order: " + ob.label, ob.tone) + pill("Payment: " + pb.label, pb.tone);
+      pills.innerHTML =
+        pill("Order: " + ob.label, ob.tone) +
+        pill("Payment: " + pb.label, pb.tone);
     }
     if (heading) {
       heading.textContent = "Order " + order.id;
     }
-    document.title = "Order " + order.id + " | O'Toosin Farms Admin";
+    document.title = "Order " + order.id + " | O’TOOSIN Farms Admin";
   }
 
   function renderCustomer(order) {
@@ -199,12 +202,32 @@
     return li;
   }
 
-  function formatQty(value) {
-    var n = Number(value);
-    return isFinite(n) ? String(n) : String(value);
+  function itemThumb(item) {
+    var thumb = document.createElement("span");
+    thumb.className = "fd-order-item-thumb";
+    thumb.setAttribute("aria-hidden", "true");
+    if (item.image) {
+      var img = document.createElement("img");
+      img.src = item.image;
+      img.alt = "";
+      img.width = 44;
+      img.height = 44;
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.onerror = function () {
+        img.hidden = true;
+      };
+      thumb.appendChild(img);
+    } else {
+      var icon = document.createElement("i");
+      icon.className = "fas fa-box";
+      thumb.appendChild(icon);
+    }
+    return thumb;
   }
 
   function renderItems(order) {
+    var s = svc();
     var tbody = document.getElementById("fd-order-items-body");
     var wrap = document.getElementById("fd-order-items-wrap");
     if (!tbody || !wrap) {
@@ -213,6 +236,7 @@
     tbody.innerHTML = "";
     for (var i = 0; i < order.items.length; i++) {
       (function (it) {
+        var unit = s.itemUnitMeta(it);
         var tr = document.createElement("tr");
         var name = document.createElement("th");
         name.setAttribute("scope", "row");
@@ -220,37 +244,38 @@
 
         var product = document.createElement("span");
         product.className = "fd-order-item-product";
-        var thumb = document.createElement("span");
-        thumb.className = "fd-order-item-thumb";
-        thumb.setAttribute("aria-hidden", "true");
-        var icon = document.createElement("i");
-        icon.className = "fas fa-drumstick-bite";
-        thumb.appendChild(icon);
+        product.appendChild(itemThumb(it));
         var text = document.createElement("span");
         text.className = "fd-order-item-text";
         var nameStrong = document.createElement("strong");
         nameStrong.textContent = it.name;
         text.appendChild(nameStrong);
-        if (it.variantLabel) {
+        if (it.variantLabel || it.unit) {
           var variant = document.createElement("span");
           variant.className = "fd-orders-sub";
-          variant.textContent = it.variantLabel;
+          variant.textContent = it.variantLabel || it.unit;
           text.appendChild(variant);
         }
-        product.appendChild(thumb);
         product.appendChild(text);
         name.appendChild(product);
-
         tr.appendChild(name);
+
         var qty = document.createElement("td");
         qty.setAttribute("data-label", "Qty");
-        qty.textContent = formatQty(it.quantity) + " kg";
+        qty.textContent = s.itemQuantityValue(it);
         tr.appendChild(qty);
-        var unit = document.createElement("td");
-        unit.setAttribute("data-label", "Price / kg");
-        unit.className = "is-amount";
-        unit.textContent = fmtNaira(it.unitPrice);
-        tr.appendChild(unit);
+
+        var unitCell = document.createElement("td");
+        unitCell.setAttribute("data-label", "Unit");
+        unitCell.textContent = unit.label;
+        tr.appendChild(unitCell);
+
+        var price = document.createElement("td");
+        price.setAttribute("data-label", "Unit price");
+        price.className = "is-amount";
+        price.textContent = fmtNaira(it.unitPrice) + unit.priceSuffix;
+        tr.appendChild(price);
+
         var line = document.createElement("td");
         line.setAttribute("data-label", "Line total");
         line.className = "is-amount";
@@ -261,7 +286,6 @@
     }
     var total = document.getElementById("fd-order-total");
     if (total) {
-      /* Recorded snapshot total — never recalculated from the catalog. */
       total.textContent = fmtNaira(order.total);
     }
   }
@@ -274,22 +298,37 @@
       return;
     }
     var d = order.delivery;
+    var receive = order.receive;
+    var fee = s.deliveryFeeMeta(order);
     if (modeEl) {
       modeEl.textContent = s.deliveryLabel(d.mode);
     }
     host.innerHTML = "";
     var rows = [];
-    rows.push(["Full address", orNotProvided(d.address)]);
-    var cityState = [d.city, d.state].filter(Boolean).join(", ");
-    rows.push(["City / state", orNotProvided(cityState)]);
-    rows.push(["Landmark", orNotProvided(d.landmark)]);
-    rows.push(["Delivery instructions", orNotProvided(d.instructions)]);
-    rows.push([
-      "Delivery fee",
-      order.deliveryFee != null
-        ? fmtNaira(order.deliveryFee) + " (paid separately to the rider)"
-        : "Paid separately to the rider"
-    ]);
+    if (receive.method === "pickup") {
+      var pickup = receive.pickupLocation || {};
+      rows.push(["Pickup location", orNotProvided(pickup.name)]);
+      rows.push(["Pickup address", orNotProvided(pickup.address)]);
+      rows.push(["Delivery fee", fee.label]);
+    } else if (receive.method === "park") {
+      var destination = receive.parkDestination || {};
+      rows.push(["Park destination", orNotProvided(destination.name)]);
+      rows.push(["Park delivery fee", fee.label]);
+    } else {
+      var zone = receive.zone || {};
+      if (zone.name) {
+        rows.push([
+          "Delivery zone",
+          zone.areas ? zone.name + " — " + zone.areas : zone.name
+        ]);
+      }
+      rows.push(["Delivery address", orNotProvided(d.address)]);
+      rows.push(["City / town", orNotProvided(d.city)]);
+      rows.push(["State", orNotProvided(d.state)]);
+      rows.push(["Landmark", orNotProvided(d.landmark)]);
+      rows.push(["Delivery fee", fee.label]);
+    }
+    rows.push(["Order notes", orNotProvided(d.instructions)]);
     for (var i = 0; i < rows.length; i++) {
       host.appendChild(factRow(rows[i][0], rows[i][1]));
     }
@@ -303,20 +342,23 @@
     }
     var pb = s.paymentMeta(order);
     var method = s.paymentMethodMeta(order);
+    var fee = s.deliveryFeeMeta(order);
     host.innerHTML = "";
     host.appendChild(factRow("Payment method", method.label));
     host.appendChild(factRow("Payment status", pb.label));
     host.appendChild(factRow("Product subtotal", fmtNaira(order.subtotal)));
+    host.appendChild(factRow("Delivery fee", fee.label));
+    host.appendChild(factRow("Order total", fmtNaira(order.total)));
     host.appendChild(
       factRow(
-        "Delivery fee",
-        order.deliveryFee != null
-          ? fmtNaira(order.deliveryFee) + " (paid separately)"
-          : "Paid separately to the rider"
+        method.amountLabel,
+        fmtNaira(
+          order.payment && isFinite(order.payment.dueOnline)
+            ? order.payment.dueOnline
+            : order.total
+        )
       )
     );
-    host.appendChild(factRow("Product total", fmtNaira(order.total)));
-    host.appendChild(factRow(method.amountLabel, fmtNaira(order.total)));
     /* A payment reference is shown ONLY when the snapshot carries a
        verified one. Nothing is ever invented here. */
     if (
@@ -330,9 +372,11 @@
     }
     var note = document.getElementById("fd-order-payment-note");
     if (note) {
-      note.textContent =
-        method.detail +
-        " The website product total never includes the delivery fee.";
+      var feeNote =
+        order.receive.method === "park"
+          ? " The park delivery charge is not included until it is confirmed."
+          : "";
+      note.textContent = method.detail + feeNote;
     }
   }
 
@@ -400,9 +444,6 @@
     if (!form || !select) {
       return;
     }
-    /* Retrying a failed load must not stack duplicate submit handlers.
-       The form keeps the latest order on the element so one handler can
-       always act on fresh data. */
     form._fdOrder = order;
     if (form._fdStatusWired === true) {
       return;
@@ -424,8 +465,6 @@
         setStatusNote("That is already the current status — no change was made.", false);
         return;
       }
-      /* Genuine submitting state: the control locks while the service
-         persists. No artificial delay — the result lands immediately. */
       setStatusNote("", false);
       setSubmitting(true);
       var result = s.updateOrderStatus(current.id, next);
@@ -434,8 +473,12 @@
         current.status = result.order.status;
         form._fdOrder = current;
         renderHeader(current);
-        renderPayment(current);
-        setStatusNote("Order status updated to “" + s.orderStatusMeta(current.status).label + "”.", false);
+        setStatusNote(
+          "Order status updated to “" +
+            s.orderStatusMeta(current.status).label +
+            "”. Payment status was not changed.",
+          false
+        );
       } else {
         var message =
           (result.error && result.error.message) ||

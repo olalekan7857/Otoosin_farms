@@ -206,6 +206,133 @@
   color: var(--secondary-color);
 }
 
+/* ---------- How would you like to receive your order? ---------- */
+.oto-receive-lead {
+  margin: -2px 0 16px;
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.oto-receive-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.oto-receive-option {
+  position: relative;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--white-color);
+}
+
+.oto-receive-option > input {
+  position: absolute;
+  display: block;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  visibility: visible;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.oto-receive-option:has(input:focus-visible) {
+  outline-color: var(--fd-focus);
+}
+
+.oto-receive-option:has(input:checked) .oto-pay-tick {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.oto-receive-option:has(input:checked) .oto-pay-icon {
+  background: var(--secondary-color);
+  color: var(--white-color);
+}
+
+.oto-receive-panel[hidden] {
+  display: none;
+}
+
+.oto-receive-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--smoke-color);
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.oto-receive-note i {
+  margin-top: 3px;
+  color: var(--secondary-color);
+}
+
+/* ---------- Pickup locations ---------- */
+.oto-pickup-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.oto-pickup-location {
+  align-items: center;
+}
+
+.oto-pickup-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oto-pickup-copy strong {
+  display: block;
+  font-family: var(--title-font);
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.oto-pickup-copy small {
+  display: block;
+  margin-top: 2px;
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.oto-pickup-tick {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--secondary-color);
+  color: var(--white-color);
+  font-size: 10px;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.oto-pickup-location:has(input:checked) .oto-pickup-tick {
+  opacity: 1;
+  transform: scale(1);
+}
+
 /* ---------- Primary / secondary actions ---------- */
 .oto-checkout-actions {
   display: flex;
@@ -576,6 +703,7 @@
 /* ---------- Dark theme surfaces ---------- */
 html[data-theme="dark"] .oto-checkout-guest,
 html[data-theme="dark"] .oto-pay-option,
+html[data-theme="dark"] .oto-receive-option,
 html[data-theme="dark"] .oto-checkout-review {
   background: var(--fd-surface);
   border-color: var(--fd-hairline);
@@ -587,12 +715,14 @@ html[data-theme="dark"] .oto-checkout-thumb {
   background: var(--fd-surface-2);
 }
 
-html[data-theme="dark"] .oto-pay-option:has(input:checked) .oto-pay-icon {
+html[data-theme="dark"] .oto-pay-option:has(input:checked) .oto-pay-icon,
+html[data-theme="dark"] .oto-receive-option:has(input:checked) .oto-pay-icon {
   background: var(--secondary-color);
   color: var(--white-color);
 }
 
 html[data-theme="dark"] .oto-pay-note,
+html[data-theme="dark"] .oto-receive-note,
 html[data-theme="dark"] .oto-review-payment,
 html[data-theme="dark"] .oto-review-note {
   background: var(--fd-surface-2);
@@ -620,13 +750,16 @@ html[data-theme="dark"] .oto-checkout-summary .fd-cart-summary-row.is-total stro
 html[data-theme="dark"] .oto-review-total strong,
 html[data-theme="dark"] .oto-checkout-item-copy strong a:hover,
 html[data-theme="dark"] .oto-pay-note i,
+html[data-theme="dark"] .oto-receive-note i,
 html[data-theme="dark"] .oto-checkout-pay-summary i,
 html[data-theme="dark"] .oto-review-note i {
   color: var(--fd-brand-green-text);
 }
 
 html[data-theme="dark"] .oto-pay-tick,
-html[data-theme="dark"] .oto-pay-option:has(input:checked) .oto-pay-icon {
+html[data-theme="dark"] .oto-pickup-tick,
+html[data-theme="dark"] .oto-pay-option:has(input:checked) .oto-pay-icon,
+html[data-theme="dark"] .oto-receive-option:has(input:checked) .oto-pay-icon {
   background: var(--fd-brand-green-text);
   color: var(--fd-bg);
 }

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Stage 1 foundation (admin shell + login)
+   O’TOOSIN Farms Admin — Stage 1 foundation (admin shell + login)
    --------------------------------------------------------------------------
    Scoped ENTIRELY under `.fd-admin` so customer storefront styles are never
    affected. Reuses the existing project system only:
@@ -245,19 +245,24 @@
   margin: 0 auto;
 }
 
-/* ---------- Login card ---------- */
-/* Standalone sign-in page: no sidebar, menu or topbar — the card is the
-   only surface, with the theme toggle floating cleanly at top-right. */
-.fd-admin-login .fd-admin-shell--login {
+/* ---------- Login (admin-login.html only) ----------
+   A deliberate two-part sign-in surface: brand context on the left, the
+   working form on the right. Everything is scoped to .fd-admin-login so
+   the signed-in admin shell and storefront are unaffected. */
+.fd-admin.fd-admin-login {
+  background: var(--smoke-color);
+}
+
+.fd-admin.fd-admin-login .fd-admin-shell--login {
   display: block;
 }
 
-.fd-admin-login .fd-admin-main {
+.fd-admin.fd-admin-login .fd-admin-main {
   min-height: 100vh;
   min-height: 100dvh;
 }
 
-.fd-admin-login .fd-admin-login-theme {
+.fd-admin.fd-admin-login .fd-admin-login-theme {
   position: fixed;
   top: max(14px, env(safe-area-inset-top));
   right: max(14px, env(safe-area-inset-right));
@@ -266,36 +271,289 @@
   align-items: center;
 }
 
-.fd-admin-login .fd-admin-login-theme .fd-theme-toggle {
+.fd-admin.fd-admin-login .fd-admin-login-theme .fd-theme-toggle {
   background: var(--fd-surface);
   border: 1px solid var(--fd-hairline);
   border-radius: 12px;
   color: var(--fd-text);
 }
 
-html[data-theme="dark"] .fd-admin-login .fd-admin-login-theme .fd-theme-toggle {
+html[data-theme="dark"] .fd-admin.fd-admin-login {
+  background: var(--fd-bg);
+}
+
+html[data-theme="dark"] .fd-admin.fd-admin-login .fd-admin-login-theme .fd-theme-toggle {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
-.fd-admin-login .fd-admin-login-content {
+.fd-admin.fd-admin-login .fd-admin-login-content {
   min-height: 100vh;
   min-height: 100dvh;
   max-width: none;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 92px 24px 48px;
+  padding: 88px 24px 40px;
 }
 
 .fd-admin-login-wrap {
   width: 100%;
-  max-width: 480px;
+  max-width: 1060px;
   margin: 0 auto;
+}
+
+.fd-admin-login-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--fd-surface);
+  border: 1px solid var(--fd-hairline);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(6, 65, 29, 0.12);
+}
+
+html[data-theme="dark"] .fd-admin-login-shell {
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+}
+
+/* Brand context — desktop only. */
+.fd-admin.fd-admin-login .fd-admin-login-brand {
+  display: none;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--secondary-color);
+  color: var(--white-color);
+  padding: 46px 42px 38px;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-brand .fd-logo {
+  align-self: flex-start;
+  color: var(--white-color);
+  font-size: 26px;
+  margin-bottom: 48px;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-brand .fd-logo span {
+  color: var(--theme-color);
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-brand .fd-logo:focus-visible {
+  outline-color: var(--theme-color);
+}
+
+.fd-admin-login-brand-eyebrow,
+.fd-admin-login-eyebrow {
+  margin: 0 0 10px 0;
+  font-family: var(--title-font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.fd-admin-login-brand-eyebrow {
+  color: var(--theme-color);
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-brand h2 {
+  margin: 0 0 14px 0;
+  color: var(--white-color);
+  font-size: 32px;
+  line-height: 1.16;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-brand-copy > p:last-child {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+.fd-admin-login-brand-list {
+  list-style: none;
+  margin: 38px 0 0 0;
+  padding: 0;
+}
+
+.fd-admin-login-brand-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.fd-admin-login-brand-list li:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.fd-admin-login-brand-list i {
+  flex: 0 0 auto;
+  width: 20px;
+  margin-top: 2px;
+  color: var(--theme-color);
+  text-align: center;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-brand-foot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: auto 0 0 0;
+  padding-top: 30px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+}
+
+.fd-admin-login-brand-foot i {
+  color: var(--theme-color);
+}
+
+/* Working form surface. */
+.fd-admin-login-form-panel {
+  min-width: 0;
+  padding: 42px 44px 34px;
+  background: var(--fd-surface);
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-mobile-brand {
+  display: inline-flex;
+  margin-bottom: 28px;
+  font-size: 24px;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-card {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-card .fd-admin-card-head {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.fd-admin-login-eyebrow {
+  color: var(--fd-brand-green-text);
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-card .fd-admin-card-head h1 {
+  margin: 0 0 10px 0;
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-card .fd-admin-card-head p {
+  margin: 0;
+  color: var(--fd-text-2);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-card .fd-admin-card-head .fd-admin-login-eyebrow {
+  margin-bottom: 8px;
+  color: var(--fd-brand-green-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.fd-admin.fd-admin-login .form-control {
+  min-height: 54px;
+  font-size: 15px;
+}
+
+/* Sentence-case action label; the template globally capitalises button text. */
+.fd-admin.fd-admin-login .fd-admin-login-card .vs-btn {
+  text-transform: none;
+}
+
+/* The template hides checkboxes globally; restore the remember control. */
+.fd-admin.fd-admin-login .fd-admin-remember input[type="checkbox"] {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  visibility: visible;
+  opacity: 1;
+  accent-color: var(--secondary-color);
+}
+
+.fd-admin.fd-admin-login .fd-admin-back-link.fd-admin-login-back {
+  display: inline-flex;
+  width: 100%;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--fd-hairline);
+}
+
+.fd-admin-login-copyright {
+  margin: 22px 0 0 0;
+  color: var(--fd-text-3);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.fd-admin-login-copyright a {
+  color: var(--fd-brand-green-text);
+  font-weight: 600;
+}
+
+@media (min-width: 992px) {
+  .fd-admin-login-shell {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  }
+
+  .fd-admin.fd-admin-login .fd-admin-login-brand {
+    display: flex;
+  }
+
+  .fd-admin.fd-admin-login .fd-admin-login-mobile-brand {
+    display: none;
+  }
+}
+
+@media (max-width: 991px) {
+  .fd-admin.fd-admin-login .fd-admin-login-content {
+    padding: 80px 16px 30px;
+  }
+
+  .fd-admin-login-wrap {
+    max-width: 560px;
+  }
+
+  .fd-admin-login-shell {
+    border-radius: 20px;
+  }
+
+  .fd-admin-login-form-panel {
+    padding: 30px 26px 26px;
+  }
 }
 
 @media (max-width: 575px) {
   .fd-admin.fd-admin-login .fd-admin-login-content {
-    padding: 84px 14px 32px;
+    padding: 76px 12px 24px;
+  }
+
+  .fd-admin.fd-admin-login .fd-admin-login-form-panel {
+    padding: 24px 18px 20px;
+  }
+
+  .fd-admin.fd-admin-login .fd-admin-login-mobile-brand {
+    margin-bottom: 24px;
+  }
+
+  .fd-admin.fd-admin-login .fd-admin-login-card .fd-admin-card-head h1 {
+    font-size: 28px;
+  }
+
+  .fd-admin.fd-admin-login .fd-admin-login-brand h2 {
+    font-size: 28px;
   }
 }
 
@@ -586,7 +844,7 @@ html[data-theme="dark"] .fd-admin-login .fd-admin-login-theme .fd-theme-toggle {
 }
 
 /* ==========================================================================
-   O'Toosin Farms Admin — Stage 2 dashboard (admin-dashboard.html only)
+   O’TOOSIN Farms Admin — Stage 2 dashboard (admin-dashboard.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-dash-*). Every value reuses the existing system:
      tokens  -> style.css :root (theme/secondary/title/body/smoke/border/
@@ -623,6 +881,17 @@ html[data-theme="dark"] .fd-dash-card-icon {
   letter-spacing: 0.03em;
   white-space: nowrap;
   color: var(--title-color);
+}
+
+.fd-admin .fd-dash-date {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--body-font);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--body-color);
+  white-space: nowrap;
 }
 
 /* Dashboard buttons keep their natural width (Stage 1 forces .vs-btn
@@ -859,7 +1128,12 @@ html[data-theme="dark"] .fd-dash-card-icon {
 /* Dashboard order summary: seven readable columns on desktop, horizontal
    scroll inside the wrapper on smaller screens. */
 .fd-admin .fd-dash-orders-table {
-  min-width: 840px;
+  min-width: 920px;
+}
+
+.fd-admin .fd-dash-orders-table th,
+.fd-admin .fd-dash-orders-table td {
+  padding: 12px 14px;
 }
 
 .fd-admin .fd-dash-items {
@@ -886,7 +1160,26 @@ html[data-theme="dark"] .fd-dash-card-icon {
 .fd-admin .fd-dash-pay-state {
   font-size: 12.5px;
   color: var(--body-color);
-  white-space: nowrap;
+  white-space: normal;
+}
+
+/* Delivery & pickup summary: same quiet hierarchy as the payment cell. */
+.fd-admin .fd-dash-receive {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-admin .fd-dash-receive-method {
+  font-family: var(--title-font);
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--title-color);
+}
+
+.fd-admin .fd-dash-receive-note {
+  font-size: 12.5px;
+  color: var(--body-color);
 }
 
 /* The order table keeps its full seven-column layout on every screen and
@@ -901,7 +1194,7 @@ html[data-theme="dark"] .fd-dash-card-icon {
 
 @media (max-width: 1023px) {
   .fd-admin .fd-dash-orders-table {
-    min-width: 860px;
+    min-width: 940px;
   }
 
   .fd-admin .fd-dash-orders-table th,
@@ -1046,6 +1339,13 @@ html[data-theme="dark"] .fd-dash-card-icon {
   color: var(--secondary-color);
 }
 
+.fd-dash-empty-cell {
+  padding: 32px 16px !important;
+  text-align: center;
+  color: var(--body-color);
+  line-height: 1.6;
+}
+
 /* ---------- Error retry ---------- */
 .fd-dash-error-actions {
   margin-top: 14px;
@@ -1122,7 +1422,7 @@ html[data-theme="dark"] .fd-dash-card-icon {
 }
 
 /* ==========================================================================
-   O'Toosin Farms Admin — Stage 3A product list (admin-products.html only)
+   O’TOOSIN Farms Admin — Stage 3A product list (admin-products.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-prod-*). Reuses the existing system exactly:
      controls -> .fd-shop-search / .fd-shop-select / .form-control /
@@ -1308,11 +1608,10 @@ html[data-theme="dark"] .fd-dash-card-icon {
 }
 
 .fd-prod-thumb img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .fd-prod-id-block {
@@ -1729,7 +2028,7 @@ html[data-theme="dark"] .fd-dash-card-icon {
 }
 
 /* ==========================================================================
-   O'Toosin Farms Admin — Stage 3B product editor (admin-product-edit.html only)
+   O’TOOSIN Farms Admin — Stage 3B product editor (admin-product-edit.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-edit-*). Reuses the existing system exactly:
      shell    -> .fd-admin-shell / sidebar / topbar (Stage 1, untouched)
@@ -1835,11 +2134,10 @@ html[data-theme="dark"] .fd-dash-card-icon {
 }
 
 .fd-admin .fd-edit-preview-frame img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .fd-admin .fd-edit-preview-frame img[hidden] {
@@ -1946,7 +2244,7 @@ html[data-theme="dark"] .fd-dash-card-icon {
   gap: 12px;
 }
 
-/* ---------- Price per kilogram ----------------------------------------- */
+/* ---------- Product price ------------------------------------------------ */
 .fd-admin .fd-edit-price-field {
   max-width: 460px;
 }
@@ -2135,11 +2433,10 @@ html[data-theme="dark"] .fd-dash-card-icon {
 }
 
 .fd-admin .fd-edit-result-thumb img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .fd-admin .fd-edit-result-body {
@@ -2366,7 +2663,7 @@ html[data-theme="dark"] .fd-dash-card-icon {
 }
 
 /* ==========================================================================
-   O'Toosin Farms Admin — Stage 4 order management (admin-orders.html +
+   O’TOOSIN Farms Admin — Stage 4 order management (admin-orders.html +
    admin-order.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-orders-* / .fd-order-*). Reuses the existing
@@ -2420,6 +2717,100 @@ html[data-theme="dark"] .fd-dash-card-icon {
   font-size: 13px;
   color: var(--body-color);
   overflow-wrap: break-word;
+}
+
+.fd-admin .fd-orders-date {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--body-font);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--body-color);
+  white-space: normal;
+}
+
+.fd-admin .fd-orders-items {
+  display: block;
+  max-width: 240px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.fd-admin .fd-orders-receive {
+  display: block;
+  min-width: 0;
+}
+
+.fd-admin .fd-orders-receive-method {
+  display: block;
+  font-family: var(--title-font);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--title-color);
+  overflow-wrap: break-word;
+}
+
+.fd-admin .fd-orders-receive-place {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--body-color);
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 768px) {
+  .fd-admin .fd-orders-table {
+    min-width: 900px;
+  }
+
+  /* Fit all eight order columns at 1280px without clipping the action.
+     Vertical rhythm stays on the shared table rules. */
+  .fd-admin .fd-orders-table th,
+  .fd-admin .fd-orders-table td {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .fd-admin .fd-orders-table .fd-prod-btn {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .fd-admin .fd-orders-table .fd-dash-pill {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+/* ---------- Order list pagination ---------- */
+.fd-admin .fd-orders-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 18px;
+}
+
+.fd-admin .fd-orders-pagination[hidden] {
+  display: none;
+}
+
+.fd-admin .fd-orders-pageinfo {
+  margin: 0;
+  font-family: var(--title-font);
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--body-color);
+  text-align: center;
+}
+
+.fd-admin .fd-orders-pagination .fd-dash-btn {
+  min-width: 120px;
+  justify-content: center;
 }
 
 /* ---------- Order list toolbar: deliberate desktop widths ----------
@@ -2585,6 +2976,12 @@ html[data-theme="dark"] .fd-dash-card-icon {
 
 .fd-admin .fd-order-items-scroll {
   margin-bottom: 4px;
+}
+
+@media (min-width: 768px) {
+  .fd-admin .fd-order-items-table {
+    min-width: 720px;
+  }
 }
 
 /* ---------- Order detail: status form note ---------- */
@@ -2818,6 +3215,25 @@ html[data-theme="dark"] .fd-dash-card-icon {
     padding: 10px 18px;
     font-size: 14px;
   }
+
+  .fd-admin .fd-orders-items {
+    max-width: none;
+    text-align: left;
+  }
+
+  .fd-admin .fd-orders-receive {
+    text-align: left;
+  }
+
+  .fd-admin .fd-orders-pagination .fd-dash-btn {
+    flex: 1 1 130px;
+    min-width: 0;
+  }
+
+  .fd-admin .fd-orders-pageinfo {
+    flex: 1 1 100%;
+    order: -1;
+  }
 }
 
 @media (max-width: 360px) {
@@ -2837,7 +3253,7 @@ html[data-theme="dark"] .fd-dash-card-icon {
 }
 
 /* ==========================================================================
-   O'Toosin Farms Admin — Stage 5 settings (admin-settings.html only)
+   O’TOOSIN Farms Admin — Stage 5 settings (admin-settings.html only)
    --------------------------------------------------------------------------
    New classes only (.fd-set-* / .fd-required). Reuses the existing system
    exactly:
@@ -3150,6 +3566,14 @@ html[data-theme="dark"] .fd-dash-card-icon {
   background: var(--smoke-color);
   color: var(--body-color);
   font-size: 18px;
+  overflow: hidden;
+}
+
+.fd-admin .fd-order-item-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .fd-admin .fd-order-item-text {

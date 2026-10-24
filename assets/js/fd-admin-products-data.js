@@ -2,8 +2,9 @@
    O'Toosin Farms Admin — Product source boundary
    --------------------------------------------------------------------------
    The admin pages never load fresh-direct.js so the customer cart store
-   cannot leak into the seller area. This file mirrors the O'Toosin Farms
-   meat catalogue in the canonical product shape used by the storefront.
+   cannot leak into the seller area. This file mirrors the O’TOOSIN Farms
+   whole-farm catalogue (meats, fish, live animals, eggs, veggies and
+   fruits) in the canonical product shape used by the storefront.
 
    getCatalog() returns the built-in demonstration records plus anything
    the seller created or edited in this browser through
@@ -11,7 +12,8 @@
    callers cannot mutate the built-in records.
 
    Demonstration values are marked here in source only. Prices are Naira
-   per kilogram and represent illustrative frontend data.
+   and follow each product's selling unit; they are illustrative frontend
+   data.
    ========================================================================== */
 (function () {
   "use strict";
@@ -55,7 +57,7 @@
       category: "Chicken",
       group: "Poultry",
       condition: "Fresh",
-      cut: "Whole bird",
+      cut: "Whole chicken",
       priceBasis: "Per kilogram",
       priceUnit: "per kg",
       status: "in",
@@ -224,6 +226,70 @@
       desc: "Fried catfish that adds a rich smoked flavour to soups and stews.",
       images: [{ src: "assets/img/meat/catfish.svg", alt: "Fried catfish", w: 480, h: 360 }],
       variants: [{ id: "1kg", label: "1kg", price: 6500 }]
+    },
+    "demo-live-chicken": {
+      id: "demo-live-chicken",
+      name: "Live Chicken",
+      category: "Live Animals",
+      group: "Farm animals",
+      condition: "Live",
+      cut: "Live whole chicken",
+      priceBasis: "Per chicken",
+      priceUnit: "per chicken",
+      status: "in",
+      badge: "Live",
+      defaultVariant: "1 live chicken",
+      desc: "A live chicken selected from the farm, available as part of the Live Animals category.",
+      images: [{ src: "assets/img/families/live-animals-card.svg", alt: "Live farm chickens", w: 480, h: 360 }],
+      variants: [{ id: "1 live chicken", label: "1 live chicken", price: 9500 }]
+    },
+    "demo-farm-eggs": {
+      id: "demo-farm-eggs",
+      name: "Farm Eggs",
+      category: "Eggs",
+      group: "Farm produce",
+      condition: "Fresh",
+      cut: "Crate",
+      priceBasis: "Per crate",
+      priceUnit: "per crate",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1 crate",
+      desc: "Fresh eggs from the farm, packed as a crate for household cooking and baking.",
+      images: [{ src: "assets/img/families/eggs-card.svg", alt: "A tray of fresh farm eggs", w: 480, h: 360 }],
+      variants: [{ id: "1 crate", label: "1 crate", price: 3800 }]
+    },
+    "demo-fresh-tomatoes": {
+      id: "demo-fresh-tomatoes",
+      name: "Fresh Tomatoes",
+      category: "Veggies",
+      group: "Farm produce",
+      condition: "Fresh",
+      cut: "Basket",
+      priceBasis: "Per basket",
+      priceUnit: "per basket",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1 basket",
+      desc: "Fresh farm tomatoes for stews, sauces and everyday cooking.",
+      images: [{ src: "assets/img/families/vegetables-card.svg", alt: "A basket of fresh vegetables", w: 480, h: 360 }],
+      variants: [{ id: "1 basket", label: "1 basket", price: 2500 }]
+    },
+    "demo-sweet-oranges": {
+      id: "demo-sweet-oranges",
+      name: "Sweet Oranges",
+      category: "Fruits",
+      group: "Farm produce",
+      condition: "Fresh",
+      cut: "Basket",
+      priceBasis: "Per basket",
+      priceUnit: "per basket",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1 basket",
+      desc: "Sweet farm oranges, packed in a basket for snacking and fresh juice.",
+      images: [{ src: "assets/img/families/fruits-card.svg", alt: "A basket of fresh fruits", w: 480, h: 360 }],
+      variants: [{ id: "1 basket", label: "1 basket", price: 3000 }]
     }
   };
 

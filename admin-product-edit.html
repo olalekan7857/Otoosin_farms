@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Add or Edit Product | O'Toosin Farms Admin</title>
-    <meta name="author" content="O'Toosin Farms">
+    <title>Add or Edit Product | O’TOOSIN Farms Admin</title>
+    <meta name="author" content="O’TOOSIN Farms">
     <!-- Admin is private: never index admin pages or expose product data. -->
     <meta name="robots" content="NOINDEX,NOFOLLOW">
-    <meta name="description" content="Private O'Toosin Farms product editor.">
+    <meta name="description" content="Private O’TOOSIN Farms whole-farm product editor.">
 
     <!-- Mobile Specific Metas -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -58,9 +58,9 @@
         <!-- Sidebar navigation -->
         <aside class="fd-admin-sidebar" id="fd-admin-sidebar" aria-label="Admin navigation">
             <div class="fd-admin-brand">
-                <a href="index.html" class="fd-logo" aria-label="O'Toosin Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="59" height="42">O'Toosin<span> Farms</span></a>
+                <a href="index.html" class="fd-logo" aria-label="O’TOOSIN Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="59" height="42">O’TOOSIN<span> Farms</span></a>
             </div>
-            <p class="fd-admin-role">Store Admin</p>
+            <p class="fd-admin-role">Farm Admin</p>
             <nav class="fd-admin-nav" aria-label="Management sections">
                 <ul>
                     <li>
@@ -113,7 +113,7 @@
                     <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
                 <h1 class="fd-admin-title" id="fd-ed-topbar-title">Product Editor</h1>
-                <span class="fd-admin-context">Store admin &middot; product management</span>
+                <span class="fd-admin-context">Farm admin &middot; product management</span>
                 <button type="button" class="icon-btn fd-theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
                     <i class="fas fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
                     <i class="fas fa-sun" data-theme-icon="sun" aria-hidden="true" hidden></i>
@@ -124,7 +124,7 @@
                 <div class="fd-dash-head">
                     <p class="fd-edit-back"><a href="admin-products.html"><i class="fas fa-arrow-left" aria-hidden="true"></i>Back to Products</a></p>
                     <h2 class="fd-edit-title" id="fd-ed-heading">Product Editor</h2>
-                    <p class="fd-dash-lead" id="fd-ed-lead">Add a meat line with its category, condition, price per kilogram and photo.</p>
+                    <p class="fd-dash-lead" id="fd-ed-lead">Add a product with its category, selling unit, condition, price and photo.</p>
                 </div>
 
                 <noscript>
@@ -192,27 +192,50 @@
                                     <label for="fd-ed-category">Category</label>
                                     <select class="form-select" id="fd-ed-category" name="category" required aria-describedby="fd-ed-category-error fd-ed-category-hint">
                                         <option value="">Choose a category…</option>
-                                        <option value="Pork">Pork</option>
-                                        <option value="Chicken">Chicken</option>
-                                        <option value="Turkey">Turkey</option>
-                                        <option value="Beef">Beef</option>
-                                        <option value="Goat Meat">Goat Meat</option>
+                                        <optgroup label="Meats">
+                                            <option value="Pork">Pork</option>
+                                            <option value="Chicken">Chicken</option>
+                                            <option value="Turkey">Turkey</option>
+                                            <option value="Beef">Beef</option>
+                                            <option value="Goat Meat">Goat Meat</option>
+                                        </optgroup>
                                         <option value="Fish">Fish</option>
+                                        <option value="Live Animals">Live Animals</option>
+                                        <option value="Eggs">Eggs</option>
+                                        <option value="Veggies">Veggies</option>
+                                        <option value="Fruits">Fruits</option>
                                     </select>
-                                    <p class="fd-dash-hint" id="fd-ed-category-hint">Used for the shop filters and for the meat group shown on cards.</p>
+                                    <p class="fd-dash-hint" id="fd-ed-category-hint">Meats use the relevant cut type; the other categories match the storefront filter.</p>
                                     <span class="fd-field-error" id="fd-ed-category-error" hidden></span>
                                 </div>
                             </div>
+                            <div class="fd-edit-grid">
+                                <div class="fd-field">
+                                    <label for="fd-ed-unit">Selling unit</label>
+                                    <select class="form-select" id="fd-ed-unit" name="unit" required aria-describedby="fd-ed-unit-error fd-ed-unit-hint">
+                                        <option value="">Choose a unit…</option>
+                                        <option value="kg">Per kilogram (kg)</option>
+                                        <option value="crate">Per crate</option>
+                                        <option value="basket">Per basket</option>
+                                        <option value="chicken">Per live chicken</option>
+                                    </select>
+                                    <p class="fd-dash-hint" id="fd-ed-unit-hint">Matches how the storefront prices and sells this product.</p>
+                                    <span class="fd-field-error" id="fd-ed-unit-error" hidden></span>
+                                </div>
+                                <div class="fd-field">
+                                    <label for="fd-ed-condition">Product condition</label>
+                                    <select class="form-select" id="fd-ed-condition" name="condition" required aria-describedby="fd-ed-condition-error fd-ed-condition-hint">
+                                        <option value="">Choose a category first</option>
+                                    </select>
+                                    <p class="fd-dash-hint" id="fd-ed-condition-hint">Available conditions depend on the selected category.</p>
+                                    <span class="fd-field-error" id="fd-ed-condition-error" hidden></span>
+                                </div>
+                            </div>
                             <div class="fd-field">
-                                <label for="fd-ed-condition">Product condition</label>
-                                <select class="form-select" id="fd-ed-condition" name="condition" required aria-describedby="fd-ed-condition-error fd-ed-condition-hint">
-                                    <option value="">Choose a condition…</option>
-                                    <option value="Fresh">Fresh</option>
-                                    <option value="Frozen">Frozen</option>
-                                    <option value="Fried">Fried</option>
-                                </select>
-                                <p class="fd-dash-hint" id="fd-ed-condition-hint">Fresh and Frozen describe how the meat is kept; Fried marks ready-to-eat meat.</p>
-                                <span class="fd-field-error" id="fd-ed-condition-error" hidden></span>
+                                <label for="fd-ed-cut" id="fd-ed-cut-label">Cut or pack detail <span class="fd-dash-count">(optional)</span></label>
+                                <input class="form-control" type="text" id="fd-ed-cut" name="cut" autocomplete="off" maxlength="160" aria-describedby="fd-ed-cut-error fd-ed-cut-hint">
+                                <p class="fd-dash-hint" id="fd-ed-cut-hint">The cut, pack or animal detail shown on the product page, for example “Bone-in chops” or “1 crate”.</p>
+                                <span class="fd-field-error" id="fd-ed-cut-error" hidden></span>
                             </div>
                             <div class="fd-field">
                                 <label for="fd-ed-availability">Availability Status</label>
@@ -235,7 +258,7 @@
                         <!-- Product image -->
                         <section class="fd-dash-section" aria-labelledby="fd-ed-image-title">
                             <h2 id="fd-ed-image-title">Product image</h2>
-                            <p class="fd-dash-hint" style="margin-top:0">Choose a clear photo of the meat. The preview updates as you choose.</p>
+                            <p class="fd-dash-hint" style="margin-top:0">Choose a clear photo of the product. The preview updates as you choose.</p>
                             <div class="fd-edit-image-layout">
                                 <div class="fd-edit-image-fields">
                                     <div class="fd-field">
@@ -280,13 +303,13 @@
                         <!-- Price -->
                         <section class="fd-dash-section" aria-labelledby="fd-ed-price-title">
                             <h2 id="fd-ed-price-title">Price</h2>
-                            <p class="fd-dash-hint" style="margin-top:0">Enter the price for one kilogram. Customers choose their weight in kilograms on the product page.</p>
+                            <p class="fd-dash-hint" style="margin-top:0">Enter the price for the selected selling unit. Customers choose that unit on the product page.</p>
                             <div class="fd-field fd-edit-price-field">
-                                <label for="fd-ed-price">Price per kilogram (&#8358;)</label>
+                                <label for="fd-ed-price" id="fd-ed-price-label">Price (&#8358;)</label>
                                 <div class="fd-edit-price-input">
                                     <span class="fd-edit-price-prefix" aria-hidden="true">&#8358;</span>
                                     <input class="form-control" type="text" id="fd-ed-price" name="price" inputmode="decimal" autocomplete="off" maxlength="14" required aria-describedby="fd-ed-price-error fd-ed-price-hint">
-                                    <span class="fd-edit-price-suffix">/ kg</span>
+                                    <span class="fd-edit-price-suffix" id="fd-ed-price-suffix">/ kg</span>
                                 </div>
                                 <p class="fd-dash-hint" id="fd-ed-price-hint">Numbers only, for example 4800.</p>
                                 <span class="fd-field-error" id="fd-ed-price-error" hidden></span>
@@ -316,7 +339,7 @@
                 </div>
 
                 <p class="fd-dash-foot-note">
-                    Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O'Toosin Farms</a>. Store admin.
+                    Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O’TOOSIN Farms</a>. Farm admin.
                 </p>
             </main>
         </div>

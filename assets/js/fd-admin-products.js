@@ -1,5 +1,5 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Product list (admin-products.html only)
+   O’TOOSIN Farms Admin — Product list (admin-products.html only)
    --------------------------------------------------------------------------
    The cards are already in the page, so the catalogue is fully readable
    without JavaScript. This controller filters, sorts and counts those
@@ -7,9 +7,9 @@
    no persistence layer.
 
    Local demonstration records live in admin-products.html. Prices are
-   Naira per kilogram. When the store backend is connected, the same card
-   markup can be produced by a template loop and this controller can keep
-   filtering the rendered list until server-side filtering replaces it.
+   Naira in each product's selling unit. When the store backend is connected,
+   the same card markup can be produced by a template loop and this controller
+   can keep filtering the rendered list until server-side filtering replaces it.
    ========================================================================== */
 (function () {
   "use strict";
@@ -48,8 +48,11 @@
   }
 
   function matches(card) {
-    if (state.category !== "all" && value(card, "category") !== state.category) {
-      return false;
+    if (state.category !== "all") {
+      var cardGroup = value(card, "category-group");
+      if (cardGroup !== state.category) {
+        return false;
+      }
     }
     if (state.productState !== "all" && value(card, "state") !== state.productState) {
       return false;
@@ -59,6 +62,8 @@
         value(card, "name") +
         " " +
         value(card, "category") +
+        " " +
+        value(card, "category-group") +
         " " +
         value(card, "state")
       ).toLowerCase();
@@ -106,7 +111,7 @@
   }
 
   function updateSummary() {
-    var totals = { Fresh: 0, Frozen: 0, Fried: 0 };
+    var totals = { Fresh: 0, Frozen: 0, Fried: 0, Live: 0 };
     for (var i = 0; i < cards.length; i++) {
       var cardState = value(cards[i], "state");
       if (totals[cardState] !== undefined) {
@@ -117,6 +122,7 @@
     var fresh = document.getElementById("fd-sum-fresh");
     var frozen = document.getElementById("fd-sum-frozen");
     var fried = document.getElementById("fd-sum-fried");
+    var live = document.getElementById("fd-sum-live");
     if (total) {
       total.textContent = String(cards.length);
     }
@@ -128,6 +134,9 @@
     }
     if (fried) {
       fried.textContent = String(totals.Fried);
+    }
+    if (live) {
+      live.textContent = String(totals.Live);
     }
   }
 
@@ -201,6 +210,10 @@
       return;
     }
     var wanted = raw.replace(/-/g, " ").toLowerCase();
+    var meatGroups = ["pork", "chicken", "turkey", "beef", "goat meat"];
+    if (meatGroups.indexOf(wanted) !== -1) {
+      wanted = "meats";
+    }
     if (!category) {
       return;
     }

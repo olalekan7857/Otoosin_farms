@@ -1,5 +1,5 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Product Editor
+   O’TOOSIN Farms Admin — Product Editor
    --------------------------------------------------------------------------
    One page (admin-product-edit.html) serves both modes:
      Add  -> admin-product-edit.html            (no ?id=, or ?mode=new)
@@ -17,8 +17,80 @@
 (function () {
   "use strict";
 
-  var CATEGORIES = ["Pork", "Chicken", "Turkey", "Beef", "Goat Meat", "Fish"];
-  var CONDITIONS = ["Fresh", "Frozen", "Fried"];
+  /* Meat products keep their specific cut category (Pork, Chicken, …) so
+     the storefront's meat filters and breadcrumbs stay intact. The other
+     five marketplace categories are stored directly. */
+  var CATEGORIES = [
+    "Pork", "Chicken", "Turkey", "Beef", "Goat Meat",
+    "Fish", "Live Animals", "Eggs", "Veggies", "Fruits"
+  ];
+  var CATEGORY_GROUP = {
+    "Pork": "Meats",
+    "Chicken": "Meats",
+    "Turkey": "Meats",
+    "Beef": "Meats",
+    "Goat Meat": "Meats",
+    "Fish": "Fish",
+    "Live Animals": "Live Animals",
+    "Eggs": "Eggs",
+    "Veggies": "Veggies",
+    "Fruits": "Fruits"
+  };
+  var CONDITIONS_BY_GROUP = {
+    "Meats": ["Fresh", "Frozen", "Fried"],
+    "Fish": ["Fresh", "Frozen", "Fried"],
+    "Live Animals": ["Live"],
+    "Eggs": ["Fresh"],
+    "Veggies": ["Fresh"],
+    "Fruits": ["Fresh"]
+  };
+  var ALL_CONDITIONS = ["Fresh", "Frozen", "Fried", "Live"];
+  var UNITS = {
+    "kg": {
+      priceBasis: "Per kilogram",
+      priceUnit: "per kg",
+      variantId: "1kg",
+      variantLabel: "1kg",
+      suffix: "/ kg",
+      priceLabel: "Price per kilogram (\u20A6)",
+      priceHint: "Numbers only, for example 4800."
+    },
+    "crate": {
+      priceBasis: "Per crate",
+      priceUnit: "per crate",
+      variantId: "1 crate",
+      variantLabel: "1 crate",
+      suffix: "/ crate",
+      priceLabel: "Price per crate (\u20A6)",
+      priceHint: "Numbers only, for example 3800."
+    },
+    "basket": {
+      priceBasis: "Per basket",
+      priceUnit: "per basket",
+      variantId: "1 basket",
+      variantLabel: "1 basket",
+      suffix: "/ basket",
+      priceLabel: "Price per basket (\u20A6)",
+      priceHint: "Numbers only, for example 2500."
+    },
+    "chicken": {
+      priceBasis: "Per chicken",
+      priceUnit: "per chicken",
+      variantId: "1 live chicken",
+      variantLabel: "1 live chicken",
+      suffix: "/ chicken",
+      priceLabel: "Price per live chicken (\u20A6)",
+      priceHint: "Numbers only, for example 9500."
+    }
+  };
+  var DEFAULT_UNIT_BY_GROUP = {
+    "Meats": "kg",
+    "Fish": "kg",
+    "Live Animals": "chicken",
+    "Eggs": "crate",
+    "Veggies": "basket",
+    "Fruits": "basket"
+  };
   var AVAILABILITY = ["in", "limited", "out"];
   var AVAILABILITY_LABELS = {
     "in": "Available",
@@ -41,7 +113,11 @@
     "Turkey": "Poultry",
     "Beef": "Red meat",
     "Goat Meat": "Red meat",
-    "Fish": "Seafood"
+    "Fish": "Seafood",
+    "Live Animals": "Farm animals",
+    "Eggs": "Farm produce",
+    "Veggies": "Farm produce",
+    "Fruits": "Farm produce"
   };
 
   function fmtNaira(n) {
@@ -267,15 +343,17 @@
     return { ok: true, value: value, error: "" };
   }
 
-  function priceErrorText(code) {
+  function priceErrorText(code, unitKey) {
+    var meta = unitMeta(unitKey);
+    var basis = meta.priceBasis.toLowerCase();
     if (code === "empty") {
-      return "Enter a price per kilogram.";
+      return "Enter a price (" + basis + ").";
     }
     if (code === "malformed") {
       return "Enter a valid amount using numbers only, for example 4800.";
     }
     if (code === "non-positive") {
-      return "Enter a price above " + fmtNaira(0) + " per kilogram.";
+      return "Enter a price above " + fmtNaira(0) + " (" + basis + ").";
     }
     return "That price looks unusually large — check it and try again.";
   }
@@ -296,6 +374,54 @@
     return GROUP_BY_CATEGORY[category] || "";
   }
 
+  function categoryGroup(category) {
+    return CATEGORY_GROUP[category] || "";
+  }
+
+  function conditionsForCategory(category) {
+    var group = categoryGroup(category);
+    return (group && CONDITIONS_BY_GROUP[group]) || ALL_CONDITIONS;
+  }
+
+  function defaultUnitForCategory(category) {
+    var group = categoryGroup(category);
+    return (group && DEFAULT_UNIT_BY_GROUP[group]) || "kg";
+  }
+
+  function unitMeta(key) {
+    return UNITS[key] || UNITS.kg;
+  }
+
+  function resolveUnitKey(entry) {
+    if (!entry) {
+      return "kg";
+    }
+    var priceUnit = trim(entry.priceUnit).toLowerCase();
+    if (priceUnit.indexOf("crate") !== -1) {
+      return "crate";
+    }
+    if (priceUnit.indexOf("basket") !== -1) {
+      return "basket";
+    }
+    if (
+      priceUnit.indexOf("chicken") !== -1 ||
+      priceUnit.indexOf("animal") !== -1
+    ) {
+      return "chicken";
+    }
+    var variant = trim(entry.defaultVariant).toLowerCase();
+    if (variant.indexOf("crate") !== -1) {
+      return "crate";
+    }
+    if (variant.indexOf("basket") !== -1) {
+      return "basket";
+    }
+    if (variant.indexOf("chicken") !== -1 || variant.indexOf("animal") !== -1) {
+      return "chicken";
+    }
+    return "kg";
+  }
+
   function validateProduct(draft, ctx) {
     var errors = [];
     var categories = (ctx && ctx.categories) || CATEGORIES;
@@ -313,10 +439,25 @@
       errors.push({ target: "fd-ed-category", message: "Choose a valid category from the list." });
     }
 
+    var allowedConditions = conditionsForCategory(draft.category);
     if (!trim(draft.condition)) {
       errors.push({ target: "fd-ed-condition", message: "Choose a product condition." });
-    } else if (CONDITIONS.indexOf(draft.condition) === -1) {
-      errors.push({ target: "fd-ed-condition", message: "Choose Fresh, Frozen or Fried." });
+    } else if (allowedConditions.indexOf(draft.condition) === -1) {
+      errors.push({
+        target: "fd-ed-condition",
+        message: "Choose " + allowedConditions.join(", ") + " for this category."
+      });
+    }
+
+    if (!trim(draft.unit)) {
+      errors.push({ target: "fd-ed-unit", message: "Choose a selling unit." });
+    } else if (!UNITS[draft.unit]) {
+      errors.push({ target: "fd-ed-unit", message: "Choose a valid selling unit." });
+    }
+
+    var cut = trim(draft.cut);
+    if (cut.length > 160) {
+      errors.push({ target: "fd-ed-cut", message: "Keep the cut or pack detail under 160 characters." });
     }
 
     var desc = trim(draft.desc);
@@ -339,7 +480,7 @@
 
     var price = parsePrice(draft.price);
     if (!price.ok) {
-      errors.push({ target: "fd-ed-price", message: priceErrorText(price.error) });
+      errors.push({ target: "fd-ed-price", message: priceErrorText(price.error, draft.unit) });
     }
 
     if (!resolveAvailability(draft)) {
@@ -379,21 +520,31 @@
       h = draft.imageHeight;
     }
 
+    var unit = unitMeta(draft.unit);
+    var cut = trim(draft.cut);
+    if (!cut && !isCreate && original && original.category === category) {
+      cut = original.cut || "";
+    }
+
     var payload = {
       id: id,
       name: name,
       category: category,
       group: groupForCategory(category) || (original && original.group) || "",
       condition: condition,
-      cut: (original && original.category === category && original.cut) || "",
-      priceBasis: "Per kilogram",
-      priceUnit: "per kg",
+      cut: cut,
+      priceBasis: unit.priceBasis,
+      priceUnit: unit.priceUnit,
       status: availability,
       badge: condition,
-      defaultVariant: "1kg",
+      defaultVariant: unit.variantId,
       desc: trim(draft.desc),
       images: [{ src: src, alt: trim(draft.imageAlt), w: w, h: h }],
-      variants: [{ id: "1kg", label: "1kg", price: price.ok ? price.value : 0 }]
+      variants: [{
+        id: unit.variantId,
+        label: unit.variantLabel,
+        price: price.ok ? price.value : 0
+      }]
     };
     return payload;
   }
@@ -486,9 +637,15 @@
 
     var nameInput = el("fd-ed-name");
     var categorySelect = el("fd-ed-category");
+    var unitSelect = el("fd-ed-unit");
     var conditionSelect = el("fd-ed-condition");
+    var conditionHint = el("fd-ed-condition-hint");
     var availabilitySelect = el("fd-ed-availability");
     var descInput = el("fd-ed-desc");
+    var cutInput = el("fd-ed-cut");
+    var priceLabel = el("fd-ed-price-label");
+    var priceSuffix = el("fd-ed-price-suffix");
+    var priceHint = el("fd-ed-price-hint");
     var imageSrcInput = el("fd-ed-image-src");
     var imageAltInput = el("fd-ed-image-alt");
     var imageOptions = el("fd-ed-image-options");
@@ -536,7 +693,7 @@
 
     function applyModeText(entry) {
       if (isCreate) {
-        document.title = "Add Product | O'Toosin Farms Admin";
+        document.title = "Add Product | O’TOOSIN Farms Admin";
         if (heading) {
           heading.textContent = "Add Product";
         }
@@ -544,7 +701,7 @@
           topbarTitle.textContent = "Add Product";
         }
         if (lead) {
-          lead.textContent = "Add a meat line with its category, condition, price per kilogram and photo.";
+          lead.textContent = "Add a product with its category, selling unit, condition, price and photo.";
         }
         if (submitLabel) {
           submitLabel.textContent = "Add Product";
@@ -553,7 +710,7 @@
           identitySection.hidden = true;
         }
       } else {
-        document.title = "Edit " + entry.name + " | O'Toosin Farms Admin";
+        document.title = "Edit " + entry.name + " | O’TOOSIN Farms Admin";
         if (heading) {
           heading.textContent = "Edit Product";
         }
@@ -618,6 +775,66 @@
       imagePick.value = found ? current : "";
     }
 
+    function populateConditions(selected) {
+      if (!conditionSelect) {
+        return;
+      }
+      var category = categorySelect ? categorySelect.value : "";
+      var allowed = category ? conditionsForCategory(category) : [];
+      conditionSelect.innerHTML = "";
+      var placeholder = document.createElement("option");
+      placeholder.value = "";
+      if (!category) {
+        placeholder.textContent = "Choose a category first";
+        conditionSelect.appendChild(placeholder);
+        conditionSelect.disabled = true;
+        return;
+      }
+      placeholder.textContent = "Choose a condition…";
+      conditionSelect.appendChild(placeholder);
+      for (var i = 0; i < allowed.length; i++) {
+        var option = document.createElement("option");
+        option.value = allowed[i];
+        option.textContent = allowed[i];
+        conditionSelect.appendChild(option);
+      }
+      conditionSelect.disabled = false;
+      conditionSelect.value = allowed.indexOf(selected) !== -1
+        ? selected
+        : allowed[0];
+      if (conditionHint) {
+        conditionHint.textContent = categoryGroup(category) === "Meats" ||
+          category === "Fish"
+          ? "Fresh and Frozen describe how it is kept; Fried marks ready-to-eat products."
+          : category === "Live Animals"
+            ? "Live products are collected or delivered alive."
+            : "Fresh is the current state for this farm category.";
+      }
+    }
+
+    function updateUnitText() {
+      var meta = unitMeta(unitSelect ? unitSelect.value : "kg");
+      if (priceLabel) {
+        priceLabel.textContent = meta.priceLabel;
+      }
+      if (priceSuffix) {
+        priceSuffix.textContent = meta.suffix;
+      }
+      if (priceHint) {
+        priceHint.textContent = meta.priceHint;
+      }
+    }
+
+    function syncCategoryFields() {
+      var category = categorySelect ? categorySelect.value : "";
+      var currentCondition = conditionSelect ? conditionSelect.value : "";
+      populateConditions(currentCondition);
+      if (isCreate && unitSelect) {
+        unitSelect.value = defaultUnitForCategory(category);
+      }
+      updateUnitText();
+    }
+
     function hideSummary() {
       if (summary) {
         summary.hidden = true;
@@ -628,9 +845,11 @@
       hideSummary();
       setFieldError(nameInput, el("fd-ed-name-error"), "");
       setFieldError(categorySelect, el("fd-ed-category-error"), "");
+      setFieldError(unitSelect, el("fd-ed-unit-error"), "");
       setFieldError(conditionSelect, el("fd-ed-condition-error"), "");
       setFieldError(availabilitySelect, el("fd-ed-availability-error"), "");
       setFieldError(descInput, el("fd-ed-desc-error"), "");
+      setFieldError(cutInput, el("fd-ed-cut-error"), "");
       setFieldError(imageSrcInput, el("fd-ed-image-src-error"), "");
       setFieldError(imageFileInput, imageFileError, "");
       setFieldError(imageAltInput, el("fd-ed-image-alt-error"), "");
@@ -809,9 +1028,11 @@
       return {
         name: nameInput.value,
         category: categorySelect.value,
+        unit: unitSelect ? unitSelect.value : "kg",
         condition: conditionSelect.value,
         availability: availabilitySelect ? availabilitySelect.value : "",
         desc: descInput.value,
+        cut: cutInput ? cutInput.value : "",
         imageSrc: imageSrcInput.value,
         imageAlt: imageAltInput.value,
         imageWidth: pendingUpload ? pendingUpload.width : 0,
@@ -961,7 +1182,7 @@
       var price = document.createElement("span");
       price.className = "fd-edit-result-price";
       var unitPrice = payload.variants && payload.variants[0] ? payload.variants[0].price : 0;
-      price.textContent = fmtNaira(unitPrice) + " / kg";
+      price.textContent = fmtNaira(unitPrice) + " " + unitMeta(resolveUnitKey(payload)).suffix;
       body.appendChild(price);
 
       if (payload.desc) {
@@ -1000,7 +1221,7 @@
             missingText.textContent = "No product with ID “" + mode.id + "” exists. Check the Products list for the correct item.";
           }
           showOnly("missing");
-          document.title = "Product not found | O'Toosin Farms Admin";
+          document.title = "Product not found | O’TOOSIN Farms Admin";
           if (heading) {
             heading.textContent = "Product not found";
           }
@@ -1020,20 +1241,25 @@
       if (isCreate) {
         nameInput.value = "";
         categorySelect.value = "";
+        unitSelect.value = "";
         conditionSelect.value = "";
         availabilitySelect.value = "in";
         descInput.value = "";
+        cutInput.value = "";
         imageSrcInput.value = "";
         imageAltInput.value = "";
         priceInput.value = "";
+        populateConditions("");
       } else {
         nameInput.value = original.name || "";
         categorySelect.value = original.category || "";
-        conditionSelect.value = original.condition || "";
+        unitSelect.value = resolveUnitKey(original);
         availabilitySelect.value = AVAILABILITY.indexOf(original.status) !== -1
           ? original.status
           : "in";
         descInput.value = original.desc || "";
+        cutInput.value = original.cut || "";
+        populateConditions(original.condition || "");
         var firstImage = (original.images && original.images[0]) || { src: "", alt: "" };
         imageSrcInput.value = firstImage.src || "";
         imageAltInput.value = firstImage.alt || "";
@@ -1047,6 +1273,7 @@
         }
         priceInput.value = variant && variant.price != null ? String(variant.price) : "";
       }
+      updateUnitText();
 
       pendingUpload = null;
       if (imageFileInput) {
@@ -1066,7 +1293,7 @@
     /* ----- Wiring ----- */
     form.addEventListener("submit", onSubmit);
 
-    var tracked = [nameInput, categorySelect, conditionSelect, availabilitySelect, descInput, priceInput, imageAltInput];
+    var tracked = [nameInput, categorySelect, unitSelect, conditionSelect, availabilitySelect, descInput, cutInput, priceInput, imageAltInput];
     for (var t = 0; t < tracked.length; t++) {
       (function (input) {
         if (!input) {
@@ -1077,9 +1304,11 @@
           var map = {
             "fd-ed-name": "fd-ed-name-error",
             "fd-ed-category": "fd-ed-category-error",
+            "fd-ed-unit": "fd-ed-unit-error",
             "fd-ed-condition": "fd-ed-condition-error",
             "fd-ed-availability": "fd-ed-availability-error",
             "fd-ed-desc": "fd-ed-desc-error",
+            "fd-ed-cut": "fd-ed-cut-error",
             "fd-ed-price": "fd-ed-price-error",
             "fd-ed-image-alt": "fd-ed-image-alt-error"
           };
@@ -1091,6 +1320,18 @@
           }
         });
       })(tracked[t]);
+    }
+
+    if (categorySelect) {
+      categorySelect.addEventListener("change", function () {
+        syncCategoryFields();
+      });
+    }
+
+    if (unitSelect) {
+      unitSelect.addEventListener("change", function () {
+        updateUnitText();
+      });
     }
 
     if (imageSrcInput) {
@@ -1176,7 +1417,10 @@
       validate: validateProduct,
       buildPayload: buildPayload,
       categories: CATEGORIES.slice(),
-      conditions: CONDITIONS.slice(),
+      categoryGroups: CATEGORY_GROUP,
+      conditions: ALL_CONDITIONS.slice(),
+      conditionsForCategory: conditionsForCategory,
+      units: Object.keys(UNITS),
       availability: AVAILABILITY.slice(),
       availabilityLabels: {
         "in": AVAILABILITY_LABELS.in,

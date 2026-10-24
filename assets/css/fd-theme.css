@@ -309,9 +309,6 @@ html[data-theme="dark"] .fd-admin-topbar {
   background: var(--fd-surface);
   border-bottom-color: var(--fd-hairline);
 }
-html[data-theme="dark"] .fd-admin-menu-btn {
-  background: var(--fd-surface-2);
-}
 /* Theme toggle sits at the end of the topbar without crowding it.
    Unscoped: the button must look correct in Light mode too. */
 .fd-admin-topbar .fd-theme-toggle {

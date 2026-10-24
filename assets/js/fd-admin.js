@@ -192,8 +192,6 @@
   function wireForgotPanel() {
     var toggle = document.getElementById("fd-admin-forgot");
     var panel = document.getElementById("fd-admin-forgot-panel");
-    var resetBtn = document.getElementById("fd-admin-reset-btn");
-    var resetMsg = document.getElementById("fd-admin-reset-msg");
     if (!toggle || !panel) {
       return;
     }
@@ -207,27 +205,8 @@
         toggle.setAttribute("aria-expanded", "false");
       }
     });
-    // Help point: the store owner manages seller credentials, so this page
-    // never pretends to send email.
-    if (resetBtn) {
-      resetBtn.addEventListener("click", function () {
-        var email = document.getElementById("fd-admin-email");
-        var value = email ? email.value.trim() : "";
-        if (resetMsg) {
-          resetMsg.removeAttribute("hidden");
-          resetMsg.textContent = value
-            ? "No reset email was sent to " +
-              value +
-              ". Please contact the store owner to reset your password."
-            : "Enter your work email above first, then contact the store owner to reset your password.";
-        }
-        window.FreshDirectAdminAuth.requestPasswordReset(value).catch(
-          function () {
-            /* Boundary is not connected yet; notice above already says so. */
-          }
-        );
-      });
-    }
+    // The panel is guidance only: the farm owner manages staff credentials.
+    // No reset request is sent and no email flow is implied.
   }
 
   function wireLoginForm() {
@@ -242,6 +221,32 @@
     var passwordError = document.getElementById("fd-admin-password-error");
     var status = document.getElementById("fd-admin-status");
     var submit = document.getElementById("fd-admin-submit");
+    var submitLabel = document.getElementById("fd-admin-submit-label");
+    var submitIcon = submit ? submit.querySelector("i") : null;
+
+    function setBusy(busy) {
+      if (!submit) {
+        return;
+      }
+      submit.disabled = busy;
+      if (busy) {
+        submit.setAttribute("aria-busy", "true");
+        if (submitLabel) {
+          submitLabel.textContent = "Signing in…";
+        }
+        if (submitIcon) {
+          submitIcon.className = "fas fa-spinner fa-spin";
+        }
+      } else {
+        submit.removeAttribute("aria-busy");
+        if (submitLabel) {
+          submitLabel.textContent = "Sign in";
+        }
+        if (submitIcon) {
+          submitIcon.className = "fas fa-sign-in-alt";
+        }
+      }
+    }
 
     function showStatus(kind, title, text) {
       if (!status) {
@@ -270,6 +275,9 @@
 
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
+      if (submit && submit.disabled) {
+        return;
+      }
       hideStatus();
       var emailValue = email ? email.value.trim() : "";
       var passwordValue = password ? password.value : "";
@@ -305,10 +313,7 @@
         return;
       }
 
-      if (submit) {
-        submit.disabled = true;
-        submit.setAttribute("aria-busy", "true");
-      }
+      setBusy(true);
 
       window.FreshDirectAdminAuth.signIn({
         email: emailValue,
@@ -318,23 +323,18 @@
         function () {
           // Unreachable until Django connects the boundary. Kept so the
           // success path has exactly one place to land in a later stage.
-          if (submit) {
-            submit.disabled = false;
-            submit.removeAttribute("aria-busy");
-          }
+          setBusy(false);
         },
         function (err) {
-          if (submit) {
-            submit.disabled = false;
-            submit.removeAttribute("aria-busy");
-          }
+          setBusy(false);
           if (err && err.code === AUTH_NOT_CONFIGURED) {
-            // Neutral wording: no account-existence signal, no fake success.
+            // Honest boundary state: this page does not check passwords and
+            // never implies an account-existence result or a fake session.
             showStatus(
               "is-error",
-              "We could not sign you in.",
-              "Seller accounts are managed by the store owner — please " +
-                "contact them for access."
+              "Sign-in is not connected.",
+              "This page does not verify staff passwords. Access is managed " +
+                "by the farm owner."
             );
           } else {
             showStatus(

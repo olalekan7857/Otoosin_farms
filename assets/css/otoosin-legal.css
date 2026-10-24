@@ -162,8 +162,7 @@ html[data-theme="dark"] .otoosin-error button:focus-visible {
 .oto-legal-lead {
   margin-bottom: 26px;
   padding: 20px 22px;
-  border-left: 3px solid var(--theme-color);
-  border-radius: 0 14px 14px 0;
+  border-radius: 14px;
   background: var(--smoke-color);
 }
 

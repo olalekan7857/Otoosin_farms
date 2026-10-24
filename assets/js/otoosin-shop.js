@@ -31,6 +31,48 @@
       sort: "featured",
     };
 
+    var CATEGORY_SLUGS = {
+      meats: "Meats",
+      meat: "Meats",
+      fish: "Fish",
+      "live-animals": "Live Animals",
+      liveanimals: "Live Animals",
+      "live animals": "Live Animals",
+      eggs: "Eggs",
+      egg: "Eggs",
+      veggies: "Veggies",
+      vegetables: "Veggies",
+      veg: "Veggies",
+      fruits: "Fruits",
+      fruit: "Fruits",
+    };
+
+    function categoryFromSlug(value) {
+      var key = (value || "").trim().toLowerCase();
+      return CATEGORY_SLUGS[key] || false;
+    }
+
+    function mainCategory(card) {
+      var category = attr(card, "data-category");
+      var condition = attr(card, "data-condition");
+      if (category === "fish") {
+        return "Fish";
+      }
+      if (category === "live animals" || condition === "live") {
+        return "Live Animals";
+      }
+      if (category === "eggs") {
+        return "Eggs";
+      }
+      if (category === "veggies") {
+        return "Veggies";
+      }
+      if (category === "fruits") {
+        return "Fruits";
+      }
+      return "Meats";
+    }
+
     function attr(card, name) {
       return (card.getAttribute(name) || "").toLowerCase();
     }
@@ -55,7 +97,7 @@
       if (state.q && cardText(card).indexOf(state.q) === -1) {
         return false;
       }
-      if (state.type !== "all" && attr(card, "data-type") !== state.type.toLowerCase()) {
+      if (state.type !== "all" && mainCategory(card) !== state.type) {
         return false;
       }
       if (
@@ -80,13 +122,14 @@
     }
 
     function resultLabel(visible) {
-      if (visible === cards.length) {
-        return "Showing all " + cards.length + " products";
-      }
+      var scope = state.type !== "all" ? " in " + state.type : "";
       if (!visible) {
         return "No products match your filters";
       }
-      return "Showing " + visible + " of " + cards.length + " products";
+      if (visible === cards.length && state.type === "all") {
+        return "Showing all " + cards.length + " products";
+      }
+      return "Showing " + visible + " of " + cards.length + " products" + scope;
     }
 
     function syncUrl() {
@@ -100,10 +143,11 @@
         } else {
           params.delete("q");
         }
+        params.delete("type");
         if (state.type !== "all") {
-          params.set("type", state.type);
+          params.set("category", state.type);
         } else {
-          params.delete("type");
+          params.delete("category");
         }
         if (state.condition !== "all") {
           params.set("state", state.condition.toLowerCase());
@@ -240,11 +284,11 @@
         }
       }
 
-      var type = params.get("type");
-      var typeValue = type ? hasOption(typeSelect, type) : false;
-      if (typeValue) {
-        typeSelect.value = typeValue;
-        state.type = typeValue;
+      var category = params.get("category") || params.get("type");
+      var categoryValue = category ? categoryFromSlug(category) : false;
+      if (categoryValue && typeSelect) {
+        typeSelect.value = categoryValue;
+        state.type = categoryValue;
       }
 
       var condition = params.get("state");

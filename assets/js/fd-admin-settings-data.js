@@ -1,48 +1,33 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Settings source boundary (Stage 5: Admin Settings)
+   O’TOOSIN Farms Admin — Settings source boundary
    --------------------------------------------------------------------------
    Vanilla JS, no dependencies, no framework. Admin-scoped: never touches
    the customer cart store and never loads fresh-direct.js, so customer
    state cannot leak into the admin area.
 
-   CANONICAL SETTINGS SHAPE (the store's operational record for V1):
+   CANONICAL SETTINGS SHAPE:
      { businessName, contactPhone, whatsapp, address, description }
-   Every default below is an established O'Toosin Farms truth, taken from
-   the storefront — never invented:
-     - businessName "O'Toosin Farms" (site identity everywhere).
-     - whatsapp "2349011058873" (FRESH_DIRECT.whatsappNumber, the single
-       centralized ordering/contact number).
-     - address: the outlet line used across the storefront footers.
-     - description: the storefront summary of the meat shop.
-     - contactPhone starts EMPTY: no store call number is established
-       anywhere in the project, so none is invented. It stays "Not set"
-       until the owner genuinely adds one.
-   Delivery is not a configurable fee in this storefront. Checkout
-   collects an address and the rider is arranged afterwards; the delivery
-   fee is paid separately to the rider. The Settings page therefore shows
-   the operating rules rather than inventing an unsupported fee field,
-   delivery-zone editor, rider workflow, tax, inventory or multi-seller
-   settings.
 
-   CURRENT SOURCE (frontend-only phase):
-     Store edits are validated here and kept in this browser
-     (localStorage "freshdirect_admin_settings_v1") through this same
-     service. updateSettings() reports the genuine result: success means
-     "saved in this browser" — never a database claim — and failures
-     (invalid values, unavailable storage) are reported truthfully with
-     per-field messages. The admin order follow-up link reads
-     getWhatsAppNumber(), so a saved WhatsApp change genuinely takes
-     effect in the admin while the storefront keeps its own centralized
-     configuration until the backend owns it. Records left over from the
-     earlier "Harvest Castle" defaults are migrated on read.
+   Editable values are validated here and kept in this browser
+   (localStorage "freshdirect_admin_settings_v1"). updateSettings() reports
+   the genuine result: success means "saved in this browser", never a
+   database claim. The admin order follow-up link reads getWhatsAppNumber(),
+   so a saved WhatsApp change genuinely takes effect there.
+
+   DELIVERY AND PICKUP:
+     The checkout owns the current doorstep zones, park destinations and
+     pickup locations. getDeliveryInfo() exposes that same operating model
+     as read-only records so the Settings page can present it accurately
+     without pretending those values can be edited in this frontend.
+     Pickup orders have no delivery fee. Doorstep fees come from the chosen
+     zone. Park charges are confirmed before dispatch.
 
    DJANGO INTEGRATION (later stage, no settings-UI rebuild needed):
-     - Replace the bodies of getSettings()/updateSettings() with API
-       calls (GET settings, PATCH/PUT settings payload) that resolve the
-       SAME canonical shape and the SAME result shape
+     - Replace getSettings()/updateSettings() with API calls that resolve
+       the SAME canonical settings shape and the SAME result shape
        { ok, settings?, errors? }.
-     - Validation errors from the backend merge into `errors` by field
-       name; every renderer below is reused untouched.
+     - Replace getDeliveryInfo() with the backend delivery configuration
+       using the same arrays, so the existing Settings renderers are reused.
      - Keep this file's public signatures so fd-admin-settings.js and
        fd-admin-orders-data.js are reused untouched.
      - Do NOT hardcode endpoint URLs here.
@@ -53,43 +38,83 @@
   var STORE_KEY = "freshdirect_admin_settings_v1";
 
   /* Central store number (digits only). Mirrors
-     FRESH_DIRECT.whatsappNumber (assets/js/fresh-direct.js), which
-     mirrors the future Django setting WHATSAPP_NUMBER. Never add a
-     second number: overrides live in the settings record above. */
+     FRESH_DIRECT.whatsappNumber (assets/js/fresh-direct.js), which mirrors
+     the future Django setting WHATSAPP_NUMBER. Never add a second number:
+     overrides live in the settings record above. */
   var CENTRAL_WHATSAPP = "2349011058873";
 
-  /* Delivery is arranged by staff after checkout and the fee is paid
-     directly to the rider. These are fixed operating rules, not editable
-     values: the checkout does not charge or calculate a delivery fee. */
+  var BRAND_SLOGAN =
+    "O’TOOSIN Farms - delivering safe, healthy, and nutritious foods at your doorstep . . .";
+
+  var BRAND_LOGO = {
+    src: "assets/img/harvest_castle/of_favicon.png",
+    alt: "O’TOOSIN Farms",
+    reference: "assets/img/harvest_castle/of_favicon.png"
+  };
+
+  var MARKETPLACE_CATEGORIES = [
+    "Meats",
+    "Fish",
+    "Live Animals",
+    "Eggs",
+    "Veggies",
+    "Fruits"
+  ];
+
+  /* Mirrors the current checkout configuration: doorstep zones with their
+     recorded fees, approved park destinations, and the pickup location. */
   var DELIVERY_INFO = {
-    arrangement:
-      "Orders are checked after checkout and a rider is arranged by O'Toosin Farms staff.",
     coverage:
-      "Checkout collects the delivery address, city or town, state and a landmark.",
-    payNow:
-      "Pay Now settles the product amount online. The delivery fee is separate.",
-    payOnDelivery:
-      "Pay on Delivery settles the product amount with the rider. The delivery fee is also paid to the rider.",
-    fee:
-      "It is never added to the website product total and is not collected online.",
-    outlet: "No. 89, behind Foursquare Church, FUNAAB Alabata Road, Camp, Abeokuta.",
-    hours: "Mon - Sat: 09.00 to 06.00"
+      "Doorstep delivery is currently limited to Abeokuta. Park delivery serves approved destinations such as Lagos, Ibadan and Ijebu.",
+    doorstep:
+      "Choose a delivery zone at checkout. The selected zone fee is added to the order total.",
+    park:
+      "Park delivery is available to approved destinations. The park charge is confirmed before dispatch.",
+    pickup:
+      "Choose Mummy-D Stores at checkout. Pickup orders have no delivery fee.",
+    payment:
+      "Doorstep order totals include the selected zone delivery fee. Park delivery charges are confirmed before dispatch, and pickup has no delivery fee. No payment is collected on this website; payment is arranged directly with O’TOOSIN Farms.",
+    zones: [
+      {
+        name: "Camp",
+        areas: "Fatola, Apakila, Surulere",
+        fee: 5000
+      },
+      {
+        name: "Obantoko",
+        areas: "Eleweran, Somorin, Odoeran",
+        fee: 10000
+      }
+    ],
+    parkDestinations: ["Lagos", "Ibadan", "Ijebu"],
+    pickupLocations: [
+      {
+        name: "Mummy-D Stores",
+        address: "Beside FUNAAB MANCOT Park, Camp, Abeokuta"
+      }
+    ]
   };
 
   var DEFAULTS = {
-    businessName: "O'Toosin Farms",
+    businessName: "O’TOOSIN Farms",
     contactPhone: "",
     whatsapp: CENTRAL_WHATSAPP,
-    address: "No. 89, behind Foursquare Church, FUNAAB Alabata Road, Camp, Abeokuta.",
+    address: "Mummy-D Stores, Beside FUNAAB MANCOT Park, Camp, Abeokuta",
     description:
-      "A meat shop selling pork, chicken, turkey, beef, goat meat and fish. Browse by meat type and state, order by the kilogram, and choose Pay Now or Pay on Delivery."
+      "Shop meats, fish, live animals, eggs, veggies and fruits from O’TOOSIN Farms. Choose each item and its unit, then select doorstep delivery, park delivery or pickup at checkout."
   };
 
-  /* Values written by earlier builds. They are dropped on read so the
-     current O'Toosin defaults apply instead of stale branding. */
-  var LEGACY_BUSINESS_NAME = "Harvest Castle";
-  var LEGACY_DESCRIPTION =
-    "Farm produce sold directly to you. Shop online on the website, or order through WhatsApp \u2014 serving the FUNAAB and Abeokuta community.";
+  /* Exact previous defaults are replaced on read so stale branding or
+     meat-only copy cannot survive a manual correction. Custom edits are
+     always preserved. */
+  var LEGACY_BUSINESS_NAMES = ["Harvest Castle", "O'Toosin Farms"];
+  var LEGACY_ADDRESSES = [
+    "No. 89, behind Foursquare Church, FUNAAB Alabata Road, Camp, Abeokuta."
+  ];
+  var LEGACY_DESCRIPTIONS = [
+    "Farm produce sold directly to you. Shop online on the website, or order through WhatsApp \u2014 serving the FUNAAB and Abeokuta community.",
+    "A meat shop selling pork, chicken, turkey, beef, goat meat and fish. Browse by meat type and state, order by the kilogram, and choose Pay Now or Pay on Delivery."
+  ];
 
   var FIELDS = ["businessName", "contactPhone", "whatsapp", "address", "description"];
 
@@ -129,11 +154,15 @@
       }
       /* Migrate stale branding without inventing a new store record. */
       var migrated = false;
-      if (out.businessName === LEGACY_BUSINESS_NAME) {
+      if (LEGACY_BUSINESS_NAMES.indexOf(out.businessName) !== -1) {
         delete out.businessName;
         migrated = true;
       }
-      if (out.description === LEGACY_DESCRIPTION) {
+      if (LEGACY_ADDRESSES.indexOf(out.address) !== -1) {
+        delete out.address;
+        migrated = true;
+      }
+      if (LEGACY_DESCRIPTIONS.indexOf(out.description) !== -1) {
         delete out.description;
         migrated = true;
       }
@@ -322,16 +351,56 @@
     return CENTRAL_WHATSAPP;
   }
 
+  function copyZones() {
+    var out = [];
+    for (var i = 0; i < DELIVERY_INFO.zones.length; i++) {
+      out.push({
+        name: DELIVERY_INFO.zones[i].name,
+        areas: DELIVERY_INFO.zones[i].areas,
+        fee: DELIVERY_INFO.zones[i].fee
+      });
+    }
+    return out;
+  }
+
+  function copyPickupLocations() {
+    var out = [];
+    for (var i = 0; i < DELIVERY_INFO.pickupLocations.length; i++) {
+      out.push({
+        name: DELIVERY_INFO.pickupLocations[i].name,
+        address: DELIVERY_INFO.pickupLocations[i].address
+      });
+    }
+    return out;
+  }
+
   function getDeliveryInfo() {
     return {
-      arrangement: DELIVERY_INFO.arrangement,
       coverage: DELIVERY_INFO.coverage,
-      payNow: DELIVERY_INFO.payNow,
-      payOnDelivery: DELIVERY_INFO.payOnDelivery,
-      fee: DELIVERY_INFO.fee,
-      outlet: DELIVERY_INFO.outlet,
-      hours: DELIVERY_INFO.hours
+      doorstep: DELIVERY_INFO.doorstep,
+      park: DELIVERY_INFO.park,
+      pickup: DELIVERY_INFO.pickup,
+      payment: DELIVERY_INFO.payment,
+      zones: copyZones(),
+      parkDestinations: DELIVERY_INFO.parkDestinations.slice(),
+      pickupLocations: copyPickupLocations()
     };
+  }
+
+  function getBrandInfo() {
+    return {
+      name: DEFAULTS.businessName,
+      slogan: BRAND_SLOGAN,
+      logo: {
+        src: BRAND_LOGO.src,
+        alt: BRAND_LOGO.alt,
+        reference: BRAND_LOGO.reference
+      }
+    };
+  }
+
+  function getMarketplaceCategories() {
+    return MARKETPLACE_CATEGORIES.slice();
   }
 
   if (typeof window !== "undefined") {
@@ -347,7 +416,9 @@
       validate: validate,
       normalizePhone: normalizePhone,
       getWhatsAppNumber: getWhatsAppNumber,
-      getDeliveryInfo: getDeliveryInfo
+      getDeliveryInfo: getDeliveryInfo,
+      getBrandInfo: getBrandInfo,
+      getMarketplaceCategories: getMarketplaceCategories
     };
   }
 })();

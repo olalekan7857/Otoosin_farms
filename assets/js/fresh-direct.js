@@ -97,15 +97,6 @@
       if (!toggles[i].hasAttribute("aria-expanded")) {
         toggles[i].setAttribute("aria-expanded", "false");
       }
-      toggles[i].addEventListener("click", function () {
-        var open =
-          document.querySelector(".vs-menu-wrapper.vs-body-visible") !== null;
-        var all = document.querySelectorAll(".vs-menu-toggle");
-        for (var j = 0; j < all.length; j++) {
-          all[j].setAttribute("aria-expanded", open ? "false" : "true");
-          all[j].setAttribute("aria-label", open ? "Open menu" : "Close menu");
-        }
-      });
     }
   }
 
@@ -1399,7 +1390,7 @@
       category: "Chicken",
       group: "Poultry",
       condition: "Fresh",
-      cut: "Whole bird",
+      cut: "Whole chicken",
       priceBasis: "Per kilogram",
       priceUnit: "per kg",
       status: "in",
@@ -1569,6 +1560,71 @@
       images: [{ src: "assets/img/meat/catfish.svg", alt: "Fried catfish", w: 480, h: 360 }],
       variants: [{ id: "1kg", label: "1kg", price: 6500 }],
     },
+    /* DEMO farm-produce entries: illustrative prices and static assets. */
+    "demo-live-chicken": {
+      id: "demo-live-chicken",
+      name: "Live Chicken",
+      category: "Live Animals",
+      group: "Farm animals",
+      condition: "Live",
+      cut: "Live whole chicken",
+      priceBasis: "Per chicken",
+      priceUnit: "per chicken",
+      status: "in",
+      badge: "Live",
+      defaultVariant: "1 live chicken",
+      desc: "A live chicken selected from the farm, available as part of the Live Animals category.",
+      images: [{ src: "assets/img/families/live-animals-card.svg", alt: "Live farm chickens", w: 480, h: 360 }],
+      variants: [{ id: "1 live chicken", label: "1 live chicken", price: 9500 }],
+    },
+    "demo-farm-eggs": {
+      id: "demo-farm-eggs",
+      name: "Farm Eggs",
+      category: "Eggs",
+      group: "Farm produce",
+      condition: "Fresh",
+      cut: "Crate",
+      priceBasis: "Per crate",
+      priceUnit: "per crate",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1 crate",
+      desc: "Fresh eggs from the farm, packed as a crate for household cooking and baking.",
+      images: [{ src: "assets/img/families/eggs-card.svg", alt: "A tray of fresh farm eggs", w: 480, h: 360 }],
+      variants: [{ id: "1 crate", label: "1 crate", price: 3800 }],
+    },
+    "demo-fresh-tomatoes": {
+      id: "demo-fresh-tomatoes",
+      name: "Fresh Tomatoes",
+      category: "Veggies",
+      group: "Farm produce",
+      condition: "Fresh",
+      cut: "Basket",
+      priceBasis: "Per basket",
+      priceUnit: "per basket",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1 basket",
+      desc: "Fresh farm tomatoes for stews, sauces and everyday cooking.",
+      images: [{ src: "assets/img/families/vegetables-card.svg", alt: "A basket of fresh vegetables", w: 480, h: 360 }],
+      variants: [{ id: "1 basket", label: "1 basket", price: 2500 }],
+    },
+    "demo-sweet-oranges": {
+      id: "demo-sweet-oranges",
+      name: "Sweet Oranges",
+      category: "Fruits",
+      group: "Farm produce",
+      condition: "Fresh",
+      cut: "Basket",
+      priceBasis: "Per basket",
+      priceUnit: "per basket",
+      status: "in",
+      badge: "Fresh",
+      defaultVariant: "1 basket",
+      desc: "Sweet farm oranges, packed in a basket for snacking and fresh juice.",
+      images: [{ src: "assets/img/families/fruits-card.svg", alt: "A basket of fresh fruits", w: 480, h: 360 }],
+      variants: [{ id: "1 basket", label: "1 basket", price: 3000 }],
+    },
   };
 
   window.FreshDirectCatalog = FD_CATALOG;
@@ -1600,7 +1656,7 @@
         if (missing) {
           missing.removeAttribute("hidden");
         }
-        document.title = "Product not found | O'Toosin Farms";
+        document.title = "Product not found | O’TOOSIN Farms";
         return;
       }
       renderPDP(root, product);
@@ -1631,6 +1687,37 @@
     return String(category || "").replace(/\s+/g, "-");
   }
 
+  function pdpIsProduceCategory(category) {
+    return category === "Eggs" || category === "Veggies" || category === "Fruits";
+  }
+
+  function pdpTypeLabel(category) {
+    if (category === "Live Animals") {
+      return "Animal type:";
+    }
+    if (pdpIsProduceCategory(category)) {
+      return "Produce type:";
+    }
+    if (category === "Fish") {
+      return "Fish type:";
+    }
+    if (category === "Pork" || category === "Chicken" || category === "Turkey" ||
+        category === "Beef" || category === "Goat Meat") {
+      return "Meat type:";
+    }
+    return "Product type:";
+  }
+
+  function pdpDetailLabel(category) {
+    if (category === "Live Animals") {
+      return "Animal:";
+    }
+    if (pdpIsProduceCategory(category)) {
+      return "Pack:";
+    }
+    return "Cut:";
+  }
+
   function renderPDP(root, product) {
     var meta = pdpStatusMeta(product.status);
     var def = null;
@@ -1652,6 +1739,10 @@
     setText("fd-pdp-crumb", product.name);
     setText("fd-pdp-condition", product.condition || product.badge || meta.badge);
     setText("fd-pdp-cut", product.cut || "");
+    var cutPill = document.getElementById("fd-pdp-cut");
+    if (cutPill) {
+      cutPill.hidden = !product.cut;
+    }
     var crumb = document.getElementById("fd-pdp-crumb");
     if (crumb) {
       crumb.setAttribute("aria-current", "page");
@@ -1814,9 +1905,23 @@
 
     // Supporting facts.
     setText("fd-pdp-fact-cat", product.group || product.category);
-    setText("fd-pdp-fact-type", product.category);
+    setText("fd-pdp-fact-type", product.name);
+    setText("fd-pdp-fact-type-label", pdpTypeLabel(product.category));
     setText("fd-pdp-fact-condition", product.condition || product.badge || meta.badge);
     setText("fd-pdp-fact-cut", product.cut || "");
+    setText("fd-pdp-fact-cut-label", pdpDetailLabel(product.category));
+    var cutFact = document.getElementById("fd-pdp-fact-cut");
+    var cutFactLabel = document.getElementById("fd-pdp-fact-cut-label");
+    var cutFactItem = cutFact && cutFact.closest ? cutFact.closest("li") : null;
+    if (cutFactItem) {
+      cutFactItem.hidden = !product.cut;
+    }
+    if (cutFact) {
+      cutFact.hidden = !product.cut;
+    }
+    if (cutFactLabel) {
+      cutFactLabel.hidden = !product.cut;
+    }
     setText("fd-pdp-fact-price", product.priceBasis || "Per kilogram");
     setText(
       "fd-pdp-fact-options",
@@ -1935,7 +2040,7 @@
     if (detail) {
       detail.textContent =
         "\u00b7 " + fdQtyLabel(state.qty, isKg) + " \u00d7 " + fmtNaira(v.price) +
-        (isKg ? "/kg" : " each");
+        (isKg ? "/kg" : " " + (state.product.priceUnit || "each"));
     }
   }
 
@@ -1944,6 +2049,7 @@
     var isKg = fdIsKgVariant(state.variant);
     setText("fd-pdp-price", fmtNaira(v.price));
     setText("fd-pdp-unit", state.product.priceUnit || v.label);
+    setText("fd-pdp-qty-label", isKg ? "Quantity (kg)" : "Quantity");
     var el = pdpEnsureQtyControl(state);
     if (el) {
       if (el.tagName === "INPUT") {
@@ -2114,6 +2220,9 @@
     if (/^per\s/i.test(label)) {
       return label;
     }
+    if (/^\d+(?:\.\d+)?\s+[a-z]/i.test(variant.id)) {
+      return label;
+    }
     if (/^(bunch|tuber|piece)$/i.test(variant.id)) {
       return "Per " + variant.id;
     }
@@ -2197,7 +2306,7 @@
   };
 
   function pdpSEO(product, meta) {
-    document.title = product.name + " | O'Toosin Farms";
+    document.title = product.name + " | O’TOOSIN Farms";
     var base = product.variants[0];
     for (var i = 0; i < product.variants.length; i++) {
       if (product.variants[i].id === product.defaultVariant) {
@@ -2205,9 +2314,13 @@
       }
     }
     var condition = product.condition || product.badge || "";
+    var priceBasis = product.priceBasis || "Priced per unit";
+    var descriptor = product.category === "Live Animals"
+      ? "Live animal"
+      : (condition ? condition + " " + product.category : product.category);
     var description =
-      product.name + " (" + condition + " " + product.category + ") from O'Toosin Farms. " +
-      "Priced per kilogram. Choose your quantity and check out on the website.";
+      product.name + " (" + descriptor + ") from O’TOOSIN Farms. " +
+      priceBasis + ". Choose your quantity and check out on the website.";
     var desc = document.querySelector('meta[name="description"]');
     if (desc) {
       desc.setAttribute("content", description);
@@ -2217,12 +2330,12 @@
       keywords.setAttribute(
         "content",
         product.name + ", " + product.category + ", " + condition +
-          " meat, O'Toosin Farms, buy meat by kilogram"
+          ", O’TOOSIN Farms, farm shop, buy online"
       );
     }
     var og = document.querySelector('meta[property="og:title"]');
     if (og) {
-      og.setAttribute("content", product.name + " | O'Toosin Farms");
+      og.setAttribute("content", product.name + " | O’TOOSIN Farms");
     }
     var ogDesc = document.querySelector('meta[property="og:description"]');
     if (ogDesc) {
@@ -2232,6 +2345,7 @@
     if (ogImage) {
       ogImage.setAttribute("content", product.images[0].src);
     }
+    var unitText = String(product.priceUnit || "unit").replace(/^per\s+/i, "");
     var ld = document.getElementById("fd-pdp-jsonld");
     if (ld) {
       ld.textContent = JSON.stringify({
@@ -2241,7 +2355,7 @@
         category: product.category,
         description: product.desc,
         image: product.images[0].src,
-        brand: { "@type": "Brand", name: "O'Toosin Farms" },
+        brand: { "@type": "Brand", name: "O’TOOSIN Farms" },
         offers: {
           "@type": "Offer",
           priceCurrency: "NGN",
@@ -2251,7 +2365,7 @@
             "@type": "UnitPriceSpecification",
             price: base.price,
             priceCurrency: "NGN",
-            unitText: "kg",
+            unitText: unitText,
           },
         },
       });
@@ -3514,6 +3628,9 @@
     load: cartLoad,
     valid: cartPageValid,
     media: cartPageMedia,
+    product: function (id) {
+      return FD_CATALOG[id] || null;
+    },
     subtotal: cartSubtotal,
     lineTotal: fdLineTotal,
     qtyLabel: fdQtyLabel,

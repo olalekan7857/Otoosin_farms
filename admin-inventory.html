@@ -4,11 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Inventory | O'Toosin Farms Admin</title>
-    <meta name="author" content="O'Toosin Farms">
+    <title>Inventory | O’TOOSIN Farms Admin</title>
+    <meta name="author" content="O’TOOSIN Farms">
     <!-- Admin is private: never index admin pages or expose product data. -->
     <meta name="robots" content="NOINDEX,NOFOLLOW">
-    <meta name="description" content="Private O'Toosin Farms inventory availability area.">
+    <meta name="description" content="Private O’TOOSIN Farms whole-farm inventory area.">
 
     <!-- Mobile Specific Metas -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -37,8 +37,10 @@
     <link rel="stylesheet" href="assets/css/fresh-direct.css">
     <!-- Admin foundation (shared shell + table styles). -->
     <link rel="stylesheet" href="assets/css/fd-admin.css?v=7.3">
+    <!-- Shared category-card design (reused by the inventory grid). -->
+    <link rel="stylesheet" href="assets/css/fd-admin-categories.css?v=1.1">
     <!-- Inventory page only -->
-    <link rel="stylesheet" href="assets/css/fd-admin-inventory.css?v=1.0">
+    <link rel="stylesheet" href="assets/css/fd-admin-inventory.css?v=2.0">
     <!-- Theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
     <link rel="stylesheet" href="assets/css/fd-theme.css">
     <!-- Apply the stored theme before first paint. Default is Light. -->
@@ -59,9 +61,9 @@
         <!-- Sidebar navigation -->
         <aside class="fd-admin-sidebar" id="fd-admin-sidebar" aria-label="Admin navigation">
             <div class="fd-admin-brand">
-                <a href="index.html" class="fd-logo" aria-label="O'Toosin Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="59" height="42">O'Toosin<span> Farms</span></a>
+                <a href="index.html" class="fd-logo" aria-label="O’TOOSIN Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="59" height="42">O’TOOSIN<span> Farms</span></a>
             </div>
-            <p class="fd-admin-role">Store Admin</p>
+            <p class="fd-admin-role">Farm Admin</p>
             <nav class="fd-admin-nav" aria-label="Management sections">
                 <ul>
                     <li>
@@ -114,7 +116,7 @@
                     <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
                 <h1 class="fd-admin-title">Inventory</h1>
-                <span class="fd-admin-context">Store admin &middot; availability</span>
+                <span class="fd-admin-context">Farm admin &middot; availability</span>
                 <button type="button" class="icon-btn fd-theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
                     <i class="fas fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
                     <i class="fas fa-sun" data-theme-icon="sun" aria-hidden="true" hidden></i>
@@ -123,7 +125,7 @@
 
             <main class="fd-admin-content fd-dash" id="fd-admin-main" tabindex="-1">
                 <div class="fd-dash-head">
-                    <p class="fd-dash-lead">Review the availability of every meat line in the O'Toosin Farms catalogue and spot what is unavailable.</p>
+                    <p class="fd-dash-lead">Review availability across every product in the O’TOOSIN Farms catalogue and spot what is unavailable.</p>
                 </div>
 
                 <noscript>
@@ -150,7 +152,7 @@
                         <div class="fd-prod-head">
                             <div class="fd-prod-head-text">
                                 <h2 id="fd-inv-overview-title">Inventory overview</h2>
-                                <p class="fd-dash-lead">Availability is read from each product record in the catalogue.</p>
+                                <p class="fd-dash-lead">Availability is read from each product record across all six farm categories.</p>
                             </div>
                             <a href="admin-products.html" class="vs-btn fd-dash-btn">
                                 <i class="fas fa-box" aria-hidden="true"></i>Products
@@ -176,21 +178,22 @@
                             </div>
                             <label class="fd-shop-select" for="fd-inv-category">Category
                                 <select id="fd-inv-category" class="form-select">
-                                    <option value="all">All meats</option>
-                                    <option value="Pork">Pork</option>
-                                    <option value="Chicken">Chicken</option>
-                                    <option value="Turkey">Turkey</option>
-                                    <option value="Beef">Beef</option>
-                                    <option value="Goat Meat">Goat Meat</option>
+                                    <option value="all">All categories</option>
+                                    <option value="Meats">Meats</option>
                                     <option value="Fish">Fish</option>
+                                    <option value="Live Animals">Live Animals</option>
+                                    <option value="Eggs">Eggs</option>
+                                    <option value="Veggies">Veggies</option>
+                                    <option value="Fruits">Fruits</option>
                                 </select>
                             </label>
-                            <label class="fd-shop-select" for="fd-inv-state">State
+                            <label class="fd-shop-select" for="fd-inv-state">Condition
                                 <select id="fd-inv-state" class="form-select">
-                                    <option value="all">All states</option>
+                                    <option value="all">All conditions</option>
                                     <option value="Fresh">Fresh</option>
                                     <option value="Frozen">Frozen</option>
                                     <option value="Fried">Fried</option>
+                                    <option value="Live">Live</option>
                                 </select>
                             </label>
                             <label class="fd-shop-select" for="fd-inv-availability">Availability
@@ -206,7 +209,7 @@
                                     <option value="availability">Unavailable first</option>
                                     <option value="name-asc">Name: A–Z</option>
                                     <option value="name-desc">Name: Z–A</option>
-                                    <option value="category">Category: A–Z</option>
+                                    <option value="category">Category order</option>
                                 </select>
                             </label>
                             <button type="button" class="fd-ghost-btn fd-dash-btn" id="fd-inv-clear" disabled>
@@ -214,20 +217,8 @@
                             </button>
                         </div>
 
-                        <div class="fd-dash-table-scroll fd-prod-table-scroll" id="fd-inv-table-wrap" tabindex="0" role="region" aria-label="Inventory table, scroll horizontally on small screens">
-                            <table class="fd-dash-table fd-prod-table fd-inv-table" id="fd-inv-table">
-                                <caption class="fd-dash-caption">Inventory availability across the catalogue. Availability is set on each product record.</caption>
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Product</th>
-                                        <th scope="col">Category</th>
-                                        <th scope="col">State</th>
-                                        <th scope="col">Availability</th>
-                                        <th scope="col">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="fd-inv-body"></tbody>
-                            </table>
+                        <div class="fd-prod-list-wrap" id="fd-inv-list-wrap">
+                            <ul class="fd-cat-grid fd-inv-grid" id="fd-inv-list" aria-label="Inventory products"></ul>
                         </div>
 
                         <div class="fd-dash-empty" id="fd-inv-empty-all" hidden>
@@ -248,12 +239,12 @@
                             </div>
                         </div>
 
-                        <p class="fd-dash-hint">Availability comes from each product record. Open a product to change whether it can be ordered.</p>
+                        <p class="fd-dash-hint">Availability comes from each product record. Units follow each product’s selling type. Open a product to change whether it can be ordered.</p>
                     </section>
                 </div>
 
                 <p class="fd-dash-foot-note">
-                    Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O'Toosin Farms</a>. Store admin.
+                    Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O’TOOSIN Farms</a>. Farm admin.
                 </p>
             </main>
         </div>
@@ -268,7 +259,7 @@
          this browser). No second inventory dataset is created. -->
     <script src="assets/js/fd-admin-products-data.js"></script>
     <!-- Inventory list (reads the product source above). -->
-    <script src="assets/js/fd-admin-inventory.js"></script>
+    <script src="assets/js/fd-admin-inventory.js?v=2.0"></script>
 
 </body>
 

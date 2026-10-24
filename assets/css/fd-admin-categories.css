@@ -1,8 +1,8 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Product Categories page (admin-categories.html only)
+   O’TOOSIN Farms Admin — Product Categories page (admin-categories.html)
    --------------------------------------------------------------------------
-   Loaded only by admin-categories.html so the shared fd-admin.css stays
-   untouched. Reuses the existing admin tokens (--white-color, --border-color,
+   Also loaded by admin-inventory.html so product cards use the exact same
+   card design. Reuses the existing admin tokens (--white-color, --border-color,
    --smoke-color, --title-color, --body-color, --secondary-color) so Light and
    Dark themes keep working without page-specific colour values.
    ========================================================================== */
@@ -74,11 +74,10 @@
 }
 
 .fd-cat-thumb img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .fd-cat-id {

@@ -1,9 +1,9 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Product list sync
+   O’TOOSIN Farms Admin — Product list sync
    --------------------------------------------------------------------------
    Runs before fd-admin-products.js. It applies products kept in the local
-   seller store to the static cards and adds cards for newly created meat
-   lines, so the editor's save state and the Products page stay in step.
+   seller store to the static cards and adds cards for newly created products,
+   so the editor's save state and the Products page stay in step.
    The list controller then filters and counts the resulting cards normally.
    ========================================================================== */
 (function () {
@@ -14,16 +14,51 @@
     return;
   }
 
-  var VALID_CATEGORIES = ["Pork", "Chicken", "Turkey", "Beef", "Goat Meat", "Fish"];
-  var VALID_CONDITIONS = ["Fresh", "Frozen", "Fried"];
+  var VALID_CATEGORIES = [
+    "Pork", "Chicken", "Turkey", "Beef", "Goat Meat", "Fish",
+    "Live Animals", "Eggs", "Veggies", "Fruits"
+  ];
+  var VALID_CONDITIONS = ["Fresh", "Frozen", "Fried", "Live"];
+  var MEAT_CATEGORIES = ["Pork", "Chicken", "Turkey", "Beef", "Goat Meat"];
   var GROUPS = {
     "Pork": "Red meat",
     "Chicken": "Poultry",
     "Turkey": "Poultry",
     "Beef": "Red meat",
     "Goat Meat": "Red meat",
-    "Fish": "Seafood"
+    "Fish": "Seafood",
+    "Live Animals": "Farm animals",
+    "Eggs": "Farm produce",
+    "Veggies": "Farm produce",
+    "Fruits": "Farm produce"
   };
+
+  function parentGroup(category) {
+    return MEAT_CATEGORIES.indexOf(category) !== -1 ? "Meats" : category;
+  }
+
+  function categoryText(category) {
+    var group = GROUPS[category] || "";
+    var top = parentGroup(category);
+    if (top === category) {
+      return group ? category + " · " + group : category;
+    }
+    return "Meats · " + category + " · " + group;
+  }
+
+  function unitText(entry) {
+    var basis = String(entry.priceUnit || entry.priceBasis || "").toLowerCase();
+    if (basis.indexOf("chicken") !== -1) {
+      return { suffix: "/ chicken", hidden: "Price per chicken: " };
+    }
+    if (basis.indexOf("crate") !== -1) {
+      return { suffix: "/ crate", hidden: "Price per crate: " };
+    }
+    if (basis.indexOf("basket") !== -1) {
+      return { suffix: "/ basket", hidden: "Price per basket: " };
+    }
+    return { suffix: "/ kg", hidden: "Price per kg: " };
+  }
 
   function fmtNaira(n) {
     return "\u20A6" + Number(n).toLocaleString("en-NG");
@@ -90,15 +125,29 @@
     actions.appendChild(editLink(entry));
   }
 
+  function isLocalEntry(id) {
+    try {
+      return !!(
+        window.FreshDirectAdminStore &&
+        window.FreshDirectAdminStore.isLocal &&
+        window.FreshDirectAdminStore.isLocal(id)
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
   function updateCard(card, entry) {
-    var group = entry.group || GROUPS[entry.category] || "";
     var price = priceOf(entry);
+    var unitMeta = unitText(entry);
     var image = entry.images[0] || { src: "", alt: entry.name };
 
     card.setAttribute("data-name", entry.name);
     card.setAttribute("data-category", entry.category);
+    card.setAttribute("data-category-group", parentGroup(entry.category));
     card.setAttribute("data-state", entry.condition);
     card.setAttribute("data-price", String(price));
+    card.setAttribute("data-unit", unitMeta.suffix.replace("/ ", ""));
 
     var nameEl = card.querySelector(".fd-prod-name");
     if (nameEl) {
@@ -106,7 +155,7 @@
     }
     var catEl = card.querySelector(".fd-prod-cat");
     if (catEl) {
-      catEl.textContent = entry.category + " · " + group;
+      catEl.textContent = categoryText(entry.category);
     }
     var stateEl = card.querySelector(".fd-prod-state");
     if (stateEl) {
@@ -123,25 +172,29 @@
       priceEl.innerHTML = "";
       var hidden = document.createElement("span");
       hidden.className = "visually-hidden";
-      hidden.textContent = "Price per kilogram: ";
+      hidden.textContent = unitMeta.hidden;
       priceEl.appendChild(hidden);
       priceEl.appendChild(document.createTextNode(fmtNaira(price) + " "));
       var unit = document.createElement("span");
       unit.className = "fd-prod-unit";
-      unit.textContent = "/ kg";
+      unit.textContent = unitMeta.suffix;
       priceEl.appendChild(unit);
     }
     var view = card.querySelector('.fd-prod-actions a[href*="product-details.html"]');
     if (view) {
-      view.setAttribute("href", "product-details.html?id=" + encodeURIComponent(entry.id));
-      view.setAttribute("aria-label", "View " + entry.name + " on the storefront");
+      if (isLocalEntry(entry.id)) {
+        view.parentNode.removeChild(view);
+      } else {
+        view.setAttribute("href", "product-details.html?id=" + encodeURIComponent(entry.id));
+        view.setAttribute("aria-label", "View " + entry.name + " on the storefront");
+      }
     }
     ensureEdit(card, entry);
   }
 
   function createCard(entry, order) {
-    var group = entry.group || GROUPS[entry.category] || "";
     var price = priceOf(entry);
+    var unitMeta = unitText(entry);
     var image = entry.images[0] || { src: "", alt: entry.name };
 
     var li = document.createElement("li");
@@ -149,8 +202,10 @@
     li.setAttribute("data-product-id", entry.id);
     li.setAttribute("data-name", entry.name);
     li.setAttribute("data-category", entry.category);
+    li.setAttribute("data-category-group", parentGroup(entry.category));
     li.setAttribute("data-state", entry.condition);
     li.setAttribute("data-price", String(price));
+    li.setAttribute("data-unit", unitMeta.suffix.replace("/ ", ""));
     li.setAttribute("data-order", String(order));
 
     var top = document.createElement("div");
@@ -178,7 +233,7 @@
     name.textContent = entry.name;
     var cat = document.createElement("p");
     cat.className = "fd-prod-cat";
-    cat.textContent = entry.category + " · " + group;
+    cat.textContent = categoryText(entry.category);
     idBlock.appendChild(name);
     idBlock.appendChild(cat);
     top.appendChild(idBlock);
@@ -195,12 +250,12 @@
     priceEl.className = "fd-prod-price";
     var hidden = document.createElement("span");
     hidden.className = "visually-hidden";
-    hidden.textContent = "Price per kilogram: ";
+    hidden.textContent = unitMeta.hidden;
     priceEl.appendChild(hidden);
     priceEl.appendChild(document.createTextNode(fmtNaira(price) + " "));
     var unit = document.createElement("span");
     unit.className = "fd-prod-unit";
-    unit.textContent = "/ kg";
+    unit.textContent = unitMeta.suffix;
     priceEl.appendChild(unit);
     foot.appendChild(priceEl);
 

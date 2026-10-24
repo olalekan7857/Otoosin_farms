@@ -4,136 +4,112 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Order Confirmation | Harvest Castle</title>
-    <meta name="author" content="Harvest Castle">
-    <meta name="description" content="Your Harvest Castle order details. This page shows your private order state.">
+    <title>Order Confirmation | O’TOOSIN Farms</title>
+    <meta name="author" content="O’TOOSIN Farms">
+    <meta name="description" content="View the order summary and reference saved from your O’TOOSIN Farms checkout.">
+    <meta name="keywords" content="O’TOOSIN Farms, order confirmation, order summary, meats, fish, live animals, eggs, veggies, fruits">
     <meta name="robots" content="NOINDEX,NOFOLLOW">
 
-    <!-- Mobile Specific Metas -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Favicons - Place favicon.ico in the root directory -->
-    <link rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="assets/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="assets/img/harvest_castle/of_favicon.png" type="image/png">
 
-    <!--==============================
-	  Google Fonts
-	============================== -->
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;family=DM+Sans:wght@400&amp;display=swap" rel="stylesheet">
 
-
-    <!--==============================
-	    All CSS File
-	============================== -->
-    <!-- Bootstrap -->
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <!-- Fontawesome Icon -->
     <link rel="stylesheet" href="assets/css/fontawesome.min.css">
-    <!-- Magnific Popup -->
     <link rel="stylesheet" href="assets/css/magnific-popup.min.css">
-    <!-- Slick Slider -->
     <link rel="stylesheet" href="assets/css/slick.min.css">
-    <!-- Theme Custom CSS -->
     <link rel="stylesheet" href="assets/css/harvest-castle.css">
-    <!-- Harvest Castle foundation overrides -->
     <link rel="stylesheet" href="assets/css/fresh-direct.css">
-    <!-- Harvest Castle theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
     <link rel="stylesheet" href="assets/css/fd-theme.css">
+    <link rel="stylesheet" href="assets/css/otoosin-shop.css">
+    <link rel="stylesheet" href="assets/css/otoosin-confirmation.css">
     <link rel="stylesheet" href="assets/css/otoosin-mobile-nav.css">
     <link rel="stylesheet" href="assets/css/otoosin-footer.css">
-    <!-- Apply the stored theme before first paint. Default is Light. -->
+    <noscript>
+        <style>.sideCartToggler,[data-theme-toggle],#fd-cart-count,#fd-cart-count-mobile{display:none!important}</style>
+    </noscript>
     <script>try{var fdT=localStorage.getItem("freshdirect_theme_v1");if(fdT==="dark"){document.documentElement.setAttribute("data-theme","dark");}}catch(fdE){}</script>
 
     <script src="assets/js/otoosin-mobile-nav.js" defer></script>
+    <script src="assets/js/otoosin-header.js" defer></script>
 </head>
 
-<body>
+<body class="otoosin-shop otoosin-confirmation">
 
     <a class="fd-skip-link" href="#fd-main">Skip to main content</a>
 
-    <!--[if lte IE 9]>
-    	<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
-  	<![endif]-->
-
-
-
-    <!--********************************
-    	Code Start From Here
-	******************************** -->
-
-
-
-    <!--==============================
-    Mobile Menu
-    ============================== -->
     <div class="vs-menu-wrapper" id="fd-mobile-menu">
         <div class="vs-menu-area text-center">
             <button class="vs-menu-toggle" aria-label="Close menu" aria-expanded="false" aria-controls="fd-mobile-menu"><i class="fal fa-times" aria-hidden="true"></i></button>
             <div class="mobile-logo">
-                <a href="index.html" class="fd-logo" aria-label="Harvest Castle home"><img src="assets/img/harvest_castle/hc_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="42" height="42">Harvest<span>Castle</span></a>
+                <a href="index.html" class="fd-logo oto-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async">O’TOOSIN<span> Farms</span></a>
             </div>
             <nav class="vs-mobile-menu" aria-label="Mobile navigation">
                 <ul>
                     <li><a href="index.html">Home</a></li>
-                    <li><a href="product.html">Shop Produce</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="index.html#how-it-works">How It Works</a></li>
+                    <li><a href="product.html">Shop All</a></li>
+                    <li>
+                        <a href="product.html#oto-shop-categories">Product Categories</a>
+                        <ul>
+                            <li><a href="product.html?category=Meats">Meats</a></li>
+                            <li><a href="product.html?category=Fish">Fish</a></li>
+                            <li><a href="product.html?category=Live-Animals">Live Animals</a></li>
+                            <li><a href="product.html?category=Eggs">Eggs</a></li>
+                            <li><a href="product.html?category=Veggies">Veggies</a></li>
+                            <li><a href="product.html?category=Fruits">Fruits</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="index.html#states">Freshness</a>
+                        <ul>
+                            <li><a href="product.html?state=fresh">Fresh</a></li>
+                            <li><a href="product.html?state=fried">Fried</a></li>
+                            <li><a href="product.html?state=frozen">Frozen</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="about.html">About Us</a></li>
                     <li><a href="contact.html">Contact</a></li>
                     <li><a href="cart.html">Cart</a></li>
-                    <li><a href="#" data-whatsapp="general">Order on WhatsApp</a></li>
                 </ul>
             </nav>
+            <form class="oto-mobile-search" action="product.html" method="get" role="search">
+                <label class="visually-hidden" for="oto-mobile-search-input">Search products</label>
+                <input id="oto-mobile-search-input" name="q" type="search" placeholder="Search products">
+                <button type="submit" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></button>
+            </form>
         </div>
     </div>
-    <!--==============================
-    Cart Side bar
-    ============================== -->
+
     <div class="sideCart-wrapper offcanvas-wrapper" role="dialog" aria-modal="true" aria-label="Shopping cart preview">
         <div class="sidemenu-content">
             <button class="closeButton border-theme bg-theme-hover sideMenuCls2" aria-label="Close cart preview"><i class="far fa-times" aria-hidden="true"></i></button>
             <div class="widget widget_shopping_cart">
                 <h3 class="widget_title">Shopping cart</h3>
                 <div class="widget_shopping_cart_content">
-                    <!-- Shown when the cart is empty; cart items + subtotal are
-                         injected here by assets/js/fresh-direct.js when present. -->
                     <div class="fd-cart-empty">
                         <i class="far fa-shopping-basket" aria-hidden="true"></i>
                         <p><strong>Your cart is empty.</strong></p>
-                        <p>Browse fresh produce and add items to get started.</p>
+                        <p>Browse the farm shop and add the first item you need.</p>
                     </div>
                     <div class="buttons">
-                        <a href="product.html" class="vs-btn">Shop produce</a>
+                        <a href="product.html" class="vs-btn">Shop All Products</a>
                         <a href="cart.html" class="fd-view-cart-btn">View cart</a>
-                        <a href="#" class="fd-whatsapp-btn" data-whatsapp="cart"><i class="fab fa-whatsapp" aria-hidden="true"></i><span>Order on WhatsApp</span></a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!--==============================
-    Header Area
-    ==============================-->
+
     <header class="vs-header header-layout1">
-        <div class="header-top">
+        <div class="header-top oto-announcement">
             <div class="container">
-                <div class="row justify-content-between">
-                    <div class="col-auto">
-                        <div class="header-links">
-                            <ul>
-                                <li><i class="far fa-map-marker-alt" aria-hidden="true"></i>FUNAAB Alabata Road, Camp, Abeokuta</li>
-                                <li class="d-none d-md-inline-block"><i class="far fa-clock" aria-hidden="true"></i>Mon - Sat: 09.00 to 06.00</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-auto d-none d-sm-block">
-                        <div class="header-links">
-                            <ul>
-                                <li class="fd-top-note">Serving the FUNAAB community</li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="oto-announcement-inner">
+                    <p class="mb-0"><i class="fas fa-truck" aria-hidden="true"></i> Doorstep delivery in Abeokuta &middot; Park delivery &middot; Pickup</p>
+                    <a href="index.html#delivery-pickup">Delivery and pickup details <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                 </div>
             </div>
         </div>
@@ -144,18 +120,41 @@
                         <div class="row align-items-center justify-content-between">
                             <div class="col-auto">
                                 <div class="header-logo">
-                                    <a href="index.html" class="fd-logo" aria-label="Harvest Castle home"><img src="assets/img/harvest_castle/hc_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="42" height="42">Harvest<span>Castle</span></a>
+                                    <a href="index.html" class="fd-logo oto-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async">O’TOOSIN<span> Farms</span></a>
                                 </div>
                             </div>
                             <div class="col">
                                 <nav class="main-menu menu-style1 d-none d-lg-block" aria-label="Primary navigation">
                                     <ul>
                                         <li><a href="index.html">Home</a></li>
-                                        <li><a href="product.html">Shop Produce</a></li>
-                                        <li><a href="about.html">About</a></li>
-                                        <li><a href="index.html#how-it-works">How It Works</a></li>
+                                        <li><a href="product.html">Shop All</a></li>
+                                        <li class="oto-has-dropdown">
+                                            <a href="product.html#oto-shop-categories">Product Categories</a>
+                                            <button type="button" class="oto-dropdown-toggle" aria-expanded="false" aria-controls="oto-submenu-categories" aria-haspopup="true" aria-label="Show Product Categories menu">
+                                                <svg class="oto-caret" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.3 4.4 6 8.1l3.7-3.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            </button>
+                                            <ul class="sub-menu" id="oto-submenu-categories">
+                                                <li><a href="product.html?category=Meats">Meats</a></li>
+                                                <li><a href="product.html?category=Fish">Fish</a></li>
+                                                <li><a href="product.html?category=Live-Animals">Live Animals</a></li>
+                                                <li><a href="product.html?category=Eggs">Eggs</a></li>
+                                                <li><a href="product.html?category=Veggies">Veggies</a></li>
+                                                <li><a href="product.html?category=Fruits">Fruits</a></li>
+                                            </ul>
+                                        </li>
+                                        <li class="oto-has-dropdown">
+                                            <a href="index.html#states">Freshness</a>
+                                            <button type="button" class="oto-dropdown-toggle" aria-expanded="false" aria-controls="oto-submenu-states" aria-haspopup="true" aria-label="Show Freshness menu">
+                                                <svg class="oto-caret" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.3 4.4 6 8.1l3.7-3.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                            </button>
+                                            <ul class="sub-menu" id="oto-submenu-states">
+                                                <li><a href="product.html?state=fresh">Fresh</a></li>
+                                                <li><a href="product.html?state=fried">Fried</a></li>
+                                                <li><a href="product.html?state=frozen">Frozen</a></li>
+                                            </ul>
+                                        </li>
+                                        <li><a href="about.html">About Us</a></li>
                                         <li><a href="contact.html">Contact</a></li>
-
                                     </ul>
                                 </nav>
                             </div>
@@ -176,15 +175,17 @@
                             </div>
                             <div class="col-auto d-none d-lg-block">
                                 <div class="header-icons fd-header-actions">
+                                    <a href="product.html#fd-shop-search" class="icon-btn" aria-label="Search products">
+                                        <i class="fas fa-search" aria-hidden="true"></i>
+                                    </a>
                                     <button type="button" class="icon-btn fd-theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
                                         <i class="fas fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
                                         <i class="fas fa-sun" data-theme-icon="sun" aria-hidden="true" hidden></i>
                                     </button>
-                                    <a href="#" class="fd-whatsapp-btn" data-whatsapp="general"><i class="fab fa-whatsapp" aria-hidden="true"></i><span>Order on WhatsApp</span></a>
-                                    <a href="#" class="icon-btn sideCartToggler fd-cart-btn" aria-label="Open cart preview">
+                                    <button type="button" class="icon-btn sideCartToggler fd-cart-btn" aria-label="Open cart preview">
                                         <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                                         <span class="badge" id="fd-cart-count">0</span>
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -195,56 +196,45 @@
     </header>
 
     <main id="fd-main">
-    <!--==============================
-    Confirmation intro
-    ============================== -->
-    <div class="fd-shop-intro">
-        <div class="container">
-            <nav aria-label="Breadcrumb">
-                <ol class="fd-breadcrumb">
-                    <li><a href="index.html">Home</a></li>
-                    <li aria-current="page">Order Confirmation</li>
-                </ol>
-            </nav>
-            <span class="sec-subtitle">Order update</span>
-            <h1 class="sec-title">Order Confirmation</h1>
-        </div>
-    </div>
 
-    <!--==============================
-    Confirmation
-    ============================== -->
-    <!--
-      STAGE 6: states render here from the saved order snapshot
-      (sessionStorage freshdirect_last_order). The page never trusts URL
-      parameters for payment state — see assets/js/fresh-direct.js.
-    -->
-    <div class="space">
-        <div class="container" id="fd-confirm-wrap">
-            <noscript>
-                <div class="fd-shop-state">
-                    <i class="far fa-exclamation-circle" aria-hidden="true"></i>
-                    <h2>JavaScript is required</h2>
-                    <p>Please enable JavaScript to view your order confirmation.</p>
-                    <a href="product.html" class="vs-btn">Return to Shop</a>
-                </div>
-            </noscript>
-            <div id="fd-confirm-state" aria-live="polite"></div>
-        </div>
-    </div>
+        <section class="fd-shop-intro oto-shop-intro oto-confirm-intro" aria-labelledby="oto-confirm-heading">
+            <div class="container">
+                <nav aria-label="Breadcrumb">
+                    <ol class="fd-breadcrumb">
+                        <li><a href="index.html">Home</a></li>
+                        <li aria-current="page">Order Confirmation</li>
+                    </ol>
+                </nav>
+                <span class="sec-subtitle">Order update</span>
+                <h1 class="sec-title" id="oto-confirm-heading">Order Confirmation</h1>
+                <p>Your saved order summary from checkout appears here. Keep the order reference for future enquiries.</p>
+            </div>
+        </section>
+
+        <section class="oto-confirm-section" aria-label="Order confirmation">
+            <div class="container" id="oto-confirm-wrap">
+                <noscript>
+                    <div class="fd-shop-state">
+                        <i class="far fa-exclamation-circle" aria-hidden="true"></i>
+                        <h2>JavaScript is required</h2>
+                        <p>Please enable JavaScript to view your order details.</p>
+                        <a href="product.html" class="vs-btn">Continue Shopping</a>
+                    </div>
+                </noscript>
+                <div id="oto-confirm-state" aria-live="polite"></div>
+            </div>
+        </section>
+
     </main>
 
-    <!--==============================
-    Footer
-    ============================== -->
     <footer class="footer-wrapper footer-layout1 oto-footer" id="footer">
         <div class="container">
             <div class="widget-area">
                 <div class="row g-4">
                     <div class="col-lg-4">
                         <div class="widget footer-widget">
-                            <a href="index.html" class="fd-logo oto-logo oto-footer-logo" aria-label="O'Toosin Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async" loading="lazy">O'Toosin<span> Farms</span></a>
-                            <p class="footer-text oto-footer-text">A meat shop selling pork, chicken, turkey, beef, goat meat and fish. Browse by meat type and state, order by the kilogram, and choose Pay Now or Pay on Delivery.</p>
+                            <a href="index.html" class="fd-logo oto-logo oto-footer-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async" loading="lazy">O’TOOSIN<span> Farms</span></a>
+                            <p class="footer-text oto-footer-text">Delivering safe, healthy, and nutritious foods at your doorstep . . . Shop meats, fish, live animals, eggs, veggies and fruits.</p>
                         </div>
                     </div>
                     <div class="col-6 col-lg-2">
@@ -252,12 +242,12 @@
                             <h3 class="widget_title">Shop</h3>
                             <ul class="widget_categories">
                                 <li><a href="product.html">Shop All</a></li>
-                                <li><a href="product-category.html?category=Pork">Pork</a></li>
-                                <li><a href="product-category.html?category=Chicken">Chicken</a></li>
-                                <li><a href="product-category.html?category=Turkey">Turkey</a></li>
-                                <li><a href="product-category.html?category=Beef">Beef</a></li>
-                                <li><a href="product-category.html?category=Goat-Meat">Goat Meat</a></li>
-                                <li><a href="product-category.html?category=Fish">Fish</a></li>
+                                <li><a href="product.html?category=Meats">Meats</a></li>
+                                <li><a href="product.html?category=Fish">Fish</a></li>
+                                <li><a href="product.html?category=Live-Animals">Live Animals</a></li>
+                                <li><a href="product.html?category=Eggs">Eggs</a></li>
+                                <li><a href="product.html?category=Veggies">Veggies</a></li>
+                                <li><a href="product.html?category=Fruits">Fruits</a></li>
                             </ul>
                         </div>
                     </div>
@@ -266,6 +256,7 @@
                             <h3 class="widget_title">Ordering</h3>
                             <ul class="widget_categories">
                                 <li><a href="index.html#how-it-works">How It Works</a></li>
+                                <li><a href="index.html#delivery-pickup">Delivery &amp; Pickup</a></li>
                                 <li><a href="product.html?state=fresh">Fresh</a></li>
                                 <li><a href="product.html?state=fried">Fried</a></li>
                                 <li><a href="product.html?state=frozen">Frozen</a></li>
@@ -288,45 +279,28 @@
         </div>
         <div class="container">
             <div class="copyright-wrap oto-copyright">
-                <p class="copyright-text">Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O'Toosin Farms</a>. All Rights Reserved.</p>
+                <p class="copyright-text">Copyright <i class="fal fa-copyright" aria-hidden="true"></i> <span data-fd-year>2026</span> <a href="index.html">O’TOOSIN Farms</a>. All Rights Reserved.</p>
                 <ul class="oto-legal-links">
                     <li><a href="privacy.html">Privacy Policy</a></li>
-                    <li><a href="terms.html">Terms of Service</a></li>
+                    <li><a href="terms.html">Terms &amp; Conditions</a></li>
                     <li><a href="contact.html">Contact</a></li>
                 </ul>
             </div>
         </div>
     </footer>
-    <!-- Scroll To Top -->
-    <a href="#" class="scrollToTop scroll-btn" aria-label="Scroll to top"><i class="far fa-arrow-up" aria-hidden="true"></i></a>
 
-    <!--********************************
-			Code End  Here
-	******************************** -->
-
-    <!--==============================
-        All Js File
-    ============================== -->
-    <!-- Jquery -->
     <script src="assets/js/vendor/jquery-3.6.0.min.js"></script>
-    <!-- Slick Slider -->
     <script src="assets/js/slick.min.js"></script>
-    <!-- Bootstrap -->
     <script src="assets/js/bootstrap.min.js"></script>
-    <!-- Magnific Popup -->
     <script src="assets/js/jquery.magnific-popup.min.js"></script>
-    <!-- Isotope Filter -->
     <script src="assets/js/imagesloaded.pkgd.min.js"></script>
     <script src="assets/js/isotope.pkgd.min.js"></script>
-    <!-- Main Js File -->
     <script src="assets/js/main.js"></script>
-    <!-- Harvest Castle config + cart + shop (single WhatsApp source) -->
     <script src="assets/js/fresh-direct.js?v=7.0"></script>
+    <script src="assets/js/otoosin-confirmation.js"></script>
     <script src="assets/js/fd-theme.js"></script>
-
 
     <div data-otoosin-mobile-nav-mount></div>
 </body>
-
 
 </html>

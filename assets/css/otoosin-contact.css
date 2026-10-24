@@ -1,12 +1,35 @@
 /* ==========================================================================
-   O'Toosin Farms — Contact page
+   O’TOOSIN Farms — Contact page
    Page-specific layout only. Shared header, footer, typography, colours and
    form field primitives come from fresh-direct.css, fd-theme.css and
    otoosin-shop.css.
    ========================================================================== */
 
 .otoosin-contact .fd-shop-intro {
-  padding-bottom: 48px;
+  padding-bottom: 54px;
+}
+
+.oto-contact-intro .sec-subtitle,
+.oto-contact-form-head .sec-subtitle {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--secondary-color);
+  font-family: var(--title-font);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.oto-band-kicker {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--theme-color);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
 .oto-contact-layout {
@@ -56,6 +79,53 @@
   color: rgba(255, 255, 255, 0.76);
   font-size: 15px;
   line-height: 1.7;
+}
+
+.oto-contact-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 16px;
+  color: var(--white-color);
+  font-size: 16px;
+  font-style: normal;
+  line-height: 1.65;
+}
+
+.oto-contact-address i {
+  margin-top: 4px;
+  color: var(--theme-color);
+  font-size: 17px;
+}
+
+.oto-contact-pickup-note {
+  margin-bottom: 14px !important;
+}
+
+.oto-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--theme-color);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.oto-contact-link i {
+  font-size: 11px;
+  transition: transform 0.3s ease;
+}
+
+.oto-contact-link:hover,
+.oto-contact-link:focus-visible {
+  color: var(--white-color);
+}
+
+.oto-contact-link:hover i,
+.oto-contact-link:focus-visible i {
+  transform: translateX(4px);
 }
 
 .oto-contact-topics {
@@ -129,6 +199,38 @@
 
 .oto-contact-tips li:last-child {
   margin-bottom: 0;
+}
+
+.oto-contact-cat-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oto-contact-cat-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+
+.oto-contact-cat-links a:hover,
+.oto-contact-cat-links a:focus-visible {
+  border-color: var(--theme-color);
+  background: rgba(222, 173, 57, 0.14);
+  color: var(--white-color);
 }
 
 .oto-contact-form-card {
@@ -291,7 +393,9 @@
 }
 
 html[data-theme="dark"] .otoosin-contact .main-menu a[aria-current="page"],
-html[data-theme="dark"] .otoosin-contact .vs-mobile-menu ul li a[aria-current="page"] {
+html[data-theme="dark"] .otoosin-contact .vs-mobile-menu ul li a[aria-current="page"],
+html[data-theme="dark"] .oto-contact-intro .sec-subtitle,
+html[data-theme="dark"] .oto-contact-form-head .sec-subtitle {
   color: var(--fd-brand-green-text);
 }
 

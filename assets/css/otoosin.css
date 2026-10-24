@@ -162,10 +162,21 @@
 }
 
 .oto-hero-content .hero-title {
-  font-size: clamp(34px, 4.4vw, 52px);
-  line-height: 1.06;
+  max-width: 640px;
+  font-size: clamp(34px, 3.7vw, 48px);
+  line-height: 1.08;
   letter-spacing: -0.015em;
+  text-wrap: balance;
   margin-bottom: 20px;
+}
+
+.oto-hero-tag {
+  max-width: 560px;
+  padding: 9px 16px;
+  border-radius: 16px;
+  line-height: 1.5;
+  white-space: normal;
+  text-align: center;
 }
 
 .oto-hero-content .hero-text {
@@ -341,8 +352,15 @@
   gap: 28px 18px;
 }
 
-#meat-types {
+#categories {
   padding-bottom: 44px;
+}
+
+#categories,
+#discover,
+#delivery-pickup,
+[id^="popular-"] {
+  scroll-margin-top: 100px;
 }
 
 .oto-cat-grid .fd-cat-cell {
@@ -350,16 +368,9 @@
   max-width: calc((100% - 36px) / 3);
 }
 
-@media (min-width: 992px) {
-  .oto-cat-grid .fd-cat-cell {
-    flex: 0 0 calc((100% - 90px) / 6);
-    max-width: calc((100% - 90px) / 6);
-  }
-}
-
 .oto-cat-card .categorie-img {
   width: 100%;
-  max-width: 170px;
+  max-width: 210px;
   height: auto;
   aspect-ratio: 1 / 1;
   display: flex;
@@ -382,28 +393,28 @@
   }
 }
 
-.oto-cat-card .categorie-img.cat-pork {
-  background-image: url("../img/categorie/pork-meat.png");
-}
-
-.oto-cat-card .categorie-img.cat-chicken {
-  background-image: url("../img/categorie/chicken-meat.png");
-}
-
-.oto-cat-card .categorie-img.cat-turkey {
-  background-image: url("../img/categorie/turkey-meat.png");
-}
-
-.oto-cat-card .categorie-img.cat-beef {
-  background-image: url("../img/categorie/beef-meat.png");
-}
-
-.oto-cat-card .categorie-img.cat-goat {
-  background-image: url("../img/categorie/goat-meat.png");
+.oto-cat-card .categorie-img.cat-meats {
+  background-image: url("../img/hero/oto-hero-meat.jpg");
 }
 
 .oto-cat-card .categorie-img.cat-fish {
   background-image: url("../img/categorie/fish-meat.png");
+}
+
+.oto-cat-card .categorie-img.cat-live {
+  background-image: url("../img/categorie/otoosin-live-animals.png");
+}
+
+.oto-cat-card .categorie-img.cat-eggs {
+  background-image: url("../img/categorie/otoosin-eggs.png");
+}
+
+.oto-cat-card .categorie-img.cat-veggies {
+  background-image: url("../img/categorie/otoosin-veggies.png");
+}
+
+.oto-cat-card .categorie-img.cat-fruits {
+  background-image: url("../img/categorie/otoosin-fruits.png");
 }
 
 .oto-cat-card:hover .categorie-img {
@@ -423,9 +434,35 @@
 }
 
 .oto-cat-card .categorie-text {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 290px;
   font-size: 14px;
+  line-height: 1.6;
   color: #69716c;
+}
+
+.oto-cat-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  color: var(--secondary-color);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.oto-cat-cta i {
+  font-size: 11px;
+  transition: transform 0.3s ease;
+}
+
+.oto-cat-card:hover .oto-cat-cta {
+  color: var(--title-color);
+}
+
+.oto-cat-card:hover .oto-cat-cta i {
+  transform: translateX(4px);
 }
 
 .oto-state-grid {
@@ -677,6 +714,107 @@
   line-height: 1.6;
 }
 
+.oto-fulfil-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.oto-fulfil-option {
+  height: 100%;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+}
+
+.oto-fulfil-option h3 {
+  margin-bottom: 7px;
+  color: var(--white-color);
+  font-size: 19px;
+}
+
+.oto-fulfil-option p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.oto-pickup-panel {
+  margin-top: 24px;
+  padding: 24px 26px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+}
+
+.oto-pickup-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.oto-pickup-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--theme-color);
+  color: var(--title-color);
+  font-size: 17px;
+}
+
+.oto-pickup-head h3 {
+  margin: 0 0 4px;
+  color: var(--white-color);
+  font-size: 19px;
+}
+
+.oto-pickup-head p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.oto-pickup-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.oto-pickup-location {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+}
+
+.oto-pickup-name {
+  color: var(--white-color);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.oto-pickup-address,
+.oto-pickup-hours {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .oto-payment-note {
   display: flex;
   align-items: flex-start;
@@ -841,6 +979,14 @@ html[data-theme="dark"] .oto-state-card:hover {
 
 html[data-theme="dark"] .oto-hero-photo {
   background-color: var(--fd-surface-2);
+}
+
+html[data-theme="dark"] .oto-cat-cta {
+  color: var(--fd-brand-green-text);
+}
+
+html[data-theme="dark"] .oto-cat-card:hover .oto-cat-cta {
+  color: var(--theme-color);
 }
 
 /* Hardcoded light-mode body copy on the homepage. */
@@ -1093,8 +1239,17 @@ html[data-theme="dark"] .oto-faq-intro p {
     gap: 20px;
   }
 
-  .oto-payment-options {
+  .oto-payment-options,
+  .oto-fulfil-options {
     gap: 12px;
+  }
+
+  .oto-fulfil-options {
+    grid-template-columns: 1fr;
+  }
+
+  .oto-pickup-panel {
+    padding: 20px;
   }
 
   .oto-faq-intro {
@@ -1114,7 +1269,7 @@ html[data-theme="dark"] .oto-faq-intro p {
   }
 
   .oto-hero-content .hero-title {
-    font-size: 38px;
+    font-size: 34px;
   }
 
   .oto-hero-content .hero-text {
@@ -1153,11 +1308,11 @@ html[data-theme="dark"] .oto-faq-intro p {
   }
 
   .oto-cat-grid .fd-cat-cell {
-    flex: 0 0 clamp(124px, 26vw, 200px);
-    max-width: clamp(124px, 26vw, 200px);
+    flex: 0 0 calc((100% - 14px) / 2);
+    max-width: calc((100% - 14px) / 2);
   }
 
-  #meat-types {
+  #categories {
     padding-bottom: 34px;
   }
 
@@ -1242,7 +1397,7 @@ html[data-theme="dark"] .oto-faq-intro p {
 
 @media (max-width: 575px) {
   .oto-hero-content .hero-title {
-    font-size: 32px;
+    font-size: 29px;
   }
 
   .oto-hero-photo {

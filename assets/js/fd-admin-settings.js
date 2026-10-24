@@ -1,5 +1,5 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Store Settings page controller
+   O’TOOSIN Farms Admin — Settings page controller
    --------------------------------------------------------------------------
    One form owns all editable settings. The data boundary
    (window.FreshDirectAdminSettings in fd-admin-settings-data.js) is the only
@@ -12,7 +12,7 @@
 
   var FIELDS = [
     { key: "businessName", input: "fd-settings-name", label: "Business name" },
-    { key: "address", input: "fd-settings-address", label: "Outlet address" },
+    { key: "address", input: "fd-settings-address", label: "Business address" },
     { key: "whatsapp", input: "fd-settings-whatsapp", label: "WhatsApp number" },
     { key: "contactPhone", input: "fd-settings-phone", label: "Contact phone number" },
     { key: "description", input: "fd-settings-description", label: "Storefront introduction" }
@@ -289,7 +289,7 @@
       submit.setAttribute("aria-busy", busy ? "true" : "false");
     }
     if (label) {
-      label.textContent = busy ? "Saving…" : "Save Changes";
+      label.textContent = busy ? "Saving…" : "Save changes";
     }
     if (discard) {
       discard.disabled = busy || !isDirty();
@@ -319,11 +319,130 @@
     paintDirty();
   }
 
-  /* ---------- Read-only delivery rules ---------- */
+  /* ---------- Read-only brand, delivery and category records ---------- */
   function setText(id, value) {
     var node = byId(id);
     if (node) {
       node.textContent = value || "—";
+    }
+  }
+
+  function fmtNaira(value) {
+    var amount = Number(value);
+    if (!isFinite(amount)) {
+      return "To be confirmed";
+    }
+    return "₦" + amount.toLocaleString("en-NG");
+  }
+
+  function emptyNote(text) {
+    var item = document.createElement("li");
+    item.className = "fd-settings-list-empty";
+    item.textContent = text;
+    return item;
+  }
+
+  function renderBrand() {
+    var s = svc();
+    if (!s || typeof s.getBrandInfo !== "function") {
+      return;
+    }
+    var info;
+    try {
+      info = s.getBrandInfo();
+    } catch (e) {
+      return;
+    }
+    if (!info) {
+      return;
+    }
+    setText("fd-settings-slogan", info.slogan);
+    var logo = info.logo || {};
+    var image = byId("fd-settings-logo-img");
+    if (image && logo.src) {
+      image.src = logo.src;
+      image.alt = logo.alt || "O’TOOSIN Farms";
+    }
+    setText("fd-settings-logo-path", logo.reference || logo.src || "—");
+  }
+
+  function renderZones(zones) {
+    var list = byId("fd-settings-zone-list");
+    if (!list) {
+      return;
+    }
+    list.innerHTML = "";
+    if (!zones || !zones.length) {
+      list.appendChild(emptyNote("No doorstep zones are configured."));
+      return;
+    }
+    for (var i = 0; i < zones.length; i++) {
+      var zone = zones[i] || {};
+      var item = document.createElement("li");
+      item.className = "fd-settings-zone";
+      var text = document.createElement("div");
+      text.className = "fd-settings-zone-text";
+      var name = document.createElement("strong");
+      name.className = "fd-settings-zone-name";
+      name.textContent = zone.name || "Delivery zone";
+      var areas = document.createElement("span");
+      areas.className = "fd-settings-zone-areas";
+      areas.textContent = zone.areas || "Area details not set.";
+      var fee = document.createElement("span");
+      fee.className = "fd-settings-zone-fee";
+      fee.textContent = fmtNaira(zone.fee);
+      text.appendChild(name);
+      text.appendChild(areas);
+      item.appendChild(text);
+      item.appendChild(fee);
+      list.appendChild(item);
+    }
+  }
+
+  function renderPickupLocations(locations) {
+    var list = byId("fd-settings-pickup-list");
+    if (!list) {
+      return;
+    }
+    list.innerHTML = "";
+    if (!locations || !locations.length) {
+      list.appendChild(emptyNote("No pickup locations are configured."));
+      return;
+    }
+    for (var i = 0; i < locations.length; i++) {
+      var location = locations[i] || {};
+      var item = document.createElement("li");
+      item.className = "fd-settings-pickup";
+      var name = document.createElement("strong");
+      name.className = "fd-settings-pickup-name";
+      name.textContent = location.name || "Pickup location";
+      var address = document.createElement("span");
+      address.className = "fd-settings-pickup-address";
+      address.textContent = location.address || "Address not set.";
+      var fee = document.createElement("span");
+      fee.className = "fd-dash-pill is-ok";
+      fee.textContent = "No delivery fee";
+      item.appendChild(name);
+      item.appendChild(address);
+      item.appendChild(fee);
+      list.appendChild(item);
+    }
+  }
+
+  function renderParkDestinations(destinations) {
+    var list = byId("fd-settings-park-list");
+    if (!list) {
+      return;
+    }
+    list.innerHTML = "";
+    if (!destinations || !destinations.length) {
+      list.appendChild(emptyNote("No park destinations are configured."));
+      return;
+    }
+    for (var i = 0; i < destinations.length; i++) {
+      var item = document.createElement("li");
+      item.textContent = destinations[i];
+      list.appendChild(item);
     }
   }
 
@@ -338,12 +457,96 @@
     } catch (e) {
       return;
     }
-    setText("fd-settings-delivery-arrangement", info.arrangement);
+    if (!info) {
+      return;
+    }
     setText("fd-settings-delivery-coverage", info.coverage);
-    setText("fd-settings-delivery-hours", info.hours);
-    setText("fd-settings-delivery-pay-now", info.payNow);
-    setText("fd-settings-delivery-pay-on-delivery", info.payOnDelivery);
-    setText("fd-settings-delivery-fee", info.fee);
+    setText("fd-settings-doorstep-note", info.doorstep);
+    setText("fd-settings-park-note", info.park);
+    setText("fd-settings-pickup-note", info.pickup);
+    setText("fd-settings-delivery-payment", info.payment);
+    renderZones(info.zones);
+    renderPickupLocations(info.pickupLocations);
+    renderParkDestinations(info.parkDestinations);
+  }
+
+  function renderCategories() {
+    var s = svc();
+    if (!s || typeof s.getMarketplaceCategories !== "function") {
+      return;
+    }
+    var list = byId("fd-settings-category-list");
+    if (!list) {
+      return;
+    }
+    var categories;
+    try {
+      categories = s.getMarketplaceCategories();
+    } catch (e) {
+      return;
+    }
+    list.innerHTML = "";
+    for (var i = 0; i < categories.length; i++) {
+      var item = document.createElement("li");
+      item.textContent = categories[i];
+      list.appendChild(item);
+    }
+  }
+
+  /* ---------- Appearance (existing global theme preference) ---------- */
+  function themeApi() {
+    return window.FreshDirectTheme || null;
+  }
+
+  function paintThemeChoice() {
+    var api = themeApi();
+    var theme = api && typeof api.get === "function" ? api.get() : "light";
+    var inputs = document.querySelectorAll('input[name="adminTheme"]');
+    for (var i = 0; i < inputs.length; i++) {
+      var input = inputs[i];
+      var selected = input.value === theme;
+      input.checked = selected;
+      input.disabled = !api;
+      var label = input.parentNode;
+      if (label && label.classList) {
+        label.classList.toggle("is-selected", selected);
+      }
+    }
+    var note = byId("fd-settings-theme-note");
+    if (note) {
+      if (!api) {
+        note.textContent = "The theme control is unavailable on this page.";
+      } else {
+        note.textContent =
+          theme === "dark"
+            ? "Dark mode is active in the admin on this device."
+            : "Light mode is active in the admin on this device.";
+      }
+    }
+  }
+
+  function wireAppearance() {
+    var inputs = document.querySelectorAll('input[name="adminTheme"]');
+    for (var i = 0; i < inputs.length; i++) {
+      inputs[i].addEventListener("change", function () {
+        var api = themeApi();
+        if (!api || typeof api.set !== "function") {
+          return;
+        }
+        api.set(this.value);
+        paintThemeChoice();
+      });
+    }
+    paintThemeChoice();
+    if (typeof window.MutationObserver === "function") {
+      var observer = new window.MutationObserver(function () {
+        paintThemeChoice();
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"]
+      });
+    }
   }
 
   /* ---------- Save attempts ---------- */
@@ -408,7 +611,7 @@
     setBusy(false);
     if (result && result.ok && result.settings) {
       fill(result.settings);
-      setFeedback("Store settings saved on this device.", false, true);
+      setFeedback("Farm settings saved on this device.", false, true);
     } else {
       applyErrors(result);
     }
@@ -551,7 +754,10 @@
       return;
     }
     fill(settings);
+    renderBrand();
     renderDelivery();
+    renderCategories();
+    paintThemeChoice();
     showContent();
     wireNav();
   }
@@ -563,6 +769,7 @@
     wireForm();
     wireRetry();
     wireUnload();
+    wireAppearance();
     load();
   }
 

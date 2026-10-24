@@ -1,16 +1,17 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Product Categories (admin-categories.html only)
+   O’TOOSIN Farms Admin — Product Categories (admin-categories.html only)
    --------------------------------------------------------------------------
    The six category cards are already in the page, so the list is fully
    readable without JavaScript. This controller:
      1. Reads the current product catalogue (built-in records merged with
         products kept in this browser) and writes the real per-category and
-        per-state counts into the existing cards.
-     2. Filters those cards by search text and meat group.
+        per-condition counts into the existing cards.
+     2. Filters those cards by search text and category type.
 
-   No data is invented, nothing is saved here, and the category menu stays
-   the canonical O'Toosin Farms order: Pork, Chicken, Turkey, Beef,
-   Goat Meat, Fish.
+   Product records keep their specific meat category (Pork, Chicken, …) while
+   the category page groups them under the six storefront sections. Nothing is
+   invented, nothing is saved here, and the order stays Meats, Fish,
+   Live Animals, Eggs, Veggies, Fruits.
    ========================================================================== */
 (function () {
   "use strict";
@@ -32,8 +33,7 @@
     list.querySelectorAll(".fd-cat-card")
   );
 
-  var states = ["Fresh", "Frozen", "Fried"];
-  var stateKey = { Fresh: "fresh", Frozen: "frozen", Fried: "fried" };
+  var MEAT_CATEGORIES = ["Pork", "Chicken", "Turkey", "Beef", "Goat Meat", "Meats"];
 
   var state = {
     q: "",
@@ -64,27 +64,61 @@
     }
   }
 
+  function mainCategory(entry) {
+    var category = entry && entry.category ? String(entry.category) : "";
+    if (MEAT_CATEGORIES.indexOf(category) !== -1) {
+      return "Meats";
+    }
+    if (
+      category === "Fish" ||
+      category === "Live Animals" ||
+      category === "Eggs" ||
+      category === "Veggies" ||
+      category === "Fruits"
+    ) {
+      return category;
+    }
+    return "";
+  }
+
+  function cardStates(card) {
+    return cardValue(card, "states")
+      .split(",")
+      .map(function (item) {
+        return item.replace(/^\s+|\s+$/g, "");
+      })
+      .filter(function (item) {
+        return item;
+      });
+  }
+
   function applyCounts() {
     var catalog = readCatalog();
     if (!catalog) {
       return;
     }
+
     var totals = {};
     for (var i = 0; i < cards.length; i++) {
-      var category = cardValue(cards[i], "category");
-      totals[category] = { total: 0, Fresh: 0, Frozen: 0, Fried: 0 };
+      var bucket = { total: 0 };
+      var states = cardStates(cards[i]);
+      for (var s = 0; s < states.length; s++) {
+        bucket[states[s]] = 0;
+      }
+      totals[cardValue(cards[i], "category")] = bucket;
     }
 
     var ids = Object.keys(catalog);
     for (var j = 0; j < ids.length; j++) {
       var entry = catalog[ids[j]];
-      if (!entry || !totals[entry.category]) {
+      var category = mainCategory(entry);
+      if (!category || !totals[category]) {
         continue;
       }
-      var bucket = totals[entry.category];
-      bucket.total += 1;
-      if (states.indexOf(entry.condition) !== -1) {
-        bucket[entry.condition] += 1;
+      var bucketForEntry = totals[category];
+      bucketForEntry.total += 1;
+      if (Object.prototype.hasOwnProperty.call(bucketForEntry, entry.condition)) {
+        bucketForEntry[entry.condition] += 1;
       }
     }
 
@@ -92,12 +126,16 @@
     var grandTotal = 0;
     for (var k = 0; k < cards.length; k++) {
       var card = cards[k];
-      var cat = cardValue(card, "category");
-      var bucketForCard = totals[cat] || { total: 0, Fresh: 0, Frozen: 0, Fried: 0 };
+      var categoryName = cardValue(card, "category");
+      var bucketForCard = totals[categoryName] || { total: 0 };
       setText(card.querySelector(".fd-cat-total"), bucketForCard.total);
-      setText(card.querySelector(".fd-cat-fresh"), bucketForCard.Fresh);
-      setText(card.querySelector(".fd-cat-frozen"), bucketForCard.Frozen);
-      setText(card.querySelector(".fd-cat-fried"), bucketForCard.Fried);
+
+      var stateNodes = card.querySelectorAll(".fd-cat-state");
+      for (var n = 0; n < stateNodes.length; n++) {
+        var stateName = stateNodes[n].getAttribute("data-state") || "";
+        setText(stateNodes[n], bucketForCard[stateName] || 0);
+      }
+
       grandTotal += bucketForCard.total;
 
       var group = cardValue(card, "group");
@@ -106,9 +144,10 @@
 
     setText(document.getElementById("fd-cat-summary-categories"), cards.length);
     setText(document.getElementById("fd-cat-summary-total"), grandTotal);
-    setText(document.getElementById("fd-cat-summary-red"), groupTotals["Red meat"] || 0);
-    setText(document.getElementById("fd-cat-summary-poultry"), groupTotals.Poultry || 0);
-    setText(document.getElementById("fd-cat-summary-seafood"), groupTotals.Seafood || 0);
+    setText(document.getElementById("fd-cat-summary-meats"), groupTotals.Meat || 0);
+    setText(document.getElementById("fd-cat-summary-fish"), groupTotals.Seafood || 0);
+    setText(document.getElementById("fd-cat-summary-live"), groupTotals["Farm animals"] || 0);
+    setText(document.getElementById("fd-cat-summary-produce"), groupTotals["Farm produce"] || 0);
   }
 
   function matches(card) {
@@ -118,6 +157,8 @@
     if (state.q) {
       var haystack = (
         cardValue(card, "category") +
+        " " +
+        cardValue(card, "slug") +
         " " +
         cardValue(card, "group") +
         " " +
@@ -172,7 +213,8 @@
     }
   }
 
-  /* Deep link support: ?group=Red%20meat preselects the group filter. */
+  /* Deep link support keeps existing ?group= links working and maps the older
+     meat groupings onto the current whole-farm category types. */
   function applyUrlGroup() {
     var params = null;
     try {
@@ -183,11 +225,14 @@
     if (!params || !groupSelect) {
       return;
     }
-    var raw = params.get("group") || "";
+    var raw = params.get("group") || params.get("type") || "";
     if (!raw) {
       return;
     }
     var wanted = raw.replace(/-/g, " ").toLowerCase();
+    if (wanted === "red meat" || wanted === "poultry" || wanted === "meats") {
+      wanted = "meat";
+    }
     for (var i = 0; i < groupSelect.options.length; i++) {
       var option = groupSelect.options[i];
       if (option.value !== "all" && option.value.toLowerCase() === wanted) {

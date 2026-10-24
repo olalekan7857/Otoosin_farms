@@ -1,12 +1,13 @@
 /* ==========================================================================
-   O'Toosin Farms Admin — Inventory list (admin-inventory.html only)
+   O’TOOSIN Farms Admin — Inventory list (admin-inventory.html only)
    --------------------------------------------------------------------------
    Reads the SAME product catalogue the Products page, Dashboard and editor
    use (window.FreshDirectAdminProducts), so nothing is duplicated or can
    drift out of sync. The catalogue stores an availability status per
    product ("in", "limited", "out"); this page displays that status and
-   filters/sorts it. No stock quantity, cost, batch or supplier data exists
-   in the current project, so none is shown or invented here.
+   filters/sorts it across all six farm categories. No stock quantity, cost,
+   batch or supplier data exists in the current project, so none is shown or
+   invented here.
 
    Vanilla JS, no dependencies. Admin-scoped: never touches the customer
    cart store or fresh-direct.js.
@@ -16,13 +17,13 @@
 
   var SORT_DEFAULT = "availability";
 
-  var body = document.getElementById("fd-inv-body");
-  if (!body) {
+  var list = document.getElementById("fd-inv-list");
+  if (!list) {
     return;
   }
 
   var cardsHost = document.getElementById("fd-inv-cards");
-  var tableWrap = document.getElementById("fd-inv-table-wrap");
+  var listWrap = document.getElementById("fd-inv-list-wrap");
   var countEl = document.getElementById("fd-inv-count");
   var emptyAll = document.getElementById("fd-inv-empty-all");
   var emptyFiltered = document.getElementById("fd-inv-empty-filtered");
@@ -43,8 +44,18 @@
     "Turkey": "Poultry",
     "Beef": "Red meat",
     "Goat Meat": "Red meat",
-    "Fish": "Seafood"
+    "Fish": "Seafood",
+    "Live Animals": "Farm animals",
+    "Eggs": "Farm produce",
+    "Veggies": "Farm produce",
+    "Fruits": "Farm produce"
   };
+  var MEAT_CATEGORIES = ["Pork", "Chicken", "Turkey", "Beef", "Goat Meat", "Meats"];
+  var CATEGORY_ORDER = ["Meats", "Fish", "Live Animals", "Eggs", "Veggies", "Fruits"];
+  var CATEGORY_RANK = {};
+  for (var orderIndex = 0; orderIndex < CATEGORY_ORDER.length; orderIndex++) {
+    CATEGORY_RANK[CATEGORY_ORDER[orderIndex]] = orderIndex;
+  }
 
   var state = {
     q: "",
@@ -66,8 +77,47 @@
     });
   }
 
+  function mainCategory(category) {
+    return MEAT_CATEGORIES.indexOf(category) !== -1 ? "Meats" : category;
+  }
+
+  function categoryLabel(row) {
+    if (row.mainCategory === "Meats") {
+      return row.group
+        ? "Meats · " + row.category + " · " + row.group
+        : "Meats · " + row.category;
+    }
+    return row.group ? row.category + " · " + row.group : row.category;
+  }
+
+  function unitLabel(entry) {
+    var unit = String(entry.priceUnit || "").replace(/^\s+|\s+$/g, "");
+    if (unit) {
+      return unit;
+    }
+    var basis = String(entry.priceBasis || "").replace(/^\s+|\s+$/g, "");
+    if (basis) {
+      return basis;
+    }
+    var variant = entry.variants && entry.variants[0];
+    var label = variant && variant.label ? String(variant.label) : "";
+    if (label.indexOf("kg") !== -1) {
+      return "per kg";
+    }
+    if (/crate/i.test(label)) {
+      return "per crate";
+    }
+    if (/basket/i.test(label)) {
+      return "per basket";
+    }
+    if (/chicken/i.test(label)) {
+      return "per chicken";
+    }
+    return "—";
+  }
+
   function availabilityMeta(status) {
-    if (status === "out") {
+    if (status === "out" || status === "draft" || status === "unavailable") {
       return { key: "out", label: "Out of Stock", tone: "is-bad", rank: 2 };
     }
     if (status === "limited") {
@@ -108,9 +158,11 @@
         id: String(entry.id || ids[i]),
         name: name,
         category: categoryName,
+        mainCategory: mainCategory(categoryName),
         group: entry.group || CATEGORY_GROUP[categoryName] || "",
         condition: entry.condition || "",
         status: entry.status || "in",
+        unit: unitLabel(entry),
         imageSrc: image.src || "",
         imageAlt: image.alt || name
       });
@@ -119,7 +171,7 @@
   }
 
   function matches(row) {
-    if (state.category !== "all" && row.category !== state.category) {
+    if (state.category !== "all" && row.mainCategory !== state.category) {
       return false;
     }
     if (state.productState !== "all" && row.condition !== state.productState) {
@@ -138,7 +190,13 @@
         " " +
         row.category +
         " " +
-        row.group
+        row.mainCategory +
+        " " +
+        row.group +
+        " " +
+        row.condition +
+        " " +
+        row.unit
       ).toLowerCase();
       if (haystack.indexOf(state.q) === -1) {
         return false;
@@ -161,6 +219,17 @@
       });
     } else if (state.sort === "category") {
       out.sort(function (a, b) {
+        var aRank = CATEGORY_RANK[a.mainCategory];
+        var bRank = CATEGORY_RANK[b.mainCategory];
+        if (aRank === undefined) {
+          aRank = CATEGORY_ORDER.length;
+        }
+        if (bRank === undefined) {
+          bRank = CATEGORY_ORDER.length;
+        }
+        if (aRank !== bRank) {
+          return aRank - bRank;
+        }
         var c = a.category.localeCompare(b.category, "en", { sensitivity: "base" });
         return c !== 0 ? c : byName(a, b);
       });
@@ -173,16 +242,6 @@
       });
     }
     return out;
-  }
-
-  function pill(label, tone) {
-    return (
-      '<span class="fd-dash-pill' +
-      (tone ? " " + tone : "") +
-      '">' +
-      esc(label) +
-      "</span>"
-    );
   }
 
   function renderCards(rows) {
@@ -207,7 +266,7 @@
         icon: "fas fa-box",
         label: "Total products",
         value: rows.length,
-        context: "Meat lines in the catalogue."
+        context: "Product lines across all six categories."
       },
       {
         icon: "fas fa-check-circle",
@@ -249,7 +308,19 @@
     cardsHost.innerHTML = html;
   }
 
-  function renderRows(rows) {
+  function isLocalProduct(id) {
+    try {
+      return !!(
+        window.FreshDirectAdminStore &&
+        window.FreshDirectAdminStore.isLocal &&
+        window.FreshDirectAdminStore.isLocal(id)
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function renderProducts(rows) {
     var html = "";
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
@@ -258,54 +329,67 @@
         "admin-product-edit.html?id=" + encodeURIComponent(row.id);
       var viewHref =
         "product-details.html?id=" + encodeURIComponent(row.id);
+      var viewAction = isLocalProduct(row.id)
+        ? ""
+        : '<a class="fd-prod-btn" href="' +
+          esc(viewHref) +
+          '" target="_blank" rel="noopener" aria-label="View ' +
+          esc(row.name) +
+          ' on the storefront"><i class="far fa-eye" aria-hidden="true"></i>View</a>';
       var thumb = row.imageSrc
-        ? '<span class="fd-inv-thumb"><img src="' +
+        ? '<img src="' +
           esc(row.imageSrc) +
-          '" alt="" width="104" height="104" loading="lazy" decoding="async" onerror="this.hidden=true"></span>'
-        : "";
-      var group = row.group ? " · " + row.group : "";
+          '" alt="" width="144" height="144" loading="lazy" decoding="async" onerror="this.hidden=true">'
+        : '<i class="fas fa-box" aria-hidden="true"></i>';
       html +=
-        "<tr>" +
-        '<th scope="row" data-label="Product">' +
-        '<span class="fd-inv-product">' +
+        '<li class="fd-cat-card">' +
+        '<div class="fd-cat-card-top">' +
+        '<span class="fd-cat-thumb">' +
         thumb +
-        '<span class="fd-inv-id-block">' +
-        '<strong class="fd-inv-name">' +
+        "</span>" +
+        '<div class="fd-cat-id">' +
+        '<h3 class="fd-cat-name">' +
         esc(row.name) +
-        "</strong>" +
-        '<span class="fd-inv-code">ID: <code>' +
+        "</h3>" +
+        '<p class="fd-cat-group">' +
+        esc(row.group || row.mainCategory) +
+        "</p>" +
+        "</div>" +
+        "</div>" +
+        '<p class="fd-cat-desc">' +
+        esc(categoryLabel(row)) +
+        ' &middot; Catalogue ID: <code class="fd-inv-code">' +
         esc(row.id) +
-        "</code></span>" +
-        "</span>" +
-        "</span>" +
-        "</th>" +
-        '<td data-label="Category">' +
-        esc(row.category) +
-        esc(group) +
-        "</td>" +
-        '<td data-label="State">' +
-        (row.condition ? pill(row.condition, "") : "&mdash;") +
-        "</td>" +
-        '<td data-label="Availability">' +
-        pill(meta.label, meta.tone) +
-        "</td>" +
-        '<td data-label="Action">' +
-        '<div class="fd-inv-actions">' +
+        "</code></p>" +
+        '<ul class="fd-cat-stats" aria-label="' +
+        esc(row.name) +
+        ' inventory details">' +
+        "<li><span class=\"fd-cat-stat-label\">Condition</span>" +
+        '<span class="fd-cat-stat-value">' +
+        esc(row.condition || "—") +
+        "</span></li>" +
+        '<li><span class="fd-cat-stat-label">Unit</span>' +
+        '<span class="fd-cat-stat-value">' +
+        esc(row.unit) +
+        "</span></li>" +
+        '<li><span class="fd-cat-stat-label">Availability</span>' +
+        '<span class="fd-cat-stat-value fd-inv-status ' +
+        esc(meta.tone) +
+        '">' +
+        esc(meta.label) +
+        "</span></li>" +
+        "</ul>" +
+        '<div class="fd-cat-actions">' +
         '<a class="fd-prod-btn" href="' +
         esc(editHref) +
         '" aria-label="Edit ' +
         esc(row.name) +
         '"><i class="fas fa-pen" aria-hidden="true"></i>Edit</a>' +
-        '<a class="fd-prod-btn" href="' +
-        esc(viewHref) +
-        '" target="_blank" rel="noopener" aria-label="View ' +
-        esc(row.name) +
-        ' on the storefront"><i class="far fa-eye" aria-hidden="true"></i>View</a>' +
+        viewAction +
         "</div>" +
-        "</td>" +
-        "</tr>";
+        "</li>";
     }
-    body.innerHTML = html;
+    list.innerHTML = html;
   }
 
   function isPristine() {
@@ -356,8 +440,8 @@
       countEl.textContent =
         "Showing " + visible.length + " of " + allRows.length + " products.";
     }
-    if (tableWrap) {
-      tableWrap.hidden = visible.length === 0;
+    if (listWrap) {
+      listWrap.hidden = visible.length === 0;
     }
     if (emptyAll) {
       emptyAll.hidden = !(allRows.length === 0);
@@ -368,7 +452,7 @@
     if (clearBtn) {
       clearBtn.disabled = isPristine();
     }
-    renderRows(visible);
+    renderProducts(visible);
   }
 
   function load() {

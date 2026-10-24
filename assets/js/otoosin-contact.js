@@ -1,8 +1,8 @@
 /* ==========================================================================
-   O'Toosin Farms — Contact form
-   Frontend validation and honest static-submission feedback. No message
-   delivery endpoint is configured, so the form never claims a message was
-   sent and never persists the enquiry.
+   O’TOOSIN Farms — Contact form
+   Frontend validation and honest submission feedback. No message delivery
+   endpoint is configured, so the form never claims a message was sent and
+   never persists the enquiry.
    ========================================================================== */
 (function () {
   "use strict";
@@ -171,7 +171,7 @@
     }
 
     showStatus(
-      "Message delivery is not available from this page yet, so nothing has been sent. Your details have been kept in the form.",
+      "Message delivery is not connected on this page, so your enquiry has not been sent. Your details remain in the form.",
       false
     );
 
