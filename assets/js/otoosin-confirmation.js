@@ -294,7 +294,22 @@
         "Destination",
         receive.parkDestination ? receive.parkDestination.name : ""
       );
-      addRow(rows, "Park delivery fee", "To be confirmed");
+      var parkFee =
+        receive.parkDestination &&
+        receive.parkDestination.fee !== null &&
+        receive.parkDestination.fee !== undefined
+          ? numberOrNull(receive.parkDestination.fee)
+          : null;
+      addRow(
+        rows,
+        "Park delivery fee",
+        parkFee === null ? "\u2014" : fmtNaira(parkFee)
+      );
+      addRow(
+        rows,
+        "Destination note",
+        receive.parkDestination ? receive.parkDestination.instructions : ""
+      );
     } else {
       if (receive.pickupLocation) {
         addRow(rows, "Pickup location", receive.pickupLocation.name);
@@ -370,29 +385,21 @@
     if (isPickup) {
       summaryRow("Delivery fee", "No delivery fee");
     } else if (isPark) {
-      summaryRow("Park delivery fee", "To be confirmed");
-    } else {
       summaryRow(
-        "Delivery fee",
-        fee === null ? "To be confirmed" : fmtNaira(fee)
+        "Park delivery fee",
+        fee === null ? "\u2014" : fmtNaira(fee)
       );
+    } else {
+      summaryRow("Delivery fee", fee === null ? "\u2014" : fmtNaira(fee));
     }
 
     summaryRow(
-      isPark ? "Products total (park fee to be confirmed)" : "Order total",
+      "Order total",
       total === null ? "\u2014" : fmtNaira(total),
       true
     );
 
-    if (isPark) {
-      aside.appendChild(
-        el(
-          "p",
-          "oto-confirm-summary-note",
-          "The park delivery charge is not included in the products total above. It will be confirmed before dispatch."
-        )
-      );
-    } else if (isPickup) {
+    if (isPickup) {
       aside.appendChild(
         el(
           "p",
@@ -493,6 +500,12 @@
       dateRow.appendChild(el("dt", null, "Date"));
       dateRow.appendChild(el("dd", null, date));
       meta.appendChild(dateRow);
+    }
+    if (order.payment && order.payment.status !== "paid") {
+      var payRow = el("div", "oto-confirm-meta-row");
+      payRow.appendChild(el("dt", null, "Payment status"));
+      payRow.appendChild(el("dd", null, "Pending"));
+      meta.appendChild(payRow);
     }
     heroCopy.appendChild(meta);
 

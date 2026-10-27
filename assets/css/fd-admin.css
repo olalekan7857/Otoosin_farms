@@ -55,6 +55,13 @@
   font-size: 22px;
 }
 
+.fd-admin-brand .fd-logo img.fd-logo-img {
+  height: 54px;
+  width: auto;
+  max-width: 150px;
+  margin-right: 0;
+}
+
 .fd-admin-brand .fd-logo i {
   width: 36px;
   height: 36px;
@@ -333,6 +340,13 @@ html[data-theme="dark"] .fd-admin-login-shell {
   margin-bottom: 48px;
 }
 
+.fd-admin.fd-admin-login .fd-admin-login-brand .fd-logo img.fd-logo-img {
+  height: 64px;
+  width: auto;
+  max-width: 180px;
+  margin-right: 0;
+}
+
 .fd-admin.fd-admin-login .fd-admin-login-brand .fd-logo span {
   color: var(--theme-color);
 }
@@ -424,6 +438,13 @@ html[data-theme="dark"] .fd-admin-login-shell {
   display: inline-flex;
   margin-bottom: 28px;
   font-size: 24px;
+}
+
+.fd-admin.fd-admin-login .fd-admin-login-mobile-brand img.fd-logo-img {
+  height: 52px;
+  width: auto;
+  max-width: 145px;
+  margin-right: 0;
 }
 
 .fd-admin.fd-admin-login .fd-admin-login-card {

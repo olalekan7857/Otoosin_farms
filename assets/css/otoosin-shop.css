@@ -96,9 +96,9 @@
   .otoosin-shop .fd-logo img.oto-logo-img {
     display: block;
     width: auto;
-    height: 45px;
+    height: 58px;
     max-width: none;
-    margin-right: 8px;
+    margin-right: 0;
   }
 }
 

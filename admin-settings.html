@@ -34,14 +34,14 @@
     <!-- Theme Custom CSS -->
     <link rel="stylesheet" href="assets/css/harvest-castle.css">
     <!-- Storefront foundation overrides -->
-    <link rel="stylesheet" href="assets/css/fresh-direct.css">
+    <link rel="stylesheet" href="assets/css/fresh-direct.css?v=8.1">
     <!-- O’TOOSIN Farms admin foundation (shared shell + table styles).
          ?v= pin: force browsers to fetch the latest admin styles
          instead of serving a stale cached copy. Bump when this file
          changes again. -->
-    <link rel="stylesheet" href="assets/css/fd-admin.css?v=7.3">
+    <link rel="stylesheet" href="assets/css/fd-admin.css?v=7.4">
     <!-- Page-specific Settings layout (loaded only by this page). -->
-    <link rel="stylesheet" href="assets/css/fd-admin-settings.css?v=1.1">
+    <link rel="stylesheet" href="assets/css/fd-admin-settings.css?v=1.3">
     <!-- Theme layer: light/dark tokens + dark surfaces (inert in Light mode) -->
     <link rel="stylesheet" href="assets/css/fd-theme.css">
     <!-- Apply the stored theme before first paint. Default is Light. -->
@@ -62,7 +62,7 @@
         <!-- Sidebar navigation -->
         <aside class="fd-admin-sidebar" id="fd-admin-sidebar" aria-label="Admin navigation">
             <div class="fd-admin-brand">
-                <a href="index.html" class="fd-logo" aria-label="O’TOOSIN Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="59" height="42">O’TOOSIN<span> Farms</span></a>
+                <a href="index.html" class="fd-logo" aria-label="O’TOOSIN Farms storefront"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img" width="70" height="50"></a>
             </div>
             <p class="fd-admin-role">Farm Admin</p>
             <nav class="fd-admin-nav" aria-label="Management sections">
@@ -231,7 +231,7 @@
 
                                 <div class="fd-settings-brand">
                                     <span class="fd-settings-brand-mark">
-                                        <img id="fd-settings-logo-img" src="assets/img/harvest_castle/of_favicon.png" alt="O’TOOSIN Farms" width="59" height="42">
+                                        <img id="fd-settings-logo-img" src="assets/img/harvest_castle/of_favicon.png" alt="O’TOOSIN Farms" width="70" height="50">
                                     </span>
                                     <div class="fd-settings-brand-copy">
                                         <span class="fd-settings-brand-label">Storefront logo</span>
@@ -328,8 +328,96 @@
                                     <div class="fd-settings-policy-card">
                                         <h3>Park destinations</h3>
                                         <ul class="fd-settings-chip-list" id="fd-settings-park-list"></ul>
-                                        <p class="fd-settings-card-note">Park delivery charges are confirmed before dispatch.</p>
+                                        <p class="fd-settings-card-note">Park delivery fees are included in the checkout total.</p>
                                     </div>
+                                </div>
+
+                                <div class="fd-loc-manager" id="fd-loc-manager">
+                                    <div class="fd-loc-manager-head">
+                                        <div>
+                                            <h3>Delivery location management</h3>
+                                            <p class="fd-loc-manager-lead">Add, edit, activate or deactivate the locations customers see in the checkout Delivery selector. Doorstep and park locations stay distinct here but appear together at checkout, sorted alphabetically. Pickup locations stay separate.</p>
+                                        </div>
+                                        <button type="button" class="vs-btn fd-dash-btn" id="fd-loc-add">
+                                            <i class="fas fa-plus" aria-hidden="true"></i>Add location
+                                        </button>
+                                    </div>
+
+                                    <div class="fd-loc-groups">
+                                        <div class="fd-loc-group-panel">
+                                            <div class="fd-loc-group-title">
+                                                <h4>Doorstep delivery — Abeokuta</h4>
+                                                <span class="fd-dash-pill is-muted" id="fd-loc-doorstep-count">0</span>
+                                            </div>
+                                            <ul class="fd-loc-admin-list" id="fd-loc-doorstep-list"></ul>
+                                        </div>
+                                        <div class="fd-loc-group-panel">
+                                            <div class="fd-loc-group-title">
+                                                <h4>Park delivery — approved destinations</h4>
+                                                <span class="fd-dash-pill is-muted" id="fd-loc-park-count">0</span>
+                                            </div>
+                                            <ul class="fd-loc-admin-list" id="fd-loc-park-list-managed"></ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="fd-loc-editor" id="fd-loc-editor" hidden>
+                                        <div class="fd-loc-editor-head">
+                                            <h4 id="fd-loc-form-title">Add a delivery location</h4>
+                                            <p id="fd-loc-form-hint">Doorstep and park locations need a fixed delivery fee.</p>
+                                        </div>
+                                        <div class="fd-field-error fd-loc-error" id="fd-loc-error" role="alert" hidden></div>
+                                        <div class="fd-loc-form-grid">
+                                            <div class="fd-field">
+                                                <label for="fd-loc-type">Location type <span class="fd-required" aria-hidden="true">*</span></label>
+                                                <select class="form-control" id="fd-loc-type">
+                                                    <option value="doorstep">Doorstep delivery</option>
+                                                    <option value="park">Park delivery</option>
+                                                </select>
+                                            </div>
+                                            <div class="fd-field">
+                                                <label for="fd-loc-name">Location name <span class="fd-required" aria-hidden="true">*</span></label>
+                                                <input class="form-control" type="text" id="fd-loc-name" maxlength="80" placeholder="e.g. Camp or Ibadan">
+                                                <span class="fd-field-error" id="fd-loc-name-error" hidden></span>
+                                            </div>
+                                            <div class="fd-field fd-loc-doorstep-only">
+                                                <label for="fd-loc-areas">Areas covered <span class="fd-optional">(Optional)</span></label>
+                                                <input class="form-control" type="text" id="fd-loc-areas" maxlength="200" placeholder="e.g. Fatola, Apakila, Surulere">
+                                            </div>
+                                            <div class="fd-field">
+                                                <label for="fd-loc-fee" id="fd-loc-fee-label">Delivery fee (₦) <span class="fd-required" aria-hidden="true">*</span></label>
+                                                <input class="form-control" type="number" id="fd-loc-fee" min="0" step="50" inputmode="numeric" placeholder="e.g. 5000">
+                                                <span class="fd-field-error" id="fd-loc-fee-error" hidden></span>
+                                                <p class="fd-dash-hint" id="fd-loc-fee-hint">Enter the fixed fee added to the checkout total.</p>
+                                            </div>
+                                            <div class="fd-field fd-loc-doorstep-only">
+                                                <label for="fd-loc-city">City <span class="fd-optional">(Optional)</span></label>
+                                                <input class="form-control" type="text" id="fd-loc-city" maxlength="80" placeholder="e.g. Abeokuta">
+                                            </div>
+                                            <div class="fd-field fd-loc-doorstep-only">
+                                                <label for="fd-loc-state">State <span class="fd-optional">(Optional)</span></label>
+                                                <input class="form-control" type="text" id="fd-loc-state" maxlength="80" placeholder="e.g. Ogun">
+                                            </div>
+                                            <div class="fd-field fd-loc-park-only">
+                                                <label for="fd-loc-instructions">Customer note <span class="fd-optional">(Optional)</span></label>
+                                                <input class="form-control" type="text" id="fd-loc-instructions" maxlength="300" placeholder="e.g. Receiving park confirmed before dispatch">
+                                            </div>
+                                            <div class="fd-field fd-loc-active-field">
+                                                <label class="fd-loc-check" for="fd-loc-active">
+                                                    <input type="checkbox" id="fd-loc-active" checked>
+                                                    <span>Available at checkout</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="fd-settings-actions fd-loc-editor-actions">
+                                            <button type="button" class="vs-btn fd-dash-btn" id="fd-loc-save">
+                                                <i class="fas fa-check" aria-hidden="true"></i><span>Save location</span>
+                                            </button>
+                                            <button type="button" class="fd-ghost-btn fd-dash-btn" id="fd-loc-cancel">Cancel</button>
+                                        </div>
+                                    </div>
+
+                                    <p class="fd-loc-feedback" id="fd-loc-feedback" role="status" aria-live="polite" tabindex="-1" hidden></p>
+                                    <p class="fd-loc-note"><i class="fas fa-info-circle" aria-hidden="true"></i> Locations are saved in this browser on this device and reach checkout through the shared frontend store. They are not shared with other browsers or devices.</p>
                                 </div>
 
                                 <div class="fd-settings-callout">
@@ -434,11 +522,13 @@
          customer cart store can never leak into the admin. -->
     <script src="assets/js/fd-admin.js?v=6.8"></script>
     <script src="assets/js/fd-theme.js"></script>
+    <!-- Shared delivery-location boundary used by checkout and this page. -->
+    <script src="assets/js/fd-delivery-locations.js?v=1.1"></script>
     <!-- Settings source boundary (store record kept in this browser;
          the settings UI consumes only this boundary). -->
-    <script src="assets/js/fd-admin-settings-data.js?v=2.0"></script>
+    <script src="assets/js/fd-admin-settings-data.js?v=2.2"></script>
     <!-- Settings page (consumes the data boundary above). -->
-    <script src="assets/js/fd-admin-settings.js?v=2.0"></script>
+    <script src="assets/js/fd-admin-settings.js?v=2.2"></script>
 
 </body>
 

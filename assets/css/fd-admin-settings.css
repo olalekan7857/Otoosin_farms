@@ -896,9 +896,294 @@
   cursor: wait;
 }
 
+/* ---------- Delivery location management ------------------------------- */
+.fd-loc-manager {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--fd-hairline);
+  border-radius: 16px;
+  background: var(--fd-surface);
+}
+
+.fd-loc-manager-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.fd-loc-manager-head h3 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.fd-loc-manager-lead {
+  margin: 0;
+  max-width: 66ch;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--body-color);
+}
+
+.fd-loc-manager-head .vs-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.fd-loc-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.fd-loc-group-panel {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--fd-hairline);
+  border-radius: 14px;
+  background: var(--fd-surface-2);
+}
+
+.fd-loc-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.fd-loc-group-title h4 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.fd-loc-admin-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fd-loc-admin-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--fd-hairline);
+  border-radius: 12px;
+  background: var(--fd-surface);
+}
+
+.fd-loc-admin-item.is-inactive {
+  opacity: 0.72;
+}
+
+.fd-loc-admin-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fd-loc-admin-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.fd-loc-admin-title strong {
+  font-family: var(--title-font);
+  font-size: 14.5px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.fd-loc-admin-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--body-color);
+  overflow-wrap: anywhere;
+}
+
+.fd-loc-admin-fee {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--title-font);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--title-color);
+}
+
+.fd-loc-admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.fd-loc-mini {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.fd-loc-editor {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--fd-hairline);
+  border-radius: 14px;
+  background: var(--fd-surface-2);
+}
+
+.fd-loc-editor[hidden] {
+  display: none;
+}
+
+.fd-loc-editor-head {
+  margin-bottom: 12px;
+}
+
+.fd-loc-editor-head h4 {
+  margin: 0 0 3px 0;
+  font-size: 16px;
+}
+
+.fd-loc-editor-head p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--body-color);
+}
+
+.fd-loc-error {
+  margin-bottom: 12px;
+}
+
+.fd-loc-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+
+.fd-loc-form-grid .fd-field {
+  min-width: 0;
+  margin-bottom: 14px;
+}
+
+.fd-loc-form-grid .fd-field > label {
+  display: block;
+  margin-bottom: 7px;
+  font-family: var(--title-font);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fd-loc-form-grid .form-control {
+  min-height: 46px;
+}
+
+.fd-loc-form-grid .fd-dash-hint {
+  margin: 6px 0 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.fd-loc-form-grid .fd-field-error {
+  margin-top: 6px;
+}
+
+.fd-loc-active-field {
+  display: flex;
+  align-items: flex-end;
+}
+
+.fd-loc-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--title-color);
+  cursor: pointer;
+}
+
+.fd-loc-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--secondary-color);
+}
+
+.fd-loc-editor-actions {
+  margin-top: 2px;
+}
+
+.fd-loc-feedback {
+  margin: 12px 0 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--secondary-color);
+}
+
+.fd-loc-feedback.is-error {
+  color: var(--error-color);
+}
+
+.fd-loc-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--body-color);
+}
+
+.fd-loc-note i {
+  margin-top: 2px;
+  color: var(--secondary-color);
+}
+
 /* ---------- Dark theme surfaces ---------------------------------------- */
 html[data-theme="dark"] .fd-settings-nav-link.is-active .fd-settings-nav-icon {
   background: var(--fd-surface-3);
+}
+
+@media (max-width: 767px) {
+  .fd-loc-manager-head {
+    flex-direction: column;
+  }
+
+  .fd-loc-manager-head .vs-btn {
+    width: 100%;
+  }
+
+  .fd-loc-groups,
+  .fd-loc-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fd-loc-admin-item {
+    flex-direction: column;
+  }
+
+  .fd-loc-admin-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .fd-loc-admin-actions .fd-loc-mini {
+    flex: 1 1 auto;
+  }
 }
 
 /* ---------- Responsive ------------------------------------------------ */

@@ -15,12 +15,15 @@
    so a saved WhatsApp change genuinely takes effect there.
 
    DELIVERY AND PICKUP:
-     The checkout owns the current doorstep zones, park destinations and
-     pickup locations. getDeliveryInfo() exposes that same operating model
-     as read-only records so the Settings page can present it accurately
-     without pretending those values can be edited in this frontend.
-     Pickup orders have no delivery fee. Doorstep fees come from the chosen
-     zone. Park charges are confirmed before dispatch.
+     Delivery locations come from the shared
+     window.FreshDirectDeliveryLocations boundary
+     (assets/js/fd-delivery-locations.js), which is also loaded by checkout.
+     The Settings page can add, edit, activate and deactivate locations
+     through that boundary; getDeliveryInfo() exposes the same records for
+     the read-only summary. Pickup locations stay separate. Pickup orders
+     have no delivery fee. Doorstep fees come from the selected location.
+     Park charges without a confirmed fee stay marked as requiring
+     confirmation and are never treated as free delivery.
 
    DJANGO INTEGRATION (later stage, no settings-UI rebuild needed):
      - Replace getSettings()/updateSettings() with API calls that resolve
@@ -61,39 +64,48 @@
     "Fruits"
   ];
 
-  /* Mirrors the current checkout configuration: doorstep zones with their
-     recorded fees, approved park destinations, and the pickup location. */
   var DELIVERY_INFO = {
     coverage:
       "Doorstep delivery is currently limited to Abeokuta. Park delivery serves approved destinations such as Lagos, Ibadan and Ijebu.",
     doorstep:
-      "Choose a delivery zone at checkout. The selected zone fee is added to the order total.",
+      "Choose a delivery location at checkout. The selected doorstep fee is added to the order total.",
     park:
-      "Park delivery is available to approved destinations. The park charge is confirmed before dispatch.",
+      "Park delivery is available to approved destinations. The selected park delivery fee is added to the order total.",
     pickup:
       "Choose Mummy-D Stores at checkout. Pickup orders have no delivery fee.",
     payment:
-      "Doorstep order totals include the selected zone delivery fee. Park delivery charges are confirmed before dispatch, and pickup has no delivery fee. No payment is collected on this website; payment is arranged directly with O’TOOSIN Farms.",
-    zones: [
-      {
-        name: "Camp",
-        areas: "Fatola, Apakila, Surulere",
-        fee: 5000
-      },
-      {
-        name: "Obantoko",
-        areas: "Eleweran, Somorin, Odoeran",
-        fee: 10000
-      }
-    ],
-    parkDestinations: ["Lagos", "Ibadan", "Ijebu"],
-    pickupLocations: [
-      {
-        name: "Mummy-D Stores",
-        address: "Beside FUNAAB MANCOT Park, Camp, Abeokuta"
-      }
-    ]
+      "Doorstep and park delivery fees are included in the checkout total, and pickup has no delivery fee. Payment is completed securely through the website at checkout."
   };
+
+  function locationsApi() {
+    return typeof window !== "undefined"
+      ? window.FreshDirectDeliveryLocations || null
+      : null;
+  }
+
+  function deliveryLocations() {
+    var api = locationsApi();
+    if (!api || typeof api.getDeliveryLocations !== "function") {
+      return [];
+    }
+    try {
+      return api.getDeliveryLocations({ includeInactive: true }) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function pickupLocations() {
+    var api = locationsApi();
+    if (!api || typeof api.getPickupLocations !== "function") {
+      return [];
+    }
+    try {
+      return api.getPickupLocations() || [];
+    } catch (e) {
+      return [];
+    }
+  }
 
   var DEFAULTS = {
     businessName: "O’TOOSIN Farms",
@@ -351,39 +363,42 @@
     return CENTRAL_WHATSAPP;
   }
 
-  function copyZones() {
-    var out = [];
-    for (var i = 0; i < DELIVERY_INFO.zones.length; i++) {
-      out.push({
-        name: DELIVERY_INFO.zones[i].name,
-        areas: DELIVERY_INFO.zones[i].areas,
-        fee: DELIVERY_INFO.zones[i].fee
-      });
-    }
-    return out;
-  }
-
-  function copyPickupLocations() {
-    var out = [];
-    for (var i = 0; i < DELIVERY_INFO.pickupLocations.length; i++) {
-      out.push({
-        name: DELIVERY_INFO.pickupLocations[i].name,
-        address: DELIVERY_INFO.pickupLocations[i].address
-      });
-    }
-    return out;
-  }
-
   function getDeliveryInfo() {
+    var locations = deliveryLocations();
+    var zones = [];
+    var parks = [];
+    for (var i = 0; i < locations.length; i++) {
+      var location = locations[i];
+      if (location.type === "park") {
+        parks.push({
+          id: location.id,
+          name: location.name,
+          fee: location.fee,
+          active: location.active,
+          city: location.city,
+          state: location.state
+        });
+      } else {
+        zones.push({
+          id: location.id,
+          name: location.name,
+          areas: location.areas,
+          fee: location.fee,
+          active: location.active,
+          city: location.city,
+          state: location.state
+        });
+      }
+    }
     return {
       coverage: DELIVERY_INFO.coverage,
       doorstep: DELIVERY_INFO.doorstep,
       park: DELIVERY_INFO.park,
       pickup: DELIVERY_INFO.pickup,
       payment: DELIVERY_INFO.payment,
-      zones: copyZones(),
-      parkDestinations: DELIVERY_INFO.parkDestinations.slice(),
-      pickupLocations: copyPickupLocations()
+      zones: zones,
+      parkDestinations: parks,
+      pickupLocations: pickupLocations()
     };
   }
 

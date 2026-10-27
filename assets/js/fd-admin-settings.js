@@ -22,6 +22,7 @@
   var busy = false;
   var navWired = false;
   var scrollQueued = false;
+  var editingLocationId = "";
 
   function svc() {
     return window.FreshDirectAdminSettings || null;
@@ -328,9 +329,12 @@
   }
 
   function fmtNaira(value) {
+    if (value === null || value === undefined || value === "") {
+      return "—";
+    }
     var amount = Number(value);
     if (!isFinite(amount)) {
-      return "To be confirmed";
+      return "—";
     }
     return "₦" + amount.toLocaleString("en-NG");
   }
@@ -387,7 +391,9 @@
       name.textContent = zone.name || "Delivery zone";
       var areas = document.createElement("span");
       areas.className = "fd-settings-zone-areas";
-      areas.textContent = zone.areas || "Area details not set.";
+      areas.textContent =
+        (zone.areas || "Area details not set.") +
+        (zone.active === false ? " (inactive)" : "");
       var fee = document.createElement("span");
       fee.className = "fd-settings-zone-fee";
       fee.textContent = fmtNaira(zone.fee);
@@ -440,8 +446,16 @@
       return;
     }
     for (var i = 0; i < destinations.length; i++) {
+      var destination = destinations[i];
       var item = document.createElement("li");
-      item.textContent = destinations[i];
+      if (destination && typeof destination === "object") {
+        item.textContent =
+          destination.name +
+          " — " + fmtNaira(destination.fee) +
+          (destination.active === false ? " (inactive)" : "");
+      } else {
+        item.textContent = destination;
+      }
       list.appendChild(item);
     }
   }
@@ -490,6 +504,440 @@
       var item = document.createElement("li");
       item.textContent = categories[i];
       list.appendChild(item);
+    }
+  }
+
+  /* ---------- Delivery location management ---------- */
+  function locApi() {
+    return window.FreshDirectDeliveryLocations || null;
+  }
+
+  function setLocFeedback(message, isError) {
+    var note = byId("fd-loc-feedback");
+    if (!note) {
+      return;
+    }
+    if (!message) {
+      note.textContent = "";
+      note.setAttribute("hidden", "");
+      note.classList.remove("is-error");
+      return;
+    }
+    note.textContent = message;
+    note.classList.toggle("is-error", !!isError);
+    note.removeAttribute("hidden");
+    try {
+      note.focus({ preventScroll: true });
+    } catch (e) {
+      /* focus is best-effort */
+    }
+  }
+
+  function hideLocError() {
+    var box = byId("fd-loc-error");
+    if (box) {
+      box.textContent = "";
+      box.setAttribute("hidden", "");
+    }
+  }
+
+  function showLocError(message) {
+    var box = byId("fd-loc-error");
+    if (!box) {
+      return;
+    }
+    box.textContent = message;
+    box.removeAttribute("hidden");
+  }
+
+  function setLocFieldError(key, message) {
+    var input = byId("fd-loc-" + key);
+    var error = byId("fd-loc-" + key + "-error");
+    if (!input) {
+      return;
+    }
+    if (message) {
+      input.setAttribute("aria-invalid", "true");
+      if (error) {
+        error.textContent = message;
+        error.removeAttribute("hidden");
+      }
+    } else {
+      input.removeAttribute("aria-invalid");
+      if (error) {
+        error.textContent = "";
+        error.setAttribute("hidden", "");
+      }
+    }
+  }
+
+  function clearLocErrors() {
+    setLocFieldError("name", "");
+    setLocFieldError("fee", "");
+    hideLocError();
+  }
+
+  function formatLocationFee(location) {
+    return location ? fmtNaira(location.fee) : fmtNaira(null);
+  }
+
+  function buildManagedLocation(location) {
+    var item = document.createElement("li");
+    item.className =
+      "fd-loc-admin-item" + (location.active === false ? " is-inactive" : "");
+    item.setAttribute("data-location-id", location.id);
+
+    var main = document.createElement("div");
+    main.className = "fd-loc-admin-main";
+
+    var title = document.createElement("div");
+    title.className = "fd-loc-admin-title";
+    var name = document.createElement("strong");
+    name.textContent = location.name;
+    var pill = document.createElement("span");
+    pill.className =
+      "fd-dash-pill " + (location.active === false ? "is-muted" : "is-ok");
+    pill.textContent = location.active === false ? "Inactive" : "Active";
+    title.appendChild(name);
+    title.appendChild(pill);
+
+    var meta = document.createElement("span");
+    meta.className = "fd-loc-admin-meta";
+    var place = [location.areas, location.city, location.state]
+      .filter(Boolean)
+      .join(", ");
+    meta.textContent =
+      (location.type === "park" ? "Park delivery" : "Doorstep delivery") +
+      (place ? " \u00b7 " + place : "");
+
+    var fee = document.createElement("span");
+    fee.className = "fd-loc-admin-fee";
+    fee.textContent = formatLocationFee(location);
+
+    main.appendChild(title);
+    main.appendChild(meta);
+    main.appendChild(fee);
+
+    var actions = document.createElement("div");
+    actions.className = "fd-loc-admin-actions";
+
+    var edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "fd-ghost-btn fd-loc-mini";
+    edit.innerHTML = '<i class="fas fa-pen" aria-hidden="true"></i>Edit';
+    edit.addEventListener("click", function () {
+      openLocationEditor(location.id);
+    });
+
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "fd-ghost-btn fd-loc-mini";
+    toggle.innerHTML =
+      '<i class="fas fa-' +
+      (location.active === false ? "eye" : "eye-slash") +
+      '" aria-hidden="true"></i>' +
+      (location.active === false ? "Activate" : "Deactivate");
+    toggle.addEventListener("click", function () {
+      toggleLocation(location.id);
+    });
+
+    actions.appendChild(edit);
+    actions.appendChild(toggle);
+    item.appendChild(main);
+    item.appendChild(actions);
+    return item;
+  }
+
+  function renderManagedList(listId, locations, emptyText) {
+    var list = byId(listId);
+    if (!list) {
+      return;
+    }
+    list.innerHTML = "";
+    if (!locations.length) {
+      list.appendChild(emptyNote(emptyText));
+      return;
+    }
+    for (var i = 0; i < locations.length; i++) {
+      list.appendChild(buildManagedLocation(locations[i]));
+    }
+  }
+
+  function renderLocationManager() {
+    var api = locApi();
+    var door = [];
+    var park = [];
+    if (api && typeof api.getDeliveryLocations === "function") {
+      try {
+        var all = api.getDeliveryLocations({ includeInactive: true }) || [];
+        for (var i = 0; i < all.length; i++) {
+          if (all[i].type === "park") {
+            park.push(all[i]);
+          } else {
+            door.push(all[i]);
+          }
+        }
+      } catch (e) {
+        /* fall through to empty lists */
+      }
+    }
+    renderManagedList(
+      "fd-loc-doorstep-list",
+      door,
+      "No doorstep locations are configured."
+    );
+    renderManagedList(
+      "fd-loc-park-list-managed",
+      park,
+      "No park destinations are configured."
+    );
+    setText("fd-loc-doorstep-count", String(door.length));
+    setText("fd-loc-park-count", String(park.length));
+  }
+
+  function updateLocationTypeFields() {
+    var typeInput = byId("fd-loc-type");
+    var type = typeInput ? typeInput.value : "doorstep";
+    var doorstep = type !== "park";
+    var doorstepFields = document.querySelectorAll(".fd-loc-doorstep-only");
+    for (var i = 0; i < doorstepFields.length; i++) {
+      if (doorstep) {
+        doorstepFields[i].removeAttribute("hidden");
+      } else {
+        doorstepFields[i].setAttribute("hidden", "");
+      }
+    }
+    var parkFields = document.querySelectorAll(".fd-loc-park-only");
+    for (var j = 0; j < parkFields.length; j++) {
+      if (doorstep) {
+        parkFields[j].setAttribute("hidden", "");
+      } else {
+        parkFields[j].removeAttribute("hidden");
+      }
+    }
+    var hint = byId("fd-loc-fee-hint");
+    if (hint) {
+      hint.textContent = "Enter the fixed fee added to the checkout total.";
+    }
+    var formHint = byId("fd-loc-form-hint");
+    if (formHint) {
+      formHint.textContent = doorstep
+        ? "Doorstep locations need a fixed fee and are listed first in the checkout Delivery selector, sorted alphabetically."
+        : "Park destinations need a fixed fee and are listed alphabetically at checkout.";
+    }
+  }
+
+  function openLocationEditor(id) {
+    var api = locApi();
+    var location = null;
+    if (id && api && typeof api.getDeliveryLocation === "function") {
+      try {
+        location = api.getDeliveryLocation(id);
+      } catch (e) {
+        location = null;
+      }
+    }
+    editingLocationId = location ? location.id : "";
+    var editor = byId("fd-loc-editor");
+    var title = byId("fd-loc-form-title");
+    if (!editor) {
+      return;
+    }
+    clearLocErrors();
+    setLocFeedback("", false);
+    if (title) {
+      title.textContent = location
+        ? "Edit " + location.name
+        : "Add a delivery location";
+    }
+    byId("fd-loc-type").value = location ? location.type : "doorstep";
+    byId("fd-loc-name").value = location ? location.name : "";
+    byId("fd-loc-areas").value = location ? location.areas || "" : "";
+    byId("fd-loc-fee").value =
+      location && location.fee !== null ? String(location.fee) : "";
+    byId("fd-loc-city").value = location ? location.city || "" : "";
+    byId("fd-loc-state").value = location ? location.state || "" : "";
+    byId("fd-loc-instructions").value = location
+      ? location.instructions || ""
+      : "";
+    byId("fd-loc-active").checked = location ? location.active !== false : true;
+    updateLocationTypeFields();
+    editor.removeAttribute("hidden");
+    try {
+      editor.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      byId("fd-loc-name").focus({ preventScroll: true });
+    } catch (e) {
+      /* focus is best-effort */
+    }
+  }
+
+  function closeLocationEditor() {
+    editingLocationId = "";
+    var editor = byId("fd-loc-editor");
+    if (editor) {
+      editor.setAttribute("hidden", "");
+    }
+    clearLocErrors();
+  }
+
+  function saveLocation() {
+    var api = locApi();
+    if (!api || typeof api.upsertLocation !== "function") {
+      showLocError("Delivery locations are unavailable on this page.");
+      return;
+    }
+    clearLocErrors();
+    setLocFeedback("", false);
+    var type = byId("fd-loc-type").value === "park" ? "park" : "doorstep";
+    var feeRaw = String(byId("fd-loc-fee").value || "").trim();
+    var fee = feeRaw === "" ? null : Number(feeRaw);
+    if (feeRaw !== "" && !isFinite(fee)) {
+      setLocFieldError("fee", "Enter a valid delivery fee.");
+      return;
+    }
+    var record = {
+      id: editingLocationId,
+      type: type,
+      name: byId("fd-loc-name").value,
+      areas: byId("fd-loc-areas").value,
+      city: byId("fd-loc-city").value,
+      state: byId("fd-loc-state").value,
+      fee: fee,
+      active: byId("fd-loc-active").checked,
+      instructions: byId("fd-loc-instructions").value
+    };
+    var checked = api.validateLocation(record, { requireId: false });
+    if (!checked.ok) {
+      if (checked.errors.name) {
+        setLocFieldError("name", checked.errors.name);
+      }
+      if (checked.errors.fee) {
+        setLocFieldError("fee", checked.errors.fee);
+      }
+      showLocError("Please correct the highlighted location details.");
+      var first = byId("fd-loc-name");
+      try {
+        first.focus();
+      } catch (e) {
+        /* focus is best-effort */
+      }
+      return;
+    }
+    var result;
+    try {
+      result = api.upsertLocation(record);
+    } catch (e) {
+      result = {
+        ok: false,
+        errors: { _form: "The location could not be saved. Please try again." }
+      };
+    }
+    if (!result || !result.ok) {
+      var errors = (result && result.errors) || {};
+      if (errors.name) {
+        setLocFieldError("name", errors.name);
+      }
+      if (errors.fee) {
+        setLocFieldError("fee", errors.fee);
+      }
+      showLocError(
+        errors._form || "Please correct the highlighted location details."
+      );
+      return;
+    }
+    var savedName = result.location ? result.location.name : record.name;
+    closeLocationEditor();
+    renderLocationManager();
+    renderDelivery();
+    setLocFeedback(
+      "Saved \u201c" + savedName + "\u201d in this browser. The checkout Delivery selector uses the same store.",
+      false
+    );
+  }
+
+  function toggleLocation(id) {
+    var api = locApi();
+    if (!api || typeof api.setLocationActive !== "function") {
+      return;
+    }
+    var location = null;
+    try {
+      location = api.getDeliveryLocation(id);
+    } catch (e) {
+      location = null;
+    }
+    if (!location) {
+      setLocFeedback("That location could not be found.", true);
+      return;
+    }
+    var result = api.setLocationActive(id, location.active === false);
+    if (!result || !result.ok) {
+      setLocFeedback(
+        (result && result.errors && result.errors._form) ||
+          "The location could not be updated.",
+        true
+      );
+      return;
+    }
+    renderLocationManager();
+    renderDelivery();
+    setLocFeedback(
+      "\u201c" + location.name + "\u201d is now " +
+        (location.active === false ? "active" : "inactive") +
+        " in the checkout Delivery selector.",
+      false
+    );
+  }
+
+  function wireLocationManager() {
+    var add = byId("fd-loc-add");
+    if (add) {
+      add.addEventListener("click", function () {
+        openLocationEditor(null);
+      });
+    }
+    var save = byId("fd-loc-save");
+    if (save) {
+      save.addEventListener("click", saveLocation);
+    }
+    var cancel = byId("fd-loc-cancel");
+    if (cancel) {
+      cancel.addEventListener("click", function () {
+        closeLocationEditor();
+        setLocFeedback("", false);
+      });
+    }
+    var type = byId("fd-loc-type");
+    if (type) {
+      type.addEventListener("change", updateLocationTypeFields);
+    }
+    var name = byId("fd-loc-name");
+    if (name) {
+      name.addEventListener("input", function () {
+        setLocFieldError("name", "");
+        hideLocError();
+      });
+    }
+    var fee = byId("fd-loc-fee");
+    if (fee) {
+      fee.addEventListener("input", function () {
+        setLocFieldError("fee", "");
+        hideLocError();
+      });
+    }
+    var editor = byId("fd-loc-editor");
+    if (editor) {
+      editor.addEventListener("keydown", function (ev) {
+        if (
+          ev.key === "Enter" &&
+          ev.target &&
+          ev.target.tagName !== "BUTTON" &&
+          ev.target.tagName !== "TEXTAREA"
+        ) {
+          ev.preventDefault();
+          saveLocation();
+        }
+      });
     }
   }
 
@@ -756,6 +1204,7 @@
     fill(settings);
     renderBrand();
     renderDelivery();
+    renderLocationManager();
     renderCategories();
     paintThemeChoice();
     showContent();
@@ -770,6 +1219,7 @@
     wireRetry();
     wireUnload();
     wireAppearance();
+    wireLocationManager();
     load();
   }
 

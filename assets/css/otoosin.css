@@ -94,16 +94,15 @@
   align-items: center;
 }
 
-/* Mirror the shop page: a small mark with the O'Toosin Farms wordmark beside
-   it. Desktop height is 45px; smaller breakpoints follow the shared
-   responsive logo sizing in fresh-direct.css. */
+/* The logo image is the whole brand mark. Desktop height is 58px; smaller
+   breakpoints follow the shared responsive logo sizing in fresh-direct.css. */
 @media (min-width: 992px) {
   .fd-logo img.oto-logo-img {
     display: block;
     width: auto;
-    height: 45px;
+    height: 58px;
     max-width: none;
-    margin-right: 8px;
+    margin-right: 0;
   }
 }
 

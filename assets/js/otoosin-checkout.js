@@ -1,12 +1,13 @@
 /* ==========================================================================
    O'Toosin Farms — Checkout page (checkout.html only)
    Uses the existing freshdirect_cart_v1 store through the small
-   window.FreshDirectCart bridge. No second cart, no fake payment/order
-   success: the supported frontend progression ends at a validated review.
+   window.FreshDirectCart bridge. Delivery locations come from the shared
+   window.FreshDirectDeliveryLocations boundary so checkout and the admin
+   Settings page use the same identifiers and fees.
 
-   Receive options, delivery zones and pickup locations live in one
-   CHECKOUT_OPTIONS structure so a Django backend can later supply the same
-   shape from the admin without redesigning the checkout.
+   The supported frontend flow validates the order, presents a review and
+   hands off to the existing order-confirmation page with payment still
+   unpaid. No payment is simulated and no provider is contacted here.
    ========================================================================== */
 (function () {
   "use strict";
@@ -16,39 +17,12 @@
     return;
   }
 
-  // Frontend demonstration data. Replace from the backend later.
-  var CHECKOUT_OPTIONS = {
-    zones: [
-      {
-        value: "camp",
-        name: "Camp",
-        areas: "Fatola, Apakila, Surulere",
-        fee: 5000,
-      },
-      {
-        value: "obantoko",
-        name: "Obantoko",
-        areas: "Eleweran, Somorin, Odoeran",
-        fee: 10000,
-      },
-    ],
-    parkDestinations: [
-      { value: "lagos", name: "Lagos", fee: null },
-      { value: "ibadan", name: "Ibadan", fee: null },
-      { value: "ijebu", name: "Ijebu", fee: null },
-    ],
-    pickupLocations: [
-      {
-        id: "mummy-d-stores",
-        name: "Mummy-D Stores",
-        address: "Beside FUNAAB MANCOT Park, Camp, Abeokuta",
-      },
-    ],
-  };
-
+  var locationsApi = window.FreshDirectDeliveryLocations || null;
   var LAST_ORDER_KEY = "freshdirect_last_order";
   var lastSubtotal = 0;
   var lastOrder = null;
+  var busy = false;
+  var activeOption = null;
 
   function byId(id) {
     return document.getElementById(id);
@@ -69,41 +43,47 @@
     var checked = document.querySelector(
       'input[name="receive-method"]:checked'
     );
-    return checked ? checked.value : "doorstep";
+    return checked ? checked.value : "delivery";
   }
 
-  function receiveName(value) {
-    if (value === "pickup") {
-      return "Pickup";
+  function locationList() {
+    if (!locationsApi || typeof locationsApi.getActiveDeliveryLocations !== "function") {
+      return [];
     }
-    if (value === "park") {
-      return "Park delivery";
+    try {
+      return locationsApi.getActiveDeliveryLocations() || [];
+    } catch (e) {
+      return [];
     }
-    return "Doorstep delivery";
   }
 
-  function findZone(value) {
-    for (var i = 0; i < CHECKOUT_OPTIONS.zones.length; i++) {
-      if (CHECKOUT_OPTIONS.zones[i].value === value) {
-        return CHECKOUT_OPTIONS.zones[i];
+  function findLocation(id) {
+    var list = locationList();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) {
+        return list[i];
       }
     }
     return null;
   }
 
-  function findParkDestination(value) {
-    for (var i = 0; i < CHECKOUT_OPTIONS.parkDestinations.length; i++) {
-      if (CHECKOUT_OPTIONS.parkDestinations[i].value === value) {
-        return CHECKOUT_OPTIONS.parkDestinations[i];
-      }
-    }
-    return null;
+  function selectedDeliveryLocation() {
+    return findLocation(valueOf("oto-co-delivery-location"));
   }
 
   function findPickupLocation(id) {
-    for (var i = 0; i < CHECKOUT_OPTIONS.pickupLocations.length; i++) {
-      if (CHECKOUT_OPTIONS.pickupLocations[i].id === id) {
-        return CHECKOUT_OPTIONS.pickupLocations[i];
+    if (!locationsApi || typeof locationsApi.getPickupLocations !== "function") {
+      return null;
+    }
+    var list;
+    try {
+      list = locationsApi.getPickupLocations() || [];
+    } catch (e) {
+      return null;
+    }
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) {
+        return list[i];
       }
     }
     return null;
@@ -116,17 +96,21 @@
     if (checked) {
       return checked.value;
     }
-    var options = CHECKOUT_OPTIONS.pickupLocations;
-    return options.length ? options[0].id : "";
+    var locations = locationsApi && locationsApi.getPickupLocations
+      ? locationsApi.getPickupLocations()
+      : [];
+    return locations.length ? locations[0].id : "";
   }
 
   function selectedPickupLocation() {
     return findPickupLocation(selectedPickupId());
   }
 
-  function zoneFee() {
-    var zone = findZone(valueOf("oto-co-zone"));
-    return zone ? zone.fee : null;
+  function priceText(location) {
+    if (!location) {
+      return "";
+    }
+    return cart.fmtNaira(location.fee);
   }
 
   function deliveryFee() {
@@ -134,10 +118,11 @@
     if (method === "pickup") {
       return 0;
     }
-    if (method === "doorstep") {
-      return zoneFee();
+    var location = selectedDeliveryLocation();
+    if (!location) {
+      return null;
     }
-    return null;
+    return location.fee;
   }
 
   function orderTotal() {
@@ -206,33 +191,26 @@
     var method = receiveValue();
     var subtotal = cart.fmtNaira(lastSubtotal);
     if (method === "pickup") {
-      var location = selectedPickupLocation();
+      var pickup = selectedPickupLocation();
       return (
         "Your order total is " + subtotal + " for your products, with no delivery fee. " +
         "Complete your order and payment securely at checkout. " +
         "Collect from " +
-        (location ? location.name + ", " + location.address : "your selected pickup location") +
+        (pickup ? pickup.name + ", " + pickup.address : "your selected pickup location") +
         "."
       );
     }
-    if (method === "park") {
-      var destination = findParkDestination(valueOf("oto-co-park-destination"));
+    var location = selectedDeliveryLocation();
+    if (!location) {
       return (
-        "Your products total is " + subtotal + ". The park delivery charge" +
-        (destination ? " for " + destination.name : "") +
-        " is confirmed before dispatch. Complete your order and payment securely at checkout."
-      );
-    }
-    var zone = findZone(valueOf("oto-co-zone"));
-    if (!zone) {
-      return (
-        "Select a delivery zone to see the delivery fee and the full order total."
+        "Select a delivery location to see the delivery fee and the full order total."
       );
     }
     return (
       "Your order total is " + cart.fmtNaira(orderTotal()) + ": " + subtotal +
-      " for your products plus " + cart.fmtNaira(zone.fee) +
-      " delivery to the " + zone.name + " zone. Complete your order and payment securely at checkout."
+      " for your products plus " + cart.fmtNaira(location.fee) +
+      " delivery to " + location.name +
+      ". Complete your order and payment securely at checkout."
     );
   }
 
@@ -241,14 +219,11 @@
     if (method === "pickup") {
       return "Order total";
     }
-    if (method === "park") {
-      return findParkDestination(valueOf("oto-co-park-destination"))
-        ? "Products subtotal (park fee to be confirmed)"
-        : "Products only — select a destination";
+    var location = selectedDeliveryLocation();
+    if (!location) {
+      return "Products subtotal — select a location";
     }
-    return findZone(valueOf("oto-co-zone"))
-      ? "Order total"
-      : "Products only — select a zone";
+    return "Order total";
   }
 
   function deliverySummary() {
@@ -256,13 +231,15 @@
     if (method === "pickup") {
       return { label: "Delivery fee", value: "No delivery fee" };
     }
-    if (method === "park") {
-      return { label: "Park delivery fee", value: "To be confirmed" };
+    var location = selectedDeliveryLocation();
+    if (!location) {
+      return { label: "Delivery fee", value: "Select a location" };
     }
-    var zone = findZone(valueOf("oto-co-zone"));
     return {
-      label: zone ? "Delivery fee (" + zone.name + ")" : "Delivery fee",
-      value: zone ? cart.fmtNaira(zone.fee) : "Select a zone",
+      label:
+        (location.type === "park" ? "Park delivery fee" : "Delivery fee") +
+        " (" + location.name + ")",
+      value: priceText(location),
     };
   }
 
@@ -277,7 +254,7 @@
     for (var t = 0; t < totals.length; t++) {
       totals[t].textContent = amount;
     }
-    setText(byId("oto-receive-name"), receiveName(receiveValue()));
+    setText(byId("oto-receive-name"), receiveValue() === "pickup" ? "Pickup" : "Delivery");
     var delivery = deliverySummary();
     setText(byId("oto-delivery-label"), delivery.label);
     setText(byId("oto-delivery-value"), delivery.value);
@@ -286,6 +263,7 @@
     var sentence = paymentSentence();
     setText(byId("oto-pay-note"), sentence);
     setText(byId("oto-pay-summary"), sentence);
+    updateDeliverySelectionUI();
     if (lastOrder) {
       lastOrder.receive = buildReceive();
       lastOrder.deliveryFee = deliveryFee();
@@ -396,22 +374,50 @@
 
   function buildReceive() {
     var method = receiveValue();
-    var receive = { method: method, label: receiveName(method) };
-    if (method === "doorstep") {
-      var zone = findZone(valueOf("oto-co-zone"));
-      receive.zone = zone
-        ? { name: zone.name, areas: zone.areas, fee: zone.fee }
-        : null;
-    } else if (method === "park") {
-      var destination = findParkDestination(valueOf("oto-co-park-destination"));
-      receive.parkDestination = destination
-        ? { name: destination.name }
-        : null;
-    } else {
-      var location = selectedPickupLocation();
-      receive.pickupLocation = location
-        ? { name: location.name, address: location.address }
-        : null;
+    if (method === "pickup") {
+      var pickup = selectedPickupLocation();
+      return {
+        fulfilment: "pickup",
+        method: "pickup",
+        label: "Pickup",
+        pickupLocation: pickup
+          ? { id: pickup.id, name: pickup.name, address: pickup.address }
+          : null,
+      };
+    }
+    var location = selectedDeliveryLocation();
+    var type = location ? location.type : "doorstep";
+    var receive = {
+      fulfilment: "delivery",
+      method: type,
+      type: type,
+      label: "Delivery",
+      locationId: location ? location.id : "",
+      locationName: location ? location.name : "",
+      location: location
+        ? {
+            id: location.id,
+            type: location.type,
+            name: location.name,
+            areas: location.areas,
+            city: location.city,
+            state: location.state,
+            fee: location.fee,
+          }
+        : null,
+    };
+    if (type === "doorstep" && location) {
+      receive.zone = {
+        name: location.name,
+        areas: location.areas,
+        fee: location.fee,
+      };
+    } else if (type === "park" && location) {
+      receive.parkDestination = {
+        name: location.name,
+        fee: location.fee,
+        instructions: location.instructions || "",
+      };
     }
     return receive;
   }
@@ -423,6 +429,7 @@
       method: method,
       dueOnline: orderTotal(),
       deliveryFee: fee,
+      feeConfirmed: true,
       confirmed: false,
       label: "Payment at checkout",
     };
@@ -457,7 +464,8 @@
       });
     }
     var method = receiveValue();
-    var doorstep = method === "doorstep";
+    var location = method === "delivery" ? selectedDeliveryLocation() : null;
+    var doorstep = method === "delivery" && location && location.type === "doorstep";
     return {
       customer: {
         name: valueOf("oto-co-name"),
@@ -465,9 +473,12 @@
         email: valueOf("oto-co-email"),
       },
       delivery: {
+        locationId: location ? location.id : "",
+        locationName: location ? location.name : "",
+        type: location ? location.type : "",
         address: doorstep ? valueOf("oto-co-address") : "",
-        city: doorstep ? valueOf("oto-co-city") : "",
-        state: doorstep ? valueOf("oto-co-state") : "",
+        city: doorstep ? location.city || "" : "",
+        state: doorstep ? location.state || "" : "",
         landmark: doorstep ? valueOf("oto-co-landmark") : "",
         instructions: valueOf("oto-co-notes"),
       },
@@ -497,31 +508,18 @@
         !value || /^\S+@\S+\.\S+$/.test(value)
           ? ""
           : "Please enter a valid email address.";
-    } else if (id === "oto-co-zone") {
-      message =
-        method !== "doorstep" || value
-          ? ""
-          : "Please select your delivery zone.";
     } else if (id === "oto-co-address") {
-      message =
-        method !== "doorstep" || value.length >= 5
-          ? ""
-          : "Please enter your full delivery address.";
-    } else if (id === "oto-co-city") {
-      message =
-        method !== "doorstep" || value.length >= 2
-          ? ""
-          : "Please enter your city or town.";
-    } else if (id === "oto-co-state") {
-      message =
-        method !== "doorstep" || value
-          ? ""
-          : "Please select your state.";
-    } else if (id === "oto-co-park-destination") {
-      message =
-        method !== "park" || value
-          ? ""
-          : "Please select your park destination.";
+      var location = selectedDeliveryLocation();
+      var needsAddress =
+        method === "delivery" && location && location.type === "doorstep";
+      if (!needsAddress) {
+        message = "";
+      } else {
+        message =
+          value.length >= 5
+            ? ""
+            : "Please enter your full delivery address.";
+      }
     }
     setError(input, message);
     return !message;
@@ -531,9 +529,7 @@
     var form = byId("fd-checkout-form");
     var inputs = form
       ? form.querySelectorAll(
-          "#oto-co-name, #oto-co-phone, #oto-co-email, #oto-co-zone, " +
-          "#oto-co-address, #oto-co-city, #oto-co-state, " +
-          "#oto-co-park-destination"
+          "#oto-co-name, #oto-co-phone, #oto-co-email, #oto-co-address"
         )
       : [];
     var firstBad = null;
@@ -542,14 +538,42 @@
         firstBad = inputs[i];
       }
     }
-    if (receiveValue() === "pickup" && !selectedPickupId()) {
-      setGroupError("oto-co-pickup-error", "Please select a pickup location.");
-      if (!firstBad) {
-        firstBad = byId("oto-pickup-options");
+
+    var method = receiveValue();
+    var hiddenLocation = byId("oto-co-delivery-location");
+    var trigger = byId("oto-loc-trigger");
+    if (method === "delivery") {
+      var location = selectedDeliveryLocation();
+      if (!location) {
+        setError(hiddenLocation, "Please select a delivery location.");
+        if (trigger) {
+          trigger.setAttribute("aria-invalid", "true");
+        }
+        if (!firstBad) {
+          firstBad = trigger;
+        }
+      } else {
+        setError(hiddenLocation, "");
+        if (trigger) {
+          trigger.removeAttribute("aria-invalid");
+        }
       }
-    } else {
       setGroupError("oto-co-pickup-error", "");
+    } else {
+      setError(hiddenLocation, "");
+      if (trigger) {
+        trigger.removeAttribute("aria-invalid");
+      }
+      if (!selectedPickupId()) {
+        setGroupError("oto-co-pickup-error", "Please select a pickup location.");
+        if (!firstBad) {
+          firstBad = byId("oto-pickup-options");
+        }
+      } else {
+        setGroupError("oto-co-pickup-error", "");
+      }
     }
+
     if (firstBad) {
       status("Please check the highlighted fields and try again.", true);
       try {
@@ -594,16 +618,11 @@
         "Your order total is " +
         cart.fmtNaira(payment.dueOnline) +
         " for your products, with no delivery fee. Complete your order and payment securely at checkout, then collect from the selected pickup location.";
-    } else if (payment.method === "park") {
-      text.textContent =
-        "Your products total is " +
-        cart.fmtNaira(payment.dueOnline) +
-        ". Complete your order and payment securely at checkout. The park delivery charge is confirmed before dispatch.";
     } else {
       text.textContent =
         "Your order total is " +
         cart.fmtNaira(payment.dueOnline) +
-        ", including the applicable doorstep delivery fee. Complete your order and payment securely at checkout.";
+        ", including the applicable delivery fee. Complete your order and payment securely at checkout.";
     }
     box.appendChild(name);
     box.appendChild(text);
@@ -619,25 +638,39 @@
     addReviewRow(details, "Phone", order.customer.phone);
     addReviewRow(details, "Email", order.customer.email);
     addReviewRow(details, "Receiving method", order.receive.label);
-    if (order.receive.method === "doorstep" && order.receive.zone) {
+    if (order.receive.fulfilment === "delivery") {
       addReviewRow(
         details,
-        "Delivery zone",
-        order.receive.zone.name + " — " + order.receive.zone.areas
+        "Delivery type",
+        order.receive.type === "park" ? "Park delivery" : "Doorstep delivery"
       );
-      addReviewRow(details, "Delivery address", order.delivery.address);
-      addReviewRow(details, "City / town", order.delivery.city);
-      addReviewRow(details, "State", order.delivery.state);
-      addReviewRow(details, "Landmark", order.delivery.landmark);
-    } else if (order.receive.method === "park") {
-      if (order.receive.parkDestination) {
+      if (order.receive.location) {
         addReviewRow(
           details,
-          "Park destination",
-          order.receive.parkDestination.name
+          "Delivery location",
+          order.receive.location.name +
+            (order.receive.type === "doorstep" && order.receive.location.areas
+              ? " — " + order.receive.location.areas
+              : "")
         );
       }
-      addReviewRow(details, "Park delivery fee", "To be confirmed");
+      if (order.receive.type === "doorstep") {
+        addReviewRow(details, "Delivery address", order.delivery.address);
+        addReviewRow(
+          details,
+          "City / state",
+          [order.delivery.city, order.delivery.state].filter(Boolean).join(", ")
+        );
+        addReviewRow(details, "Landmark", order.delivery.landmark);
+      } else {
+        addReviewRow(
+          details,
+          "Park delivery fee",
+          cart.fmtNaira(
+            order.receive.location ? order.receive.location.fee : 0
+          )
+        );
+      }
     } else if (order.receive.pickupLocation) {
       addReviewRow(
         details,
@@ -749,6 +782,7 @@
         label: order.payment.label,
         dueOnline: order.payment.dueOnline,
         deliveryFee: order.payment.deliveryFee,
+        feeConfirmed: order.payment.feeConfirmed,
         confirmed: order.payment.confirmed,
         status: "unpaid",
         verified: false,
@@ -769,11 +803,16 @@
 
   function finishCheckout() {
     if (!lastOrder) {
-      status("Please review your order details before finishing.", true);
+      status("Please review your order details before continuing.", true);
       return;
     }
+    if (busy) {
+      return;
+    }
+    busy = true;
     var snapshot = saveOrderSnapshot(lastOrder);
     if (!snapshot) {
+      busy = false;
       status(
         "We could not save your order summary in this browser. Please try again.",
         true
@@ -784,43 +823,478 @@
       "order-confirmation.html?order=" + encodeURIComponent(snapshot.id);
   }
 
-  function renderZoneOptions() {
-    var select = byId("oto-co-zone");
-    if (!select) {
+  function reviewOrder() {
+    var form = byId("fd-checkout-form");
+    if (form) {
+      form.setAttribute("data-tried", "true");
+    }
+    if (!renderSummary()) {
+      status("Your cart is empty. Add some products before checking out.", true);
       return;
     }
-    select.innerHTML = "";
-    var placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select your delivery zone";
-    select.appendChild(placeholder);
-    for (var i = 0; i < CHECKOUT_OPTIONS.zones.length; i++) {
-      var zone = CHECKOUT_OPTIONS.zones[i];
-      var option = document.createElement("option");
-      option.value = zone.value;
-      option.textContent =
-        zone.name + " — " + zone.areas + " (" + cart.fmtNaira(zone.fee) + ")";
-      select.appendChild(option);
+    var order = validateForm();
+    if (!order) {
+      return;
+    }
+    showReview(order);
+    closeDropdown(false);
+  }
+
+  function proceedToPayment() {
+    if (busy) {
+      return;
+    }
+    var form = byId("fd-checkout-form");
+    if (form) {
+      form.setAttribute("data-tried", "true");
+    }
+    if (!renderSummary()) {
+      status("Your cart is empty. Add some products before checking out.", true);
+      return;
+    }
+    var order = validateForm();
+    if (!order) {
+      return;
+    }
+    lastOrder = order;
+    finishCheckout();
+  }
+
+  /* ---------- Custom delivery location dropdown ---------- */
+  function optionMeta(location) {
+    if (location.type === "park") {
+      var parts = ["Approved park destination"];
+      if (location.city) {
+        parts.push(location.city);
+      }
+      return parts.join(" \u00b7 ");
+    }
+    var bits = [];
+    if (location.areas) {
+      bits.push(location.areas);
+    }
+    if (location.city) {
+      bits.push(location.city);
+    }
+    return bits.length ? bits.join(" \u00b7 ") : "Doorstep delivery in Abeokuta";
+  }
+
+  function buildGroup(type, headingText, locations) {
+    var group = document.createElement("div");
+    group.className = "oto-loc-group";
+    group.setAttribute("role", "group");
+    var headingId = "oto-loc-group-" + type;
+    var heading = document.createElement("div");
+    heading.className = "oto-loc-group-head";
+    heading.id = headingId;
+    heading.setAttribute("role", "presentation");
+    heading.textContent = headingText;
+    group.setAttribute("aria-labelledby", headingId);
+    group.appendChild(heading);
+
+    for (var i = 0; i < locations.length; i++) {
+      var location = locations[i];
+      var option = document.createElement("button");
+      option.type = "button";
+      option.className = "oto-loc-option";
+      option.id = "oto-loc-option-" + location.id;
+      option.setAttribute("role", "option");
+      option.setAttribute("data-location-id", location.id);
+      option.setAttribute(
+        "aria-selected",
+        location.id === valueOf("oto-co-delivery-location") ? "true" : "false"
+      );
+
+      var check = document.createElement("span");
+      check.className = "oto-loc-check";
+      check.setAttribute("aria-hidden", "true");
+      var checkIcon = document.createElement("i");
+      checkIcon.className = "fas fa-check";
+      check.appendChild(checkIcon);
+
+      var copy = document.createElement("span");
+      copy.className = "oto-loc-option-copy";
+      var name = document.createElement("span");
+      name.className = "oto-loc-option-name";
+      name.textContent = location.name;
+      var meta = document.createElement("span");
+      meta.className = "oto-loc-option-meta";
+      meta.textContent = optionMeta(location);
+      copy.appendChild(name);
+      copy.appendChild(meta);
+
+      var price = document.createElement("span");
+      price.className = "oto-loc-option-price";
+      price.textContent = priceText(location);
+
+      option.appendChild(check);
+      option.appendChild(copy);
+      option.appendChild(price);
+      option.addEventListener("click", function () {
+        selectLocation(this.getAttribute("data-location-id"));
+      });
+      group.appendChild(option);
+    }
+    return group;
+  }
+
+  function locationSearchText(location) {
+    return [
+      location.name,
+      location.areas,
+      location.city,
+      location.state,
+      location.type === "park" ? "park delivery" : "doorstep delivery",
+    ]
+      .join(" ")
+      .toLowerCase();
+  }
+
+  function filterLocations(locations, query) {
+    var term = String(query || "").trim().toLowerCase();
+    if (!term) {
+      return locations;
+    }
+    return locations.filter(function (location) {
+      return locationSearchText(location).indexOf(term) !== -1;
+    });
+  }
+
+  function renderLocationDropdown(query) {
+    var listbox = byId("oto-loc-listbox");
+    if (!listbox) {
+      return;
+    }
+    var search = byId("oto-loc-search");
+    var term = query === undefined ? (search ? search.value : "") : query;
+    var locations = filterLocations(locationList(), term);
+    var doorstep = [];
+    var park = [];
+    for (var i = 0; i < locations.length; i++) {
+      if (locations[i].type === "park") {
+        park.push(locations[i]);
+      } else {
+        doorstep.push(locations[i]);
+      }
+    }
+    listbox.innerHTML = "";
+    if (!locations.length) {
+      var empty = document.createElement("div");
+      empty.className = "oto-loc-empty";
+      empty.textContent = String(term).trim()
+        ? "No locations found for \u201c" + String(term).trim() + "\u201d."
+        : "No delivery locations are available.";
+      listbox.appendChild(empty);
+      updateDeliverySelectionUI();
+      return;
+    }
+    if (doorstep.length) {
+      listbox.appendChild(
+        buildGroup("doorstep", "Doorstep delivery — Abeokuta", doorstep)
+      );
+    }
+    if (park.length) {
+      listbox.appendChild(
+        buildGroup("park", "Park delivery — approved destinations", park)
+      );
+    }
+    updateDeliverySelectionUI();
+  }
+
+  function updateDeliverySelectionUI() {
+    var location = selectedDeliveryLocation();
+    var name = byId("oto-loc-trigger-name");
+    var meta = byId("oto-loc-trigger-meta");
+    var price = byId("oto-loc-trigger-price");
+    var doorstepName = byId("oto-doorstep-zone-name");
+    var parkName = byId("oto-park-name");
+    var parkFee = byId("oto-park-fee");
+    var parkDetail = byId("oto-park-detail");
+    var doorstepFields = byId("oto-doorstep-fields");
+    var parkFields = byId("oto-park-fields");
+    var options = document.querySelectorAll(".oto-loc-option");
+
+    for (var i = 0; i < options.length; i++) {
+      options[i].setAttribute(
+        "aria-selected",
+        location && options[i].getAttribute("data-location-id") === location.id
+          ? "true"
+          : "false"
+      );
+    }
+
+    if (!location) {
+      setText(name, "Select a delivery location");
+      setText(meta, "Doorstep or park delivery");
+      setText(price, "");
+      if (doorstepFields) {
+        doorstepFields.setAttribute("hidden", "");
+      }
+      if (parkFields) {
+        parkFields.setAttribute("hidden", "");
+      }
+      return;
+    }
+
+    setText(name, location.name);
+    setText(
+      meta,
+      location.type === "park"
+        ? "Park delivery" + (location.city ? " \u00b7 " + location.city : "")
+        : "Doorstep delivery" + (location.city ? " \u00b7 " + location.city : "")
+    );
+    setText(price, priceText(location));
+
+    if (location.type === "doorstep") {
+      if (doorstepFields) {
+        doorstepFields.removeAttribute("hidden");
+      }
+      if (parkFields) {
+        parkFields.setAttribute("hidden", "");
+      }
+      setText(doorstepName, location.name);
+    } else {
+      if (doorstepFields) {
+        doorstepFields.setAttribute("hidden", "");
+      }
+      if (parkFields) {
+        parkFields.removeAttribute("hidden");
+      }
+      setText(parkName, location.name);
+      setText(parkFee, "Delivery fee: " + cart.fmtNaira(location.fee));
+      setText(
+        parkDetail,
+        location.instructions ||
+          "Park delivery is available to approved destinations. Delivery arrangements and any applicable park charge depend on the selected destination."
+      );
     }
   }
 
-  function renderParkOptions() {
-    var select = byId("oto-co-park-destination");
-    if (!select) {
+  function setActiveOption(option) {
+    if (activeOption) {
+      activeOption.classList.remove("is-active");
+    }
+    activeOption = option;
+    if (activeOption) {
+      activeOption.classList.add("is-active");
+    }
+  }
+
+  function visibleOptions() {
+    return Array.prototype.slice.call(
+      document.querySelectorAll("#oto-loc-listbox .oto-loc-option")
+    );
+  }
+
+  function openDropdown() {
+    var popup = byId("oto-loc-popup");
+    var trigger = byId("oto-loc-trigger");
+    var select = byId("oto-loc-select");
+    if (!popup || !trigger || !select || receiveValue() !== "delivery") {
       return;
     }
-    select.innerHTML = "";
-    var placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select a park destination";
-    select.appendChild(placeholder);
-    for (var i = 0; i < CHECKOUT_OPTIONS.parkDestinations.length; i++) {
-      var destination = CHECKOUT_OPTIONS.parkDestinations[i];
-      var option = document.createElement("option");
-      option.value = destination.value;
-      option.textContent = destination.name;
-      select.appendChild(option);
+    popup.removeAttribute("hidden");
+    select.classList.add("is-open");
+    trigger.setAttribute("aria-expanded", "true");
+    var search = byId("oto-loc-search");
+    if (search) {
+      search.value = "";
     }
+    renderLocationDropdown("");
+    setActiveOption(null);
+    if (search) {
+      try {
+        search.focus({ preventScroll: true });
+      } catch (e) {
+        /* focus is best-effort */
+      }
+    }
+  }
+
+  function closeDropdown(returnFocus) {
+    var popup = byId("oto-loc-popup");
+    var trigger = byId("oto-loc-trigger");
+    var select = byId("oto-loc-select");
+    if (popup) {
+      popup.setAttribute("hidden", "");
+    }
+    if (select) {
+      select.classList.remove("is-open");
+    }
+    if (trigger) {
+      trigger.setAttribute("aria-expanded", "false");
+    }
+    var search = byId("oto-loc-search");
+    if (search) {
+      search.value = "";
+    }
+    setActiveOption(null);
+    if (returnFocus && trigger) {
+      try {
+        trigger.focus({ preventScroll: true });
+      } catch (e) {
+        /* focus is best-effort */
+      }
+    }
+  }
+
+  function selectLocation(id) {
+    var location = findLocation(id);
+    if (!location) {
+      return;
+    }
+    var previous = selectedDeliveryLocation();
+    var hidden = byId("oto-co-delivery-location");
+    if (!hidden) {
+      return;
+    }
+    if (previous && previous.type !== location.type) {
+      var address = byId("oto-co-address");
+      var landmark = byId("oto-co-landmark");
+      if (address) {
+        address.value = "";
+        setError(address, "");
+      }
+      if (landmark) {
+        landmark.value = "";
+      }
+    }
+    hidden.value = location.id;
+    setError(hidden, "");
+    var trigger = byId("oto-loc-trigger");
+    if (trigger) {
+      trigger.removeAttribute("aria-invalid");
+    }
+    status("");
+    updateDeliverySelectionUI();
+    updateTotals();
+    closeDropdown(true);
+  }
+
+  function wireLocationSelector() {
+    var trigger = byId("oto-loc-trigger");
+    var popup = byId("oto-loc-popup");
+    var select = byId("oto-loc-select");
+    if (!trigger || !popup || !select) {
+      return;
+    }
+    trigger.addEventListener("click", function () {
+      if (popup.hasAttribute("hidden")) {
+        openDropdown();
+      } else {
+        closeDropdown(true);
+      }
+    });
+    trigger.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        openDropdown();
+      } else if (event.key === "Escape" && !popup.hasAttribute("hidden")) {
+        event.preventDefault();
+        closeDropdown(true);
+      }
+    });
+    var search = byId("oto-loc-search");
+    if (search) {
+      search.addEventListener("input", function () {
+        renderLocationDropdown(search.value);
+        setActiveOption(null);
+      });
+    }
+    popup.addEventListener("keydown", function (event) {
+      var options = visibleOptions();
+      if (event.target === search) {
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          event.preventDefault();
+          if (options.length) {
+            var first =
+              event.key === "ArrowDown"
+                ? options[0]
+                : options[options.length - 1];
+            setActiveOption(first);
+            first.focus();
+          }
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          closeDropdown(true);
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+        }
+        return;
+      }
+      if (!options.length) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeDropdown(true);
+        }
+        return;
+      }
+      var index = options.indexOf(document.activeElement);
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (index === -1) {
+          setActiveOption(options[0]);
+          options[0].focus();
+        } else {
+          var next = Math.min(index + 1, options.length - 1);
+          setActiveOption(options[next]);
+          options[next].focus();
+        }
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (index === -1) {
+          setActiveOption(options[options.length - 1]);
+          options[options.length - 1].focus();
+        } else {
+          var prev = Math.max(index - 1, 0);
+          setActiveOption(options[prev]);
+          options[prev].focus();
+        }
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        setActiveOption(options[0]);
+        options[0].focus();
+      } else if (event.key === "End") {
+        event.preventDefault();
+        setActiveOption(options[options.length - 1]);
+        options[options.length - 1].focus();
+      } else if (event.key === "Enter" || event.key === " ") {
+        if (index !== -1) {
+          event.preventDefault();
+          selectLocation(options[index].getAttribute("data-location-id"));
+        }
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        closeDropdown(true);
+      } else if (event.key === "Tab") {
+        closeDropdown(false);
+      }
+    });
+    document.addEventListener("click", function (event) {
+      if (!select.contains(event.target)) {
+        closeDropdown(false);
+      }
+    });
+    window.addEventListener("resize", function () {
+      closeDropdown(false);
+    });
+  }
+
+  function refreshLocations() {
+    var selected = valueOf("oto-co-delivery-location");
+    if (selected && !findLocation(selected)) {
+      var hidden = byId("oto-co-delivery-location");
+      if (hidden) {
+        hidden.value = "";
+      }
+      var trigger = byId("oto-loc-trigger");
+      if (trigger) {
+        trigger.removeAttribute("aria-invalid");
+      }
+    }
+    renderLocationDropdown();
+    updateDeliverySelectionUI();
+    updateTotals();
   }
 
   function renderPickupOptions() {
@@ -828,9 +1302,13 @@
     if (!wrap) {
       return;
     }
+    var locations =
+      locationsApi && locationsApi.getPickupLocations
+        ? locationsApi.getPickupLocations()
+        : [];
     wrap.innerHTML = "";
-    for (var i = 0; i < CHECKOUT_OPTIONS.pickupLocations.length; i++) {
-      var location = CHECKOUT_OPTIONS.pickupLocations[i];
+    for (var i = 0; i < locations.length; i++) {
+      var location = locations[i];
       var label = document.createElement("label");
       label.className = "fd-check-radio oto-pickup-location";
       var input = document.createElement("input");
@@ -863,21 +1341,13 @@
 
   function updatePanels() {
     var method = receiveValue();
-    var doorstep = byId("oto-doorstep-panel");
-    var park = byId("oto-park-panel");
+    var delivery = byId("oto-delivery-panel");
     var pickup = byId("oto-pickup-panel");
-    if (doorstep) {
-      if (method === "doorstep") {
-        doorstep.removeAttribute("hidden");
+    if (delivery) {
+      if (method === "delivery") {
+        delivery.removeAttribute("hidden");
       } else {
-        doorstep.setAttribute("hidden", "");
-      }
-    }
-    if (park) {
-      if (method === "park") {
-        park.removeAttribute("hidden");
-      } else {
-        park.setAttribute("hidden", "");
+        delivery.setAttribute("hidden", "");
       }
     }
     if (pickup) {
@@ -887,19 +1357,14 @@
         pickup.setAttribute("hidden", "");
       }
     }
-    clearPanelErrors(method);
-  }
-
-  function clearPanelErrors(method) {
-    var ids = [];
-    if (method !== "doorstep") {
-      ids.push("oto-co-zone", "oto-co-address", "oto-co-city", "oto-co-state");
-    }
-    if (method !== "park") {
-      ids.push("oto-co-park-destination");
-    }
-    for (var i = 0; i < ids.length; i++) {
-      setError(byId(ids[i]), "");
+    if (method !== "delivery") {
+      setError(byId("oto-co-address"), "");
+      var hidden = byId("oto-co-delivery-location");
+      setError(hidden, "");
+      var trigger = byId("oto-loc-trigger");
+      if (trigger) {
+        trigger.removeAttribute("aria-invalid");
+      }
     }
     if (method !== "pickup") {
       setGroupError("oto-co-pickup-error", "");
@@ -925,6 +1390,9 @@
           });
           return;
         }
+        if (input.type === "hidden") {
+          return;
+        }
         input.addEventListener("blur", function () {
           if (form.getAttribute("data-tried") === "true") {
             checkField(input);
@@ -937,9 +1405,6 @@
         input.addEventListener("change", function () {
           setError(input, "");
           status("");
-          if (input.id === "oto-co-zone" || input.id === "oto-co-park-destination") {
-            updateTotals();
-          }
         });
       })(fields[i]);
     }
@@ -955,17 +1420,13 @@
 
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
-      form.setAttribute("data-tried", "true");
-      if (!renderSummary()) {
-        status("Your cart is empty. Add some products before checking out.", true);
-        return;
-      }
-      var order = validateForm();
-      if (!order) {
-        return;
-      }
-      showReview(order);
+      proceedToPayment();
     });
+
+    var reviewBtn = byId("fd-review-order");
+    if (reviewBtn) {
+      reviewBtn.addEventListener("click", reviewOrder);
+    }
 
     var edit = byId("fd-review-edit");
     if (edit) {
@@ -991,12 +1452,12 @@
       return;
     }
     cart.seedDemo();
-    renderZoneOptions();
-    renderParkOptions();
+    renderLocationDropdown();
     renderPickupOptions();
     updatePanels();
     renderSummary();
     wireForm();
+    wireLocationSelector();
     updateTotals();
 
     window.addEventListener("pageshow", function () {
@@ -1015,19 +1476,24 @@
       renderSummary();
     });
     window.addEventListener("storage", function (ev) {
-      if (!ev || ev.key !== "freshdirect_cart_v1") {
+      if (!ev) {
         return;
       }
-      var review = byId("fd-checkout-review");
-      var form = byId("fd-checkout-form");
-      if (review && !review.hasAttribute("hidden")) {
-        review.setAttribute("hidden", "");
-        if (form) {
-          form.removeAttribute("hidden");
+      if (ev.key === "freshdirect_cart_v1") {
+        var review = byId("fd-checkout-review");
+        var form = byId("fd-checkout-form");
+        if (review && !review.hasAttribute("hidden")) {
+          review.setAttribute("hidden", "");
+          if (form) {
+            form.removeAttribute("hidden");
+          }
+          status("");
         }
-        status("");
+        renderSummary();
       }
-      renderSummary();
+      if (locationsApi && ev.key === locationsApi.storeKey) {
+        refreshLocations();
+      }
     });
   }
 

@@ -629,13 +629,7 @@
       return { label: "No delivery fee", isAmount: false };
     }
     if (order.deliveryFee == null) {
-      return {
-        label:
-          order.receive.method === "park"
-            ? "To be confirmed"
-            : "Not recorded",
-        isAmount: false
-      };
+      return { label: "Not recorded", isAmount: false };
     }
     return { label: fmtNaira(order.deliveryFee), isAmount: true };
   }

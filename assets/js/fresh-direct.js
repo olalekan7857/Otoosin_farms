@@ -2818,6 +2818,12 @@
     if (!wrap) {
       return;
     }
+    // checkout.html runs the dedicated otoosin-checkout.js controller. The
+    // older fresh-direct checkout wiring must not attach a second submit
+    // handler or overwrite its summary on the same page.
+    if (document.getElementById("oto-loc-trigger") || document.getElementById("oto-co-name")) {
+      return;
+    }
     var form = document.getElementById("fd-checkout-form");
     if (!form) {
       return;

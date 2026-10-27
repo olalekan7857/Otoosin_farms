@@ -6,7 +6,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>Checkout | O’TOOSIN Farms</title>
     <meta name="author" content="O’TOOSIN Farms">
-    <meta name="description" content="Complete your O’TOOSIN Farms checkout by choosing doorstep delivery in Abeokuta, park delivery to approved destinations, or pickup from a selected pickup location.">
+    <meta name="description" content="Complete your O’TOOSIN Farms checkout by choosing delivery to a supported doorstep or park location, or pickup from a selected pickup location.">
     <meta name="keywords" content="O’TOOSIN Farms, checkout, farm shop, meats, fish, live animals, eggs, veggies, fruits">
     <meta name="robots" content="INDEX,FOLLOW">
     <meta property="og:title" content="Checkout | O’TOOSIN Farms">
@@ -26,12 +26,12 @@
     <link rel="stylesheet" href="assets/css/magnific-popup.min.css">
     <link rel="stylesheet" href="assets/css/slick.min.css">
     <link rel="stylesheet" href="assets/css/harvest-castle.css">
-    <link rel="stylesheet" href="assets/css/fresh-direct.css">
+    <link rel="stylesheet" href="assets/css/fresh-direct.css?v=8.1">
     <link rel="stylesheet" href="assets/css/fd-theme.css">
-    <link rel="stylesheet" href="assets/css/otoosin-shop.css">
-    <link rel="stylesheet" href="assets/css/otoosin-checkout.css">
+    <link rel="stylesheet" href="assets/css/otoosin-shop.css?v=8.0">
+    <link rel="stylesheet" href="assets/css/otoosin-checkout.css?v=2.1">
     <link rel="stylesheet" href="assets/css/otoosin-mobile-nav.css">
-    <link rel="stylesheet" href="assets/css/otoosin-footer.css">
+    <link rel="stylesheet" href="assets/css/otoosin-footer.css?v=2.0">
     <noscript>
         <style>.sideCartToggler,[data-theme-toggle],#fd-cart-count,#fd-cart-count-mobile{display:none!important}</style>
     </noscript>
@@ -49,7 +49,7 @@
         <div class="vs-menu-area text-center">
             <button class="vs-menu-toggle" aria-label="Close menu" aria-expanded="false" aria-controls="fd-mobile-menu"><i class="fal fa-times" aria-hidden="true"></i></button>
             <div class="mobile-logo">
-                <a href="index.html" class="fd-logo oto-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async">O’TOOSIN<span> Farms</span></a>
+                <a href="index.html" class="fd-logo oto-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="78" height="56" decoding="async"></a>
             </div>
             <nav class="vs-mobile-menu" aria-label="Mobile navigation">
                 <ul>
@@ -123,7 +123,7 @@
                         <div class="row align-items-center justify-content-between">
                             <div class="col-auto">
                                 <div class="header-logo">
-                                    <a href="index.html" class="fd-logo oto-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async">O’TOOSIN<span> Farms</span></a>
+                                    <a href="index.html" class="fd-logo oto-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="78" height="56" decoding="async"></a>
                                 </div>
                             </div>
                             <div class="col">
@@ -242,21 +242,21 @@
                             <fieldset class="fd-checkout-card oto-checkout-card">
                                 <legend>Customer information</legend>
                                 <div class="fd-field">
-                                    <label for="oto-co-name">Full name</label>
+                                    <label for="oto-co-name">Full name <span class="fd-required" aria-hidden="true">*</span></label>
                                     <input class="form-control" type="text" id="oto-co-name" name="name" autocomplete="name" placeholder="e.g. Adaeze Okafor" required>
                                     <span class="fd-field-error" id="oto-co-name-error" hidden></span>
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <div class="fd-field">
-                                            <label for="oto-co-phone">Phone number</label>
+                                            <label for="oto-co-phone">Phone number <span class="fd-required" aria-hidden="true">*</span></label>
                                             <input class="form-control" type="tel" id="oto-co-phone" name="phone" autocomplete="tel" inputmode="tel" placeholder="e.g. 0803 123 4567" required>
                                             <span class="fd-field-error" id="oto-co-phone-error" hidden></span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="fd-field">
-                                            <label for="oto-co-email">Email address <span class="fd-optional">(optional)</span></label>
+                                            <label for="oto-co-email">Email address <span class="fd-optional">(Optional)</span></label>
                                             <input class="form-control" type="email" id="oto-co-email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
                                             <span class="fd-field-error" id="oto-co-email-error" hidden></span>
                                         </div>
@@ -266,23 +266,14 @@
 
                             <fieldset class="fd-checkout-card oto-checkout-card">
                                 <legend>How would you like to receive your order?</legend>
-                                <p class="oto-receive-lead">Choose one option. The total in your order summary updates as you choose.</p>
+                                <p class="oto-receive-lead">Choose delivery to a supported location or collect your order from a pickup location. Your order total updates based on your selection.</p>
                                 <div class="oto-receive-options" role="radiogroup" aria-label="How would you like to receive your order?">
                                     <label class="fd-check-radio oto-receive-option">
-                                        <input type="radio" name="receive-method" value="doorstep" checked>
-                                        <span class="oto-pay-icon" aria-hidden="true"><i class="fas fa-motorcycle"></i></span>
+                                        <input type="radio" name="receive-method" value="delivery" checked>
+                                        <span class="oto-pay-icon" aria-hidden="true"><i class="fas fa-truck"></i></span>
                                         <span class="oto-pay-copy">
-                                            <strong>Doorstep delivery</strong>
-                                            <small>Available in Abeokuta. Choose your delivery zone and we bring the order to your address.</small>
-                                        </span>
-                                        <span class="oto-pay-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
-                                    </label>
-                                    <label class="fd-check-radio oto-receive-option">
-                                        <input type="radio" name="receive-method" value="park">
-                                        <span class="oto-pay-icon" aria-hidden="true"><i class="fas fa-bus"></i></span>
-                                        <span class="oto-pay-copy">
-                                            <strong>Park delivery</strong>
-                                            <small>For approved destinations such as Lagos, Ibadan and Ijebu through selected transport parks.</small>
+                                            <strong>Delivery</strong>
+                                            <small>Choose an available doorstep or park delivery location. The details required will depend on the selected location.</small>
                                         </span>
                                         <span class="oto-pay-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
                                     </label>
@@ -291,99 +282,62 @@
                                         <span class="oto-pay-icon" aria-hidden="true"><i class="fas fa-store"></i></span>
                                         <span class="oto-pay-copy">
                                             <strong>Pickup</strong>
-                                            <small>Collect your order yourself from a selected pickup location. No delivery fee.</small>
+                                            <small>Choose a pickup location and collect your order yourself. No delivery fee applies.</small>
                                         </span>
                                         <span class="oto-pay-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
                                     </label>
                                 </div>
                             </fieldset>
 
-                            <fieldset class="fd-checkout-card oto-checkout-card oto-receive-panel" id="oto-doorstep-panel">
-                                <legend>Doorstep delivery details</legend>
-                                <div class="fd-field">
-                                    <label for="oto-co-zone">Delivery zone</label>
-                                    <select class="form-control" id="oto-co-zone" name="zone">
-                                        <option value="">Select your delivery zone</option>
-                                    </select>
-                                    <span class="fd-field-error" id="oto-co-zone-error" hidden></span>
-                                </div>
-                                <div class="fd-field">
-                                    <label for="oto-co-address">Delivery address</label>
-                                    <input class="form-control" type="text" id="oto-co-address" name="address" autocomplete="street-address" placeholder="e.g. No. 12, Camp Road, Alabata">
-                                    <span class="fd-field-error" id="oto-co-address-error" hidden></span>
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="fd-field">
-                                            <label for="oto-co-city">City or town</label>
-                                            <input class="form-control" type="text" id="oto-co-city" name="city" autocomplete="address-level2" placeholder="e.g. Abeokuta">
-                                            <span class="fd-field-error" id="oto-co-city-error" hidden></span>
+                            <fieldset class="fd-checkout-card oto-checkout-card oto-receive-panel" id="oto-delivery-panel">
+                                <legend>Delivery details</legend>
+                                <div class="fd-field oto-loc-field">
+                                    <label id="oto-delivery-location-label" for="oto-loc-trigger">Delivery location <span class="fd-required" aria-hidden="true">*</span></label>
+                                    <div class="oto-loc-select" id="oto-loc-select">
+                                        <button type="button" class="oto-loc-trigger" id="oto-loc-trigger" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="oto-loc-listbox" aria-labelledby="oto-delivery-location-label" aria-describedby="oto-loc-hint">
+                                            <span class="oto-loc-trigger-copy">
+                                                <span class="oto-loc-trigger-name" id="oto-loc-trigger-name">Select a delivery location</span>
+                                                <span class="oto-loc-trigger-meta" id="oto-loc-trigger-meta">Doorstep or park delivery</span>
+                                            </span>
+                                            <span class="oto-loc-trigger-price" id="oto-loc-trigger-price"></span>
+                                            <svg class="oto-loc-caret" width="14" height="14" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.3 4.4 6 8.1l3.7-3.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                        </button>
+                                        <input type="hidden" id="oto-co-delivery-location" name="delivery-location" value="">
+                                        <div class="oto-loc-popup" id="oto-loc-popup" hidden>
+                                            <div class="oto-loc-search">
+                                                <label class="oto-loc-search-label" for="oto-loc-search">Search locations</label>
+                                                <input class="oto-loc-search-input" type="search" id="oto-loc-search" placeholder="Search by area, town or park" autocomplete="off" spellcheck="false">
+                                            </div>
+                                            <div class="oto-loc-scroll" id="oto-loc-listbox" role="listbox" aria-labelledby="oto-delivery-location-label"></div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="fd-field">
-                                            <label for="oto-co-state">State</label>
-                                            <select class="form-control" id="oto-co-state" name="state" autocomplete="address-level1">
-                                                <option value="">Select state</option>
-                                                <option value="Abia">Abia</option>
-                                                <option value="Adamawa">Adamawa</option>
-                                                <option value="Akwa Ibom">Akwa Ibom</option>
-                                                <option value="Anambra">Anambra</option>
-                                                <option value="Bauchi">Bauchi</option>
-                                                <option value="Bayelsa">Bayelsa</option>
-                                                <option value="Benue">Benue</option>
-                                                <option value="Borno">Borno</option>
-                                                <option value="Cross River">Cross River</option>
-                                                <option value="Delta">Delta</option>
-                                                <option value="Ebonyi">Ebonyi</option>
-                                                <option value="Edo">Edo</option>
-                                                <option value="Ekiti">Ekiti</option>
-                                                <option value="Enugu">Enugu</option>
-                                                <option value="FCT - Abuja">FCT - Abuja</option>
-                                                <option value="Gombe">Gombe</option>
-                                                <option value="Imo">Imo</option>
-                                                <option value="Jigawa">Jigawa</option>
-                                                <option value="Kaduna">Kaduna</option>
-                                                <option value="Kano">Kano</option>
-                                                <option value="Katsina">Katsina</option>
-                                                <option value="Kebbi">Kebbi</option>
-                                                <option value="Kogi">Kogi</option>
-                                                <option value="Kwara">Kwara</option>
-                                                <option value="Lagos">Lagos</option>
-                                                <option value="Nasarawa">Nasarawa</option>
-                                                <option value="Niger">Niger</option>
-                                                <option value="Ogun">Ogun</option>
-                                                <option value="Ondo">Ondo</option>
-                                                <option value="Osun">Osun</option>
-                                                <option value="Oyo">Oyo</option>
-                                                <option value="Plateau">Plateau</option>
-                                                <option value="Rivers">Rivers</option>
-                                                <option value="Sokoto">Sokoto</option>
-                                                <option value="Taraba">Taraba</option>
-                                                <option value="Yobe">Yobe</option>
-                                                <option value="Zamfara">Zamfara</option>
-                                            </select>
-                                            <span class="fd-field-error" id="oto-co-state-error" hidden></span>
-                                        </div>
-                                    </div>
+                                    <span class="fd-field-error" id="oto-co-delivery-location-error" hidden></span>
+                                    <p class="oto-loc-hint" id="oto-loc-hint">Doorstep locations appear first, followed by approved park destinations.</p>
                                 </div>
-                                <div class="fd-field">
-                                    <label for="oto-co-landmark">Nearest landmark <span class="fd-optional">(optional)</span></label>
-                                    <input class="form-control" type="text" id="oto-co-landmark" name="landmark" autocomplete="off" placeholder="e.g. Opposite the filling station">
-                                </div>
-                                <p class="oto-receive-note"><i class="fas fa-info-circle" aria-hidden="true"></i><span>Doorstep delivery is currently available in Abeokuta. The delivery fee is based on the zone you select, not on your exact house address.</span></p>
-                            </fieldset>
 
-                            <fieldset class="fd-checkout-card oto-checkout-card oto-receive-panel" id="oto-park-panel" hidden>
-                                <legend>Park delivery details</legend>
-                                <div class="fd-field">
-                                    <label for="oto-co-park-destination">Destination</label>
-                                    <select class="form-control" id="oto-co-park-destination" name="park-destination">
-                                        <option value="">Select a park destination</option>
-                                    </select>
-                                    <span class="fd-field-error" id="oto-co-park-destination-error" hidden></span>
+                                <div class="oto-loc-fields" id="oto-doorstep-fields" hidden>
+                                    <div class="fd-field">
+                                        <label for="oto-co-address">Delivery address <span class="fd-required" aria-hidden="true">*</span></label>
+                                        <input class="form-control" type="text" id="oto-co-address" name="address" autocomplete="street-address" placeholder="e.g. No. 12, Camp Road, Alabata">
+                                        <span class="fd-field-error" id="oto-co-address-error" hidden></span>
+                                    </div>
+                                    <div class="fd-field">
+                                        <label for="oto-co-landmark">Nearest landmark <span class="fd-optional">(Optional)</span></label>
+                                        <input class="form-control" type="text" id="oto-co-landmark" name="landmark" autocomplete="off" placeholder="e.g. Opposite the filling station">
+                                    </div>
+                                    <p class="oto-receive-note"><i class="fas fa-info-circle" aria-hidden="true"></i><span>Doorstep delivery is available in Abeokuta. Your delivery fee is based on <strong id="oto-doorstep-zone-name">the selected location</strong>, not your exact house address.</span></p>
                                 </div>
-                                <p class="oto-receive-note"><i class="fas fa-info-circle" aria-hidden="true"></i><span>Park delivery is available to approved destinations only. Our team will confirm the approved park and the park delivery charge for your destination before dispatch.</span></p>
+
+                                <div class="oto-loc-fields" id="oto-park-fields" hidden>
+                                    <div class="oto-park-selected">
+                                        <span class="oto-park-selected-label">Park destination</span>
+                                        <strong id="oto-park-name">Select a park destination</strong>
+                                        <span class="oto-park-selected-fee" id="oto-park-fee">—</span>
+                                    </div>
+                                    <p class="oto-receive-note"><i class="fas fa-info-circle" aria-hidden="true"></i><span id="oto-park-detail">Park delivery is available to approved destinations. Delivery arrangements and any applicable park charge depend on the selected destination.</span></p>
+                                </div>
+
+                                <p class="oto-receive-note oto-delivery-cutoff"><i class="far fa-clock" aria-hidden="true"></i><span><strong>Delivery timing:</strong> Orders placed after 5:00 PM will be delivered the next day.</span></p>
                             </fieldset>
 
                             <fieldset class="fd-checkout-card oto-checkout-card oto-receive-panel" id="oto-pickup-panel" hidden>
@@ -394,7 +348,7 @@
                             </fieldset>
 
                             <fieldset class="fd-checkout-card oto-checkout-card">
-                                <legend>Order notes <span class="fd-optional">(optional)</span></legend>
+                                <legend>Order notes <span class="fd-optional">(Optional)</span></legend>
                                 <div class="fd-field">
                                     <label for="oto-co-notes">Anything you would like us to know?</label>
                                     <textarea class="form-control" id="oto-co-notes" name="instructions" rows="3" placeholder="e.g. Call when you arrive."></textarea>
@@ -403,21 +357,22 @@
 
                             <fieldset class="fd-checkout-card oto-checkout-card">
                                 <legend>Payment</legend>
-                                <p class="oto-pay-note" aria-live="polite"><i class="fas fa-wallet" aria-hidden="true"></i><span id="oto-pay-note">Complete your order and payment securely at checkout. Your total includes your selected products and, where applicable, the doorstep delivery fee.</span></p>
+                                <p class="oto-pay-note" aria-live="polite"><i class="fas fa-wallet" aria-hidden="true"></i><span id="oto-pay-note">Complete your order and payment securely at checkout. Your total includes your selected products and, where applicable, the delivery fee.</span></p>
                             </fieldset>
 
                             <p class="fd-checkout-status" id="fd-checkout-status" role="status" aria-live="polite" hidden></p>
 
                             <div class="oto-checkout-actions">
-                                <button type="submit" class="vs-btn" id="fd-place-order">Review Order</button>
-                                <a href="cart.html" class="fd-ghost-btn">Back to Cart</a>
+                                <button type="submit" class="vs-btn" id="fd-proceed-payment">Proceed to Payment</button>
+                                <button type="button" class="fd-ghost-btn oto-action-secondary" id="fd-review-order">Review Order</button>
+                                <a href="cart.html" class="oto-back-cart">Back to Cart</a>
                             </div>
                         </form>
 
                         <section class="oto-checkout-review" id="fd-checkout-review" hidden aria-labelledby="oto-review-title">
                             <span class="oto-review-kicker">Review</span>
                             <h2 id="oto-review-title" tabindex="-1">Review your order</h2>
-                            <p class="oto-review-lead">Check how you will receive the order, your details and the total below. You can edit anything before you finish.</p>
+                            <p class="oto-review-lead">Check how you will receive the order, your details and the total below. You can edit anything before you proceed to payment.</p>
 
                             <div class="oto-review-block">
                                 <h3>Order details</h3>
@@ -438,12 +393,12 @@
                                 </div>
                             </div>
 
-                            <p class="oto-review-note"><i class="fas fa-shield-alt" aria-hidden="true"></i><span>Check your details once more, then continue to complete your order and payment.</span></p>
+                            <p class="oto-review-note"><i class="fas fa-shield-alt" aria-hidden="true"></i><span>Check your details once more, then proceed to complete your order and payment securely at checkout.</span></p>
 
                             <div class="oto-review-actions">
-                                <button type="button" class="vs-btn" id="fd-review-confirm">Finish &amp; View Summary</button>
+                                <button type="button" class="vs-btn" id="fd-review-confirm">Proceed to Payment</button>
                                 <button type="button" class="fd-ghost-btn" id="fd-review-edit">Edit details</button>
-                                <a href="cart.html" class="fd-ghost-btn">Back to cart</a>
+                                <a href="cart.html" class="oto-back-cart">Back to cart</a>
                             </div>
                         </section>
                     </div>
@@ -459,17 +414,17 @@
                             </div>
                             <div class="fd-cart-summary-row" id="oto-receive-summary-row">
                                 <span>Delivery &amp; pickup</span>
-                                <strong id="oto-receive-name">Doorstep delivery</strong>
+                                <strong id="oto-receive-name">Delivery</strong>
                             </div>
                             <div class="oto-checkout-delivery-row">
                                 <span id="oto-delivery-label">Delivery fee</span>
-                                <strong id="oto-delivery-value">Select a zone</strong>
+                                <strong id="oto-delivery-value">Select a location</strong>
                             </div>
                             <div class="fd-cart-summary-row is-total">
                                 <span id="oto-checkout-total-label">Order total</span>
                                 <strong data-checkout-total>₦0</strong>
                             </div>
-                            <p class="oto-checkout-pay-summary"><i class="fas fa-wallet" aria-hidden="true"></i><span id="oto-pay-summary">Complete your order and payment securely at checkout. Your total includes your selected products and, where applicable, the doorstep delivery fee.</span></p>
+                            <p class="oto-checkout-pay-summary"><i class="fas fa-wallet" aria-hidden="true"></i><span id="oto-pay-summary">Complete your order and payment securely at checkout. Your total includes your selected products and, where applicable, the delivery fee.</span></p>
                             <div class="fd-cart-summary-actions">
                                 <a href="cart.html" class="fd-ghost-btn oto-checkout-edit">Edit cart</a>
                             </div>
@@ -487,7 +442,7 @@
                 <div class="row g-4">
                     <div class="col-lg-4">
                         <div class="widget footer-widget">
-                            <a href="index.html" class="fd-logo oto-logo oto-footer-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="63" height="45" decoding="async" loading="lazy">O’TOOSIN<span> Farms</span></a>
+                            <a href="index.html" class="fd-logo oto-logo oto-footer-logo" aria-label="O’TOOSIN Farms home"><img src="assets/img/harvest_castle/of_favicon.png" alt="" aria-hidden="true" class="fd-logo-img oto-logo-img" width="78" height="56" decoding="async" loading="lazy"></a>
                             <p class="footer-text oto-footer-text">Delivering safe, healthy, and nutritious foods at your doorstep . . . Shop meats, fish, live animals, eggs, veggies and fruits.</p>
                         </div>
                     </div>
@@ -550,8 +505,9 @@
     <script src="assets/js/imagesloaded.pkgd.min.js"></script>
     <script src="assets/js/isotope.pkgd.min.js"></script>
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/fresh-direct.js?v=7.0"></script>
-    <script src="assets/js/otoosin-checkout.js"></script>
+    <script src="assets/js/fresh-direct.js?v=7.1"></script>
+    <script src="assets/js/fd-delivery-locations.js?v=1.1"></script>
+    <script src="assets/js/otoosin-checkout.js?v=2.1"></script>
     <script src="assets/js/fd-theme.js"></script>
 
     <div data-otoosin-mobile-nav-mount></div>

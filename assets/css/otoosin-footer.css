@@ -83,6 +83,14 @@
   font-size: 28px;
 }
 
+.oto-footer .oto-footer-logo img.oto-logo-img {
+  display: block;
+  width: auto;
+  height: 66px;
+  max-width: 180px;
+  margin-right: 0;
+}
+
 .oto-footer-text {
   max-width: 340px;
   color: rgba(255, 255, 255, 0.72);
@@ -198,6 +206,11 @@
     font-size: 25px;
   }
 
+  .oto-footer .oto-footer-logo img.oto-logo-img {
+    height: 54px;
+    max-width: 150px;
+  }
+
   .oto-footer-text {
     max-width: none;
     font-size: 14px;
@@ -246,6 +259,11 @@
 
   .oto-footer-logo {
     font-size: 23px;
+  }
+
+  .oto-footer .oto-footer-logo img.oto-logo-img {
+    height: 48px;
+    max-width: 132px;
   }
 
   .oto-footer-text {

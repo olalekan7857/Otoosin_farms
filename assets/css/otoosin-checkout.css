@@ -353,6 +353,375 @@
   min-height: 48px;
 }
 
+/* ---------- Required markers ---------- */
+#fd-checkout-form .fd-required {
+  color: var(--error-color);
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* ---------- Custom delivery location selector ---------- */
+.oto-loc-field {
+  margin-top: 16px;
+}
+
+.oto-loc-select {
+  position: relative;
+}
+
+.oto-loc-trigger {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 16px;
+  border: 1px solid #e4e4e4;
+  border-radius: 16px;
+  background: var(--white-color);
+  color: var(--title-color);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.oto-loc-trigger:hover {
+  border-color: var(--secondary-color);
+}
+
+.oto-loc-select.is-open .oto-loc-trigger {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(6, 65, 29, 0.08);
+}
+
+.oto-loc-trigger[aria-invalid="true"] {
+  border-color: var(--error-color);
+}
+
+.oto-loc-trigger-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oto-loc-trigger-name {
+  display: block;
+  font-family: var(--title-font);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.oto-loc-trigger-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--body-color);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.oto-loc-trigger-price {
+  flex: 0 0 auto;
+  max-width: 42%;
+  color: var(--title-color);
+  font-family: var(--title-font);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.oto-loc-caret {
+  flex: 0 0 auto;
+  color: var(--secondary-color);
+  transition: transform 0.2s ease;
+}
+
+.oto-loc-select.is-open .oto-loc-caret {
+  transform: rotate(180deg);
+}
+
+.oto-loc-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 40;
+  overflow: hidden;
+  border: 1px solid #e4e4e4;
+  border-radius: 16px;
+  background: var(--white-color);
+  box-shadow: 0 20px 46px rgba(6, 65, 29, 0.14);
+}
+
+.oto-loc-popup[hidden] {
+  display: none;
+}
+
+.oto-loc-search {
+  padding: 10px;
+  border-bottom: 1px solid var(--fd-hairline, #ececec);
+  background: var(--white-color);
+}
+
+.oto-loc-search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.oto-loc-search-input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 13px;
+  border: 1px solid #e4e4e4;
+  border-radius: 12px;
+  background: var(--white-color);
+  color: var(--title-color);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  appearance: none;
+}
+
+.oto-loc-search-input::placeholder {
+  color: var(--body-color);
+  opacity: 0.8;
+}
+
+.oto-loc-search-input:focus {
+  outline: 0;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(6, 65, 29, 0.08);
+}
+
+.oto-loc-search-input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.oto-loc-scroll {
+  max-height: min(370px, 58vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.oto-loc-group-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--fd-hairline, #ececec);
+  background: var(--smoke-color);
+  color: var(--secondary-color);
+  font-family: var(--title-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.oto-loc-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 16px;
+  border: 0;
+  border-top: 1px solid #f1f1f1;
+  border-radius: 0;
+  background: transparent;
+  color: var(--body-color);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.oto-loc-option:first-of-type {
+  border-top: 0;
+}
+
+.oto-loc-option:hover,
+.oto-loc-option.is-active {
+  background: var(--smoke-color);
+}
+
+.oto-loc-option:focus-visible {
+  outline: 2px solid var(--fd-focus);
+  outline-offset: -2px;
+}
+
+.oto-loc-check {
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: 1.5px solid #c9d3cb;
+  border-radius: 5px;
+  background: var(--white-color);
+  color: transparent;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.oto-loc-option[aria-selected="true"] .oto-loc-check {
+  border-color: var(--secondary-color);
+  background: var(--secondary-color);
+  color: var(--white-color);
+}
+
+.oto-loc-option-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.oto-loc-option-name {
+  display: block;
+  color: var(--title-color);
+  font-family: var(--title-font);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.oto-loc-option-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--body-color);
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.oto-loc-option-price {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--title-color);
+  font-family: var(--title-font);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.oto-loc-empty {
+  padding: 16px;
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.oto-loc-hint {
+  margin: 7px 0 0;
+  color: var(--body-color);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.oto-loc-fields {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--fd-hairline, #ececec);
+}
+
+.oto-loc-fields[hidden] {
+  display: none;
+}
+
+.oto-loc-fields .fd-field + .fd-field {
+  margin-top: 14px;
+}
+
+.oto-park-selected {
+  display: grid;
+  gap: 3px;
+  padding: 14px 16px;
+  border: 1px solid var(--fd-hairline, #ececec);
+  border-radius: 14px;
+  background: var(--smoke-color);
+}
+
+.oto-park-selected-label {
+  color: var(--body-color);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.oto-park-selected strong {
+  font-family: var(--title-font);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.oto-park-selected-fee {
+  color: var(--body-color);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.oto-delivery-cutoff {
+  background: #fff8e6;
+  border: 1px solid #f0dfb0;
+  color: #5f4b12;
+}
+
+.oto-delivery-cutoff i {
+  color: #8a6d00;
+}
+
+.oto-delivery-cutoff strong {
+  color: inherit;
+}
+
+.oto-checkout-actions .oto-action-secondary {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+}
+
+.oto-back-cart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  font-family: var(--title-font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--body-color);
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.oto-back-cart:hover,
+.oto-back-cart:focus-visible {
+  color: var(--secondary-color);
+}
+
+.oto-review-actions .oto-back-cart {
+  min-height: 44px;
+}
+
 /* ---------- Order summary ---------- */
 .oto-checkout-summary {
   position: sticky;
@@ -704,9 +1073,55 @@
 html[data-theme="dark"] .oto-checkout-guest,
 html[data-theme="dark"] .oto-pay-option,
 html[data-theme="dark"] .oto-receive-option,
-html[data-theme="dark"] .oto-checkout-review {
+html[data-theme="dark"] .oto-checkout-review,
+html[data-theme="dark"] .oto-loc-trigger,
+html[data-theme="dark"] .oto-loc-popup,
+html[data-theme="dark"] .oto-loc-search {
   background: var(--fd-surface);
   border-color: var(--fd-hairline);
+}
+
+html[data-theme="dark"] .oto-loc-search-input {
+  background: var(--fd-surface-2);
+  border-color: var(--fd-hairline);
+  color: var(--title-color);
+}
+
+html[data-theme="dark"] .oto-loc-group-head,
+html[data-theme="dark"] .oto-loc-option:hover,
+html[data-theme="dark"] .oto-loc-option.is-active,
+html[data-theme="dark"] .oto-park-selected {
+  background: var(--fd-surface-2);
+  border-color: var(--fd-hairline);
+}
+
+html[data-theme="dark"] .oto-loc-group-head {
+  color: var(--fd-brand-green-text);
+}
+
+html[data-theme="dark"] .oto-loc-option {
+  border-top-color: var(--fd-hairline);
+}
+
+html[data-theme="dark"] .oto-loc-check {
+  border-color: var(--fd-hairline);
+  background: var(--fd-surface);
+}
+
+html[data-theme="dark"] .oto-loc-option[aria-selected="true"] .oto-loc-check {
+  border-color: var(--fd-brand-green-text);
+  background: var(--fd-brand-green-text);
+  color: var(--fd-bg);
+}
+
+html[data-theme="dark"] .oto-delivery-cutoff {
+  background: var(--fd-surface-2);
+  border-color: var(--fd-hairline);
+  color: var(--fd-warn-text);
+}
+
+html[data-theme="dark"] .oto-delivery-cutoff i {
+  color: var(--fd-warn-text);
 }
 
 html[data-theme="dark"] .oto-checkout-guest > i,
